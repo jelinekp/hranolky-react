@@ -1,31 +1,14 @@
 import React from "react";
-import { useFirestore } from "./hooks/useFirestore";
+import {useFirestore} from "./hooks/useFirestore";
+import WarehouseSlotsList from "./components/WarehouseSlotList.tsx";
 
 const App: React.FC = () => {
-    const { warehouseSlots, loading } = useFirestore("WarehouseSlots"); // Replace "users" with your Firestore collection
+    const {warehouseSlots, loading} = useFirestore("WarehouseSlots"); // Replace "users" with your Firestore collection
 
     return (
-        <div>
-            <h1>Firestore Data</h1>
-            {loading ? (
-                <p>Loading...</p>
-            ) : (
-                <ul>
-                    {warehouseSlots.map((slot) => {
-                        return (
-                            <li key={slot.productId}>
-                                Dřevo: {slot.quality},
-                                tloušťka: {slot.thickness},
-                                šířka: {slot.width},
-                                délka: {slot.length},
-                                množství: {slot.quantity},
-                                poslední změna: {slot.lastModified?.toDate().toString()},
-                                poslední akce: {slot.slotActions.at(-1)?.action}
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
+        <div className={"m-6 container h-screen bg-gray-50"}>
+            <h1>Hranolky</h1>
+            <WarehouseSlotsList warehouseSlots={warehouseSlots} loading={loading}/>
         </div>
     );
 };

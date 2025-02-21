@@ -1,0 +1,16 @@
+:root {
+    --color-primary: #c99e75;
+    --color-bg-01: #fff;
+    --color-bg-02: #000;
+    --color-bg-03: #fbf5f0;
+    --color-bg-04: #212021;
+    --color-bg-05: #faf5f1;
+    --color-text-01: #000;
+    --color-text-02: #fff;
+    --color-text-03: #010101;
+    --color-text-04: #a8a8a8;
+    --color-header-text-01: #969696;
+    --color-hover-primary: #ddb38c;
+    --color-primary-dark: #ae845b;
+    --color-primary-light: rgb(255, 237, 220);
+}

@@ -1,0 +1,20 @@
+@font-face {
+    font-family: 'GTWalsheimPro';
+    src: url('../fonts/GTWalsheimPro-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'GTWalsheimPro';
+    src: url('../fonts/GTWalsheimPro-Bold.ttf') format('truetype');
+    font-weight: bold;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: 'GTWalsheimPro';
+    src: url('../fonts/GTWalsheimPro-Medium.ttf') format('truetype');
+    font-weight: 500;
+    font-style: normal;
+}
