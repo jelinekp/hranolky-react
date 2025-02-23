@@ -1,117 +1,97 @@
-class ActiveFilters {
-    qualityFilters: string[];
-    thicknessFilters: number[];
-    widthFilters: number[];
-    lengthFilters: number[];
-    quantityFilters: number[];
-    volumeFilters: number[];
-    lastModifiedFilters: Date[];
-
-    constructor() {
-        this.qualityFilters = [];
-        this.thicknessFilters = [];
-        this.widthFilters = [];
-        this.lengthFilters = [];
-        this.quantityFilters = [];
-        this.volumeFilters = [];
-        this.lastModifiedFilters = [];
-    }
-}
-
 interface IntervalMm {
-    start: number;
-    end: number;
+    start: number
+    end: number
 }
 
 export class IntervalMmClass implements IntervalMm {
-    start: number;
-    end: number;
+    start: number
+    end: number
 
     constructor(start: number, end: number) {
-        this.start = start;
-        this.end = end;
+        this.start = start
+        this.end = end
     }
 
     contains(value: number | null): boolean {
         if (value === null) {
-            return false;
+            return false
         }
-        return value >= this.start && value <= this.end;
+        return value >= this.start && value <= this.end
     }
 
     toString(): string {
-        return `${this.start} - ${this.end}`;
+        return `${this.start} - ${this.end}`
     }
 }
 
 interface SlotFilters {
-    qualityFilters: string[];
-    thicknessFilters: number[];
-    widthFilters: number[];
-    lengthFilters: IntervalMmClass[];
+    qualityFilters: Set<string>
+    thicknessFilters: Set<number>
+    widthFilters: Set<number>
+    lengthFilters: Set<IntervalMmClass>
 }
 
 export class SlotFiltersClass implements SlotFilters {
-    qualityFilters: string[];
-    thicknessFilters: number[];
-    widthFilters: number[];
-    lengthFilters: IntervalMmClass[];
+    qualityFilters: Set<string>
+    thicknessFilters: Set<number>
+    widthFilters: Set<number>
+    lengthFilters: Set<IntervalMmClass>
 
-    static EMPTY: SlotFiltersClass = new SlotFiltersClass([], [], [], []);
+    static EMPTY: SlotFiltersClass = new SlotFiltersClass(new Set(), new Set(), new Set(), new Set());
     static ALL: SlotFiltersClass = new SlotFiltersClass(
-        ["DUB-A", "DUB-R"],
-        [20, 27.4, 42.4],
-        [42.4, 50, 70],
-        [
+        new Set(["DUB-A", "DUB-R"]),
+        new Set([20, 27.4, 42.4]),
+        new Set([42.4, 50, 70]),
+        new Set([
             { start: 0, end: 999 },
             { start: 1000, end: 1999 },
             { start: 2000, end: 2999 }
-        ]
+        ])
     );
 
     constructor(
-        qualityFilters: string[],
-        thicknessFilters: number[],
-        widthFilters: number[],
-        lengthFilters: ({ start: number; end: number })[]
+        qualityFilters: Set<string>,
+        thicknessFilters: Set<number>,
+        widthFilters: Set<number>,
+        lengthFilters: Set<({ start: number; end: number })>
     ) {
-        this.qualityFilters = qualityFilters;
-        this.thicknessFilters = thicknessFilters;
-        this.widthFilters = widthFilters;
-        this.lengthFilters = lengthFilters.map(interval => new IntervalMmClass(interval.start, interval.end));
+        this.qualityFilters = qualityFilters
+        this.thicknessFilters = thicknessFilters
+        this.widthFilters = widthFilters
+        this.lengthFilters = new Set(Array.from(lengthFilters).map(interval => new IntervalMmClass(interval.start, interval.end)))
     }
 
     isEmpty(): boolean {
         return (
-            this.qualityFilters.length === 0 &&
-            this.thicknessFilters.length === 0 &&
-            this.widthFilters.length === 0 &&
-            this.lengthFilters.length === 0
+            this.qualityFilters.size === 0 &&
+            this.thicknessFilters.size === 0 &&
+            this.widthFilters.size === 0 &&
+            this.lengthFilters.size === 0
         );
     }
 
     hasQualityFilters(): boolean {
-        return this.qualityFilters.length > 0;
+        return this.qualityFilters.size > 0
     }
 
     hasThicknessFilters(): boolean {
-        return this.thicknessFilters.length > 0;
+        return this.thicknessFilters.size > 0
     }
 
     hasWidthFilters(): boolean {
-        return this.widthFilters.length > 0;
+        return this.widthFilters.size > 0
     }
 
     hasLengthFilters(): boolean {
-        return this.lengthFilters.length > 0;
+        return this.lengthFilters.size > 0
     }
 
     getNumberOfActiveFilters(): number {
         return (
-            this.qualityFilters.length +
-            this.thicknessFilters.length +
-            this.widthFilters.length +
-            this.lengthFilters.length
-        );
+            this.qualityFilters.size +
+            this.thicknessFilters.size +
+            this.widthFilters.size +
+            this.lengthFilters.size
+        )
     }
 }

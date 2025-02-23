@@ -1,29 +1,104 @@
-import { ChipGroup, ChipItem, useListData, type Selection } from 'actify'
-import { SlotFiltersClass } from "../model/SlotFilter.ts";
+import {ChipGroup, ChipItem, type Selection} from 'actify'
+import {IntervalMmClass, SlotFiltersClass} from "../model/SlotFilter.ts";
 
 function Filters(props: {
     activeFilters: SlotFiltersClass,
     setActiveFilters: (value: (((prevState: SlotFiltersClass) => SlotFiltersClass) | SlotFiltersClass)) => void
 }) {
-    const { activeFilters, setActiveFilters } = props;
+    const {activeFilters, setActiveFilters} = props;
 
     const allFilters = SlotFiltersClass.ALL
 
-    const handleDelete = (filterType: keyof SlotFiltersClass, value: string | number) => {
-        setActiveFilters(prevState => {
-            const newFilters = new SlotFiltersClass(
-                prevState.qualityFilters,
-                prevState.thicknessFilters,
-                prevState.widthFilters,
-                prevState.lengthFilters
-            );
+    function handleQualityFilterSelect(value: Selection) {
 
-            if (Array.isArray(newFilters[filterType])) {
-                newFilters[filterType] = (newFilters[filterType] as (string | number)[]).filter((item: string | number) => item !== value);
+        const valueSet = new Set<string>()
+        for (const item of value) {
+            valueSet.add(item as string)
+        }
+
+        setActiveFilters(prevState => {
+                const newFilters = new SlotFiltersClass(
+                    prevState.qualityFilters,
+                    prevState.thicknessFilters,
+                    prevState.widthFilters,
+                    prevState.lengthFilters
+                )
+
+                newFilters.qualityFilters = valueSet
+
+                return newFilters
             }
-            return newFilters;
-        });
-    };
+        )
+    }
+
+    function handleThicknessFilterSelect(value: Selection) {
+
+        const valueSet = new Set<number>()
+        for (const item of value) {
+            valueSet.add(item as number)
+        }
+
+        setActiveFilters(prevState => {
+                const newFilters = new SlotFiltersClass(
+                    prevState.qualityFilters,
+                    prevState.thicknessFilters,
+                    prevState.widthFilters,
+                    prevState.lengthFilters
+                )
+
+                newFilters.thicknessFilters = valueSet
+
+                return newFilters
+            }
+        )
+    }
+
+    function handleWidthFilterSelect(value: Selection) {
+
+        const valueSet = new Set<number>()
+        for (const item of value) {
+            valueSet.add(item as number)
+        }
+
+        setActiveFilters(prevState => {
+                const newFilters = new SlotFiltersClass(
+                    prevState.qualityFilters,
+                    prevState.thicknessFilters,
+                    prevState.widthFilters,
+                    prevState.lengthFilters
+                )
+
+                newFilters.widthFilters = valueSet
+
+                return newFilters
+            }
+        )
+    }
+
+    function handleLengthFilterSelect(value: Selection) {
+
+        const valueSet = new Set<IntervalMmClass>()
+        for (const possibleInterval of allFilters.lengthFilters) {
+            for (const item of value) {
+                if (possibleInterval.toString() === item)
+                    valueSet.add(possibleInterval)
+            }
+        }
+
+        setActiveFilters(prevState => {
+                const newFilters = new SlotFiltersClass(
+                    prevState.qualityFilters,
+                    prevState.thicknessFilters,
+                    prevState.widthFilters,
+                    prevState.lengthFilters
+                )
+
+                newFilters.lengthFilters = valueSet
+
+                return newFilters
+            }
+        )
+    }
 
     return (
         <div>
@@ -31,42 +106,50 @@ function Filters(props: {
             <ChipGroup
                 label="Filtr kvality"
                 selectionMode="multiple"
+                selectedKeys={activeFilters.qualityFilters}
+                onSelectionChange={handleQualityFilterSelect}
             >
-            {allFilters.qualityFilters.map((filter) => (
-                <ChipItem
-                    key={filter}
-                >{filter}</ChipItem>
-            ))}
+                {Array.from(allFilters.qualityFilters).map((filter) => (
+                    <ChipItem
+                        key={filter}
+                    >{filter}</ChipItem>
+                ))}
             </ChipGroup>
             <ChipGroup
                 label="Filtr tloušťky"
                 selectionMode="multiple"
+                selectedKeys={activeFilters.thicknessFilters}
+                onSelectionChange={handleThicknessFilterSelect}
             >
-            {allFilters.thicknessFilters.map((filter) => (
-                <ChipItem
-                    key={filter}
-                >{filter} mm</ChipItem>
-            ))}
+                {Array.from(allFilters.thicknessFilters).map((filter) => (
+                    <ChipItem
+                        key={filter}
+                    >{filter} mm</ChipItem>
+                ))}
             </ChipGroup>
             <ChipGroup
                 label="Filtr šířky"
                 selectionMode="multiple"
+                selectedKeys={activeFilters.widthFilters}
+                onSelectionChange={handleWidthFilterSelect}
             >
-            {allFilters.widthFilters.map((filter) => (
-                <ChipItem
-                    key={filter}
-                >{filter} mm</ChipItem>
-            ))}
+                {Array.from(allFilters.widthFilters).map((filter) => (
+                    <ChipItem
+                        key={filter}
+                    >{filter} mm</ChipItem>
+                ))}
             </ChipGroup>
             <ChipGroup
                 label="Filtr délky"
                 selectionMode="multiple"
+                selectedKeys={Array.from(activeFilters.lengthFilters).map(interval => interval.toString())}
+                onSelectionChange={handleLengthFilterSelect}
             >
-            {allFilters.lengthFilters.map((filter) => (
-                <ChipItem
-                    key={`${filter.start}-${filter.end}`}
-                >{filter.start} - {filter.end} mm</ChipItem>
-            ))}
+                {Array.from(allFilters.lengthFilters).map((filter) => (
+                    <ChipItem
+                        key={`${filter.start}-${filter.end}`}
+                    >{filter.start} - {filter.end} mm</ChipItem>
+                ))}
             </ChipGroup>
         </div>
     );

@@ -1,5 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { SlotAction } from "./SlotAction";
+import {getLastSlotAction} from "../hooks/useFirestore.ts";
 
 export interface WarehouseSlot {
     productId: string;
@@ -16,21 +17,29 @@ export class WarehouseSlotClass implements WarehouseSlot {
     productId: string;
     quantity: number;
     slotActions: SlotAction[];
+    lastModified?: Timestamp | null;
     quality?: string | null;
     width?: number | null;
     thickness?: number | null;
     length?: number | null;
-    lastModified?: Timestamp | null;
+    lastSlotAction?: string | null = "Žádná akce";
+    lastSlotQuantityChange?: number | null = null;
 
     constructor(id: string, data: Partial<WarehouseSlot>) {
         this.productId = id || "";
         this.quantity = data.quantity != null ? data.quantity : 0;
         this.slotActions = data.slotActions != null ? data.slotActions : [];
+        this.lastModified = data.lastModified || null;
         this.quality = data.quality || null;
         this.width = data.width || null;
         this.thickness = data.thickness || null;
         this.length = data.length || null;
-        this.lastModified = data.lastModified || null;
+    }
+
+    async fetchLastAction() {
+        const action = await getLastSlotAction(this.productId);
+        this.lastSlotAction = action?.action || "Žádná akce";
+        this.lastSlotQuantityChange = action?.quantityChange || 0;
     }
 
     parsePropertiesFromProductId(): WarehouseSlotClass {

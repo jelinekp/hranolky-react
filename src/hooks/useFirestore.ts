@@ -4,15 +4,21 @@ import {db} from "../firebase"
 import {WarehouseSlotClass} from "../model/WarehouseSlot.ts"
 import {SlotActionClass} from "../model/SlotAction.ts"
 
-export const useFirestore = (collectionName: string) => {
+export const useFirestore = (warehouseSlots: string) => {
     const [data, setData] = useState<WarehouseSlotClass[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const querySnapshot = await getDocs(collection(db, collectionName))
+                const querySnapshot = await getDocs(collection(db, warehouseSlots))
                 const items = querySnapshot.docs.map((doc=> new WarehouseSlotClass(doc.id, doc.data()).parsePropertiesFromProductId()))
+
+                // Fetch last action for each item asynchronously
+                await Promise.all(items.map(async (item) => {
+                    await item.fetchLastAction(); // Ensure fetchLastAction completes
+                }));
+
                 setData(items)
             } catch (error) {
                 console.error("Error fetching Firestore data:", error)
@@ -22,7 +28,7 @@ export const useFirestore = (collectionName: string) => {
         }
 
         fetchData()
-    }, [collectionName])
+    }, [warehouseSlots])
 
     return { warehouseSlots: data, loading }
 };
