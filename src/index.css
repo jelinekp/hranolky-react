@@ -1,7 +1,6 @@
 @import "tailwindcss";
 
 :root {
-  font-family: 'GTWalsheimPro', Verdana, sans-serif !important;
   line-height: 1.5;
   font-weight: 400;
 
@@ -26,7 +25,6 @@ a:hover {
 }
 
 body {
-  font-family: 'GTWalsheimPro', Verdana, sans-serif !important;
   margin: 0;
   display: flex;
   place-items: center;
@@ -58,18 +56,20 @@ h3 {
 
 button {
   border-radius: 8px;
-  border: 1px solid transparent;
+  border: 1px solid rgb(64 54 32);
   padding: 0.6em 1.2em;
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
   cursor: pointer;
-  transition: border-color 0.25s;
+  background-color: transparent;
+  transition: background-color 0.25s;
 }
+
 button:hover {
-  border-color: #646cff;
+  background-color: var(--color-primary);
 }
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;

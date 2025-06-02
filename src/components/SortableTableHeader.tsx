@@ -4,25 +4,25 @@ import { faArrowUpAZ, faArrowUpZA, faArrowUp91, faArrowUp19, faArrowUpWideShort 
 import { SortingBy, SortingOrder } from "./WarehouseSlotList";
 
 interface SortableTableHeaderProps {
-    label: string;
-    sortingBy: SortingBy;
-    currentSortingBy: SortingBy;
-    sortingOrder: SortingOrder;
-    setSortingByAndOrder: (sortingBy: SortingBy) => void;
+    label: string
+    sortingBy: SortingBy
+    currentSortingBy: SortingBy
+    sortingOrder: SortingOrder
+    setSortingByAndOrder: (sortingBy: SortingBy) => void
 }
 
 const SortableTableHeader: React.FC<SortableTableHeaderProps> = ({ label, sortingBy, currentSortingBy, sortingOrder, setSortingByAndOrder }) => {
-    const isActive = currentSortingBy === sortingBy;
+    const isActive = currentSortingBy === sortingBy
     const icon = isActive
         ? (sortingOrder === SortingOrder.desc ? (sortingBy === SortingBy.quality || sortingBy === SortingBy.lastAction ? faArrowUpAZ : faArrowUp91) : (sortingBy === SortingBy.quality || sortingBy === SortingBy.lastAction ? faArrowUpZA : faArrowUp19))
-        : faArrowUpWideShort;
+        : faArrowUpWideShort
 
     return (
-        <th onClick={() => setSortingByAndOrder(sortingBy)} className="leading-8 pr-2 cursor-pointer font-medium hover:text-[var(--color-primary)]">
+        <th onClick={() => setSortingByAndOrder(sortingBy)} className={`leading-8 pr-2 cursor-pointer hover:text-[var(--color-primary)] ${isActive ? 'font-bold' : 'font-medium'}`}>
             {label}
             <FontAwesomeIcon icon={icon} />
         </th>
-    );
-};
+    )
+}
 
-export default SortableTableHeader;
+export default SortableTableHeader

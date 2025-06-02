@@ -1,9 +1,9 @@
 import React from "react";
-import {useFirestore} from "./hooks/useFirestore";
+import {useFetchAllWarehouseSlots} from "./hooks/useFetchAllWarehouseSlots.ts";
 import WarehouseSlotsList from "./components/WarehouseSlotList.tsx";
 
 const App: React.FC = () => {
-    const {warehouseSlots, loading} = useFirestore("WarehouseSlots"); // Replace "users" with your Firestore collection
+    const {warehouseSlots, loading} = useFetchAllWarehouseSlots("WarehouseSlots");
 
     return (
         <div className={"m-6 container min-h-screen"}>

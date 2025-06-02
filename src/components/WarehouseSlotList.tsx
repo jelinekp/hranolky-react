@@ -1,9 +1,9 @@
 import {useState} from "react";
-import {formatCsDate} from "./FormatDate.ts";
 import {WarehouseSlotClass} from "../model/WarehouseSlot.ts";
 import {SlotFiltersClass} from "../model/SlotFilter.ts";
 import Filters from "./Filters.tsx";
 import SortableTableHeader from "./SortableTableHeader";
+import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
 
 export enum SortingBy {
     quality,
@@ -78,35 +78,50 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
     sortingOrder: SortingOrder,
     setSortingByAndOrder: (sortingBy: SortingBy) => void
 }) {
+    const filteredSlots = warehouseSlots.filter((slot) => {
+        if (activeFilters.isEmpty()) {
+            return true;
+        }
+
+        const matchesQuality = activeFilters.qualityFilters.size === 0 || activeFilters.qualityFilters.has(slot.quality ?? "");
+        const matchesThickness = activeFilters.thicknessFilters.size === 0 || activeFilters.thicknessFilters.has(slot.thickness ?? 0);
+        const matchesWidth = activeFilters.widthFilters.size === 0 || activeFilters.widthFilters.has(slot.width ?? 0);
+        const matchesLength = activeFilters.lengthFilters.size === 0 || Array.from(activeFilters.lengthFilters).some(interval => interval.contains(slot.length ?? 0));
+
+        return matchesQuality && matchesThickness && matchesWidth && matchesLength;
+    });
+
+    const quantitySum = filteredSlots.reduce((sum, slot) => sum + slot.quantity, 0);
+    const volumeSum = filteredSlots.reduce((sum, slot) => sum + (slot.getVolume() ?? 0), 0);
+
     return (
         <table>
             <thead>
             <tr>
-                <SortableTableHeader label="Kvalita" sortingBy={SortingBy.quality} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Tloušťka" sortingBy={SortingBy.thickness} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Šířka" sortingBy={SortingBy.width} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Délka" sortingBy={SortingBy.length} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Množství" sortingBy={SortingBy.quantity} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Objem m³" sortingBy={SortingBy.volume} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Naposledy změněno" sortingBy={SortingBy.lastModified} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Poslední akce" sortingBy={SortingBy.lastAction} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
-                <SortableTableHeader label="Poslední změna" sortingBy={SortingBy.lastChange} currentSortingBy={sortingBy} sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder} />
+                <SortableTableHeader label="Kvalita" sortingBy={SortingBy.quality} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Tloušťka" sortingBy={SortingBy.thickness} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Šířka" sortingBy={SortingBy.width} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Délka" sortingBy={SortingBy.length} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Množství" sortingBy={SortingBy.quantity} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Objem m³" sortingBy={SortingBy.volume} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Naposledy změněno" sortingBy={SortingBy.lastModified}
+                                     currentSortingBy={sortingBy} sortingOrder={sortingOrder}
+                                     setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Poslední akce" sortingBy={SortingBy.lastAction} currentSortingBy={sortingBy}
+                                     sortingOrder={sortingOrder} setSortingByAndOrder={setSortingByAndOrder}/>
+                <SortableTableHeader label="Poslední změna" sortingBy={SortingBy.lastChange}
+                                     currentSortingBy={sortingBy} sortingOrder={sortingOrder}
+                                     setSortingByAndOrder={setSortingByAndOrder}/>
             </tr>
             </thead>
             <tbody>
-            {warehouseSlots
-                .filter((slot) => {
-                    if (activeFilters.isEmpty()) {
-                        return true
-                    }
-
-                    const matchesQuality = activeFilters.qualityFilters.size === 0 || activeFilters.qualityFilters.has(slot.quality ?? "")
-                    const matchesThickness = activeFilters.thicknessFilters.size === 0 || activeFilters.thicknessFilters.has(slot.thickness ?? 0)
-                    const matchesWidth = activeFilters.widthFilters.size === 0 || activeFilters.widthFilters.has(slot.width ?? 0)
-                    const matchesLength = activeFilters.lengthFilters.size === 0 || Array.from(activeFilters.lengthFilters).some(interval => interval.contains(slot.length ?? 0))
-
-                    return matchesQuality && matchesThickness && matchesWidth && matchesLength;
-                })
+            {filteredSlots
                 .sort((a, b) => {
                     if (sortingBy === SortingBy.quality) {
                         if (a.quality?.localeCompare && b.quality?.localeCompare) {
@@ -159,27 +174,23 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
                     return 0;
                 })
                 .map((slot) => (
-                    <WarehouseSlotItem key={slot.productId} slot={slot}/>
-                ))}
+                    <WarehouseSlotItem key={slot.productId} slot={slot} sortingBy={sortingBy}/>
+                ))
+            }
+            <tr className="font-bold">
+                <td className="pl-2">Součet:</td>
+                <td/>
+                <td/>
+                <td/>
+                <td>{quantitySum}</td>
+                <td>{volumeSum.toFixed(3)}</td>
+                <td/>
+                <td/>
+                <td/>
+            </tr>
             </tbody>
         </table>
     )
 }
 
-function WarehouseSlotItem({slot}: { slot: WarehouseSlotClass }) {
-    return (
-        <tr className=" odd:bg-[var(--md-rgb-color-surface)] even:bg-[var(--md-rgb-color-surface-variant)]">
-            <td className="pl-2 leading-8">{slot.quality}</td>
-            <td>{slot.thickness}</td>
-            <td>{slot.width}</td>
-            <td>{slot.length}</td>
-            <td>{slot.quantity}</td>
-            <td>{slot.getVolume()?.toFixed(3)}</td>
-            <td>{formatCsDate(slot.lastModified?.toDate())}</td>
-            <td>{slot.lastSlotAction ?? ""}</td>
-            <td>{slot.lastSlotQuantityChange ?? ""}</td>
-        </tr>
-    );
-}
-
-export default WarehouseSlotsList;
+export default WarehouseSlotsList
