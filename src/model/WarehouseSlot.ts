@@ -1,10 +1,13 @@
 import { Timestamp } from "firebase/firestore";
 import { SlotAction } from "./SlotAction";
+import { SlotType } from "./SlotType";
+
 
 export interface WarehouseSlot {
     productId: string;
     quantity: number;
     slotActions?: SlotAction[];
+    type: SlotType;
     quality?: string | null;
     width?: number | null;
     thickness?: number | null;
@@ -16,6 +19,7 @@ export class WarehouseSlotClass implements WarehouseSlot {
     productId: string;
     quantity: number;
     slotActions: SlotAction[];
+    type: SlotType;
     lastModified?: Timestamp | null;
     quality?: string | null;
     width?: number | null;
@@ -28,6 +32,7 @@ export class WarehouseSlotClass implements WarehouseSlot {
         this.productId = id || "";
         this.quantity = data.quantity != null ? data.quantity : 0;
         this.slotActions = data.slotActions != null ? data.slotActions : [];
+        this.type = data.type != null ? data.type : SlotType.Beam;
         this.lastModified = data.lastModified || null;
         this.quality = data.quality || null;
         this.width = data.width || null;

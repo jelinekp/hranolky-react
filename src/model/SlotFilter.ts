@@ -1,3 +1,5 @@
+import {SlotType} from "./SlotType";
+
 interface IntervalMm {
     start: number
     end: number
@@ -25,6 +27,7 @@ export class IntervalMmClass implements IntervalMm {
 }
 
 interface SlotFilters {
+    typeFilters: Set<SlotType>
     qualityFilters: Set<string>
     thicknessFilters: Set<number>
     widthFilters: Set<number>
@@ -32,13 +35,15 @@ interface SlotFilters {
 }
 
 export class SlotFiltersClass implements SlotFilters {
+    typeFilters: Set<SlotType>
     qualityFilters: Set<string>
     thicknessFilters: Set<number>
     widthFilters: Set<number>
     lengthFilters: Set<IntervalMmClass>
 
-    static EMPTY: SlotFiltersClass = new SlotFiltersClass(new Set(), new Set(), new Set(), new Set());
+    static EMPTY: SlotFiltersClass = new SlotFiltersClass(new Set(), new Set(), new Set(), new Set(), new Set());
     static ALL: SlotFiltersClass = new SlotFiltersClass(
+        new Set([SlotType.Beam, SlotType.Jointer]),
         new Set(["DUB-A", "DUB-R"]),
         new Set([20, 27.4, 42.4]),
         new Set([42.4, 50, 70]),
@@ -50,11 +55,13 @@ export class SlotFiltersClass implements SlotFilters {
     );
 
     constructor(
+        typeFilters: Set<SlotType>,
         qualityFilters: Set<string>,
         thicknessFilters: Set<number>,
         widthFilters: Set<number>,
         lengthFilters: Set<({ start: number; end: number })>
     ) {
+        this.typeFilters = typeFilters;
         this.qualityFilters = qualityFilters
         this.thicknessFilters = thicknessFilters
         this.widthFilters = widthFilters
