@@ -20,6 +20,7 @@ function Filters(props: {
 
         setActiveFilters(prevState => {
                 const newFilters = new SlotFiltersClass(
+                    prevState.typeFilters,
                     prevState.qualityFilters,
                     prevState.thicknessFilters,
                     prevState.widthFilters,
@@ -42,6 +43,7 @@ function Filters(props: {
 
         setActiveFilters(prevState => {
                 const newFilters = new SlotFiltersClass(
+                    prevState.typeFilters,
                     prevState.qualityFilters,
                     prevState.thicknessFilters,
                     prevState.widthFilters,
@@ -64,6 +66,7 @@ function Filters(props: {
 
         setActiveFilters(prevState => {
                 const newFilters = new SlotFiltersClass(
+                    prevState.typeFilters,
                     prevState.qualityFilters,
                     prevState.thicknessFilters,
                     prevState.widthFilters,
@@ -89,6 +92,7 @@ function Filters(props: {
 
         setActiveFilters(prevState => {
                 const newFilters = new SlotFiltersClass(
+                    prevState.typeFilters,
                     prevState.qualityFilters,
                     prevState.thicknessFilters,
                     prevState.widthFilters,

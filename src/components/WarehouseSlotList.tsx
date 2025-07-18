@@ -4,6 +4,8 @@ import {SlotFiltersClass} from "../model/SlotFilter.ts";
 import Filters from "./Filters.tsx";
 import SortableTableHeader from "./SortableTableHeader";
 import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
+import TableSkeleton from "./TableSkeleton.tsx";
+import Informations from "./Informations.tsx";
 
 export enum SortingBy {
     quality,
@@ -57,15 +59,21 @@ function WarehouseSlotsList(
         <div className={"flex flex-row flex-wrap-reverse gap-6 items-end"}>
             <div className={"bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg"}>
                 {props.loading ? (
-                    <p>Loading...</p>) : (
+                    <TableSkeleton/>
+                ) : (
                     <SlotsTable warehouseSlots={props.warehouseSlots} activeFilters={activeFilters}
                                 sortingBy={sortingBy}
                                 sortingOrder={sortingOrder}
                                 setSortingByAndOrder={setSortingByAndOrder}/>
                 )}
             </div>
-            <div className={"bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg"}>
-                <Filters activeFilters={activeFilters} setActiveFilters={setActiveFilters}/>
+            <div className={"flex flex-col gap-6"}>
+                <div className={"bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg"}>
+                    <Filters activeFilters={activeFilters} setActiveFilters={setActiveFilters}/>
+                </div>
+                <div className={"bg-[var(--color-bg-01)] p-8 rounded-3xl max-w-113 shadow-lg"}>
+                    <Informations/>
+                </div>
             </div>
         </div>
     )
