@@ -12,9 +12,17 @@ interface WarehouseSlotItemProps {
 }
 
 const WarehouseSlotItem: React.FC<WarehouseSlotItemProps> = ({ slot, sortingBy, isExpanded, onToggle }) => {
+
+    const getBackgroundClass = () => {
+        if (isExpanded) {
+            return 'bg-[var(--md-rgb-color-surface-container)]';
+        }
+        return 'odd:bg-[var(--md-rgb-color-surface)] even:bg-[var(--md-rgb-color-surface-variant)]';
+    };
+
     return (
         <tr
-            className={`odd:bg-[var(--md-rgb-color-surface)] even:bg-[var(--md-rgb-color-surface-variant)] cursor-pointer hover:bg-[var(--md-rgb-color-surface-container)] ${isExpanded ? 'bg-[var(--md-rgb-color-surface-container)]' : ''}`}
+            className={`${getBackgroundClass()} cursor-pointer hover:bg-[var(--md-rgb-color-surface-container)] transition-colors duration-150`}
             onClick={onToggle}
         >
             <td className={`pl-2 leading-8 ${sortingBy === SortingBy.quality ? 'font-medium' : ''}`}>{slot.quality}</td>

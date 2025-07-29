@@ -89,10 +89,21 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
     setSortingByAndOrder: (sortingBy: SortingBy) => void
 }) {
     const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null);
+    const [closingSlotId, setClosingSlotId] = useState<string | null>(null);
     const {slotActions, loading: actionsLoading} = useFetchSlotActions(expandedSlotId);
 
     const handleSlotToggle = (slotId: string) => {
-        setExpandedSlotId(expandedSlotId === slotId ? null : slotId);
+        if (expandedSlotId === slotId) {
+            // Start closing animation
+            setClosingSlotId(slotId);
+            setTimeout(() => {
+                setExpandedSlotId(null);
+                setClosingSlotId(null);
+            }, 400); // Match animation duration
+        } else {
+            setExpandedSlotId(slotId);
+            setClosingSlotId(null);
+        }
     };
 
     const filteredSlots = warehouseSlots.filter((slot) => {
@@ -191,7 +202,11 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
                     return 0;
                 })
                 .flatMap((slot) => {
+
                     const isExpanded = expandedSlotId === slot.productId;
+                    const isClosing = closingSlotId === slot.productId;
+                    const shouldShowActions = isExpanded || isClosing;
+
                     return [
                         <WarehouseSlotItem
                             key={slot.productId}
@@ -200,11 +215,12 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
                             isExpanded={isExpanded}
                             onToggle={() => handleSlotToggle(slot.productId)}
                         />,
-                        ...(isExpanded ? [
+                        ...(shouldShowActions ? [
                             <SlotActionsRow
                                 key={`${slot.productId}-actions`}
                                 actions={slotActions}
                                 loading={actionsLoading}
+                                isClosing={isClosing}
                             />
                         ] : [])
                     ];

@@ -1,1 +1,39 @@
-:root,:host{--md-sys-color-background:22 19 16;--md-sys-color-on-background:234 225 219;--md-sys-color-surface:22 19 16;--md-sys-color-surface-dim:22 19 16;--md-sys-color-surface-bright:61 56 53;--md-sys-color-surface-container-lowest:17 14 11;--md-sys-color-surface-container-low:31 27 24;--md-sys-color-surface-container:35 31 28;--md-sys-color-surface-container-high:45 41 38;--md-sys-color-surface-container-highest:56 52 48;--md-sys-color-on-surface:234 225 219;--md-sys-color-surface-variant:79 69 60;--md-sys-color-on-surface-variant:211 196 184;--md-sys-color-inverse-surface:234 225 219;--md-sys-color-inverse-on-surface:52 48 44;--md-sys-color-outline:156 142 131;--md-sys-color-outline-variant:79 69 60;--md-sys-color-shadow:0 0 0;--md-sys-color-scrim:0 0 0;--md-sys-color-surface-tint:236 190 147;--md-sys-color-primary:237 191 148;--md-sys-color-on-primary:70 42 10;--md-sys-color-primary-container:193 151 110;--md-sys-color-on-primary-container:31 14 0;--md-sys-color-inverse-primary:122 87 52;--md-sys-color-secondary:219 194 173;--md-sys-color-on-secondary:61 45 31;--md-sys-color-secondary-container:75 59 43;--md-sys-color-on-secondary-container:230 205 184;--md-sys-color-tertiary:198 203 151;--md-sys-color-on-tertiary:47 51 13;--md-sys-color-tertiary-container:157 162 114;--md-sys-color-on-tertiary-container:16 19 0;--md-sys-color-error:255 180 171;--md-sys-color-on-error:105 0 5;--md-sys-color-error-container:147 0 10;--md-sys-color-on-error-container:255 218 214;}
+:root, :host {
+    --md-sys-color-background: 22 19 16;
+    --md-sys-color-on-background: 234 225 219;
+    --md-sys-color-surface: 22 19 16;
+    --md-sys-color-surface-dim: 22 19 16;
+    --md-sys-color-surface-bright: 61 56 53;
+    --md-sys-color-surface-container-lowest: 17 14 11;
+    --md-sys-color-surface-container-low: 31 27 24;
+    --md-sys-color-surface-container: 35 31 28;
+    --md-sys-color-surface-container-high: 45 41 38;
+    --md-sys-color-surface-container-highest: 56 52 48;
+    --md-sys-color-on-surface: 234 225 219;
+    --md-sys-color-surface-variant: 79 69 60;
+    --md-sys-color-on-surface-variant: 211 196 184;
+    --md-sys-color-inverse-surface: 234 225 219;
+    --md-sys-color-inverse-on-surface: 52 48 44;
+    --md-sys-color-outline: 156 142 131;
+    --md-sys-color-outline-variant: 79 69 60;
+    --md-sys-color-shadow: 0 0 0;
+    --md-sys-color-scrim: 0 0 0;
+    --md-sys-color-surface-tint: 236 190 147;
+    --md-sys-color-primary: 237 191 148;
+    --md-sys-color-on-primary: 70 42 10;
+    --md-sys-color-primary-container: 193 151 110;
+    --md-sys-color-on-primary-container: 31 14 0;
+    --md-sys-color-inverse-primary: 122 87 52;
+    --md-sys-color-secondary: 219 194 173;
+    --md-sys-color-on-secondary: 61 45 31;
+    --md-sys-color-secondary-container: 75 59 43;
+    --md-sys-color-on-secondary-container: 230 205 184;
+    --md-sys-color-tertiary: 198 203 151;
+    --md-sys-color-on-tertiary: 47 51 13;
+    --md-sys-color-tertiary-container: 157 162 114;
+    --md-sys-color-on-tertiary-container: 16 19 0;
+    --md-sys-color-error: 255 180 171;
+    --md-sys-color-on-error: 105 0 5;
+    --md-sys-color-error-container: 147 0 10;
+    --md-sys-color-on-error-container: 255 218 214;
+}

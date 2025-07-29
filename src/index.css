@@ -87,3 +87,25 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@keyframes slideDown {
+  from {
+    height: 0;
+    transform: scaleY(0);
+  }
+  to {
+    height: 90px;
+    transform: scaleY(1);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    height: 90px;
+    transform: scaleY(1);
+  }
+  to {
+    height: 0;
+    transform: scaleY(0);
+  }
+}
