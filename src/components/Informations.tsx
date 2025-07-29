@@ -7,10 +7,10 @@ function Informations() {
                      Stránku netřeba aktualizovat (znovu načítat), data se aktualizují při každém pohybu okamžitě automaticky.
                </li>
                 <li>
-                    Zatím funguje filtrování a řazení vzestupně a sestupně klikáním na názvy sloupců.
+                    Řazení vzestupně a sestupně funguje kliknutím na názvy sloupců.
                 </li>
                <li>
-                   V budoucí verzi bude možné rozkliknout jednotlivé řádky a zobrazit historii pohybů.
+                   Jednotlivé řádky lze rozkliknout a zobrazit historii pohybů.
                </li>
            </ul>
         </div>

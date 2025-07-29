@@ -6,6 +6,8 @@ import SortableTableHeader from "./SortableTableHeader";
 import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
 import TableSkeleton from "./TableSkeleton.tsx";
 import Informations from "./Informations.tsx";
+import SlotActionsRow from "./SlotActionsRow.tsx";
+import {useFetchSlotActions} from "../hooks/useFetchSlotActions.ts";
 
 export enum SortingBy {
     quality,
@@ -86,6 +88,13 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
     sortingOrder: SortingOrder,
     setSortingByAndOrder: (sortingBy: SortingBy) => void
 }) {
+    const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null);
+    const {slotActions, loading: actionsLoading} = useFetchSlotActions(expandedSlotId);
+
+    const handleSlotToggle = (slotId: string) => {
+        setExpandedSlotId(expandedSlotId === slotId ? null : slotId);
+    };
+
     const filteredSlots = warehouseSlots.filter((slot) => {
         if (activeFilters.isEmpty()) {
             return true;
@@ -181,9 +190,25 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
                     }
                     return 0;
                 })
-                .map((slot) => (
-                    <WarehouseSlotItem key={slot.productId} slot={slot} sortingBy={sortingBy}/>
-                ))
+                .flatMap((slot) => {
+                    const isExpanded = expandedSlotId === slot.productId;
+                    return [
+                        <WarehouseSlotItem
+                            key={slot.productId}
+                            slot={slot}
+                            sortingBy={sortingBy}
+                            isExpanded={isExpanded}
+                            onToggle={() => handleSlotToggle(slot.productId)}
+                        />,
+                        ...(isExpanded ? [
+                            <SlotActionsRow
+                                key={`${slot.productId}-actions`}
+                                actions={slotActions}
+                                loading={actionsLoading}
+                            />
+                        ] : [])
+                    ];
+                })
             }
             <tr className="font-bold">
                 <td className="pl-2">Součet:</td>
