@@ -31,7 +31,8 @@ interface SlotFilters {
     qualityFilters: Set<string>
     thicknessFilters: Set<number>
     widthFilters: Set<number>
-    lengthFilters: Set<IntervalMmClass>
+    lengthIntervalFilters: Set<IntervalMmClass>
+    allLengthFilters: Set<number>
 }
 
 export class SlotFiltersClass implements SlotFilters {
@@ -39,19 +40,21 @@ export class SlotFiltersClass implements SlotFilters {
     qualityFilters: Set<string>
     thicknessFilters: Set<number>
     widthFilters: Set<number>
-    lengthFilters: Set<IntervalMmClass>
+    lengthIntervalFilters: Set<IntervalMmClass>
+    allLengthFilters: Set<number>
 
-    static EMPTY: SlotFiltersClass = new SlotFiltersClass(new Set(), new Set(), new Set(), new Set(), new Set());
+    static EMPTY: SlotFiltersClass = new SlotFiltersClass(new Set(), new Set(), new Set(), new Set(), new Set(), new Set());
     static ALL: SlotFiltersClass = new SlotFiltersClass(
         new Set([SlotType.Beam, SlotType.Jointer]),
         new Set(["DUB-A", "DUB-R"]),
         new Set([20, 27.4, 42.4]),
-        new Set([42.4, 50, 70]),
+        new Set([38, 40, 42.4, 50, 70]),
         new Set([
             { start: 0, end: 999 },
             { start: 1000, end: 1999 },
             { start: 2000, end: 2999 }
-        ])
+        ]),
+        new Set([1000, 2000, 3000])
     );
 
     constructor(
@@ -59,13 +62,15 @@ export class SlotFiltersClass implements SlotFilters {
         qualityFilters: Set<string>,
         thicknessFilters: Set<number>,
         widthFilters: Set<number>,
-        lengthFilters: Set<({ start: number; end: number })>
+        lengthFilters: Set<({ start: number; end: number })>,
+        allLengthFilters: Set<number>
     ) {
         this.typeFilters = typeFilters;
         this.qualityFilters = qualityFilters
         this.thicknessFilters = thicknessFilters
         this.widthFilters = widthFilters
-        this.lengthFilters = new Set(Array.from(lengthFilters).map(interval => new IntervalMmClass(interval.start, interval.end)))
+        this.lengthIntervalFilters = new Set(Array.from(lengthFilters).map(interval => new IntervalMmClass(interval.start, interval.end)))
+        this.allLengthFilters = allLengthFilters
     }
 
     isEmpty(): boolean {
@@ -73,7 +78,8 @@ export class SlotFiltersClass implements SlotFilters {
             this.qualityFilters.size === 0 &&
             this.thicknessFilters.size === 0 &&
             this.widthFilters.size === 0 &&
-            this.lengthFilters.size === 0
+            this.lengthIntervalFilters.size === 0 &&
+            this.allLengthFilters.size === 0
         );
     }
 
@@ -89,8 +95,12 @@ export class SlotFiltersClass implements SlotFilters {
         return this.widthFilters.size > 0
     }
 
-    hasLengthFilters(): boolean {
-        return this.lengthFilters.size > 0
+    hasLengthIntervalFilters(): boolean {
+        return this.lengthIntervalFilters.size > 0
+    }
+
+    hasAllLengthFilters(): boolean {
+        return this.allLengthFilters.size > 0
     }
 
     getNumberOfActiveFilters(): number {
@@ -98,7 +108,8 @@ export class SlotFiltersClass implements SlotFilters {
             this.qualityFilters.size +
             this.thicknessFilters.size +
             this.widthFilters.size +
-            this.lengthFilters.size
+            this.lengthIntervalFilters.size +
+            this.allLengthFilters.size
         )
     }
 }
