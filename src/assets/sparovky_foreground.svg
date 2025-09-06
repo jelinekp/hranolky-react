@@ -1,0 +1,133 @@
+<svg width="108" height="108" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+    <title id="title">Ikona spárovky (fast-food styl)</title>
+    <desc id="desc">Červený kelímek jako na hranolky, ze kterého vyjíždí lepená dubová spárovka s viditelnými lamelami a spárami.</desc>
+    <defs>
+        <!-- Stylově podobný zlatý přechod (odkaz na hranolky), použijeme na světla -->
+        <radialGradient id="grad1" cx="64.59" cy="-7.87" r="83.13" gradientUnits="userSpaceOnUse">
+            <stop offset="0.45" stop-color="#FCC216"/>
+            <stop offset="0.59" stop-color="#FABB16"/>
+            <stop offset="0.79" stop-color="#F3A814"/>
+            <stop offset="0.92" stop-color="#ED9913"/>
+        </radialGradient>
+
+        <!-- Červené přechody kelímku (vizuálně sladěné s vaší ikonou hranolků) -->
+        <linearGradient id="cupFace" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ff2a23"/>
+            <stop offset="1" stop-color="#dc0d25"/>
+        </linearGradient>
+        <linearGradient id="cupRim" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#ffffff" stop-opacity="0.65"/>
+            <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+        </linearGradient>
+
+        <!-- Dřevěné odstíny lamel (jemná variace mezi lamelami) -->
+        <linearGradient id="oakA" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#f2d3a1"/>
+            <stop offset="0.55" stop-color="#d8b57f"/>
+            <stop offset="1" stop-color="#bb8c56"/>
+        </linearGradient>
+        <linearGradient id="oakB" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#efcd98"/>
+            <stop offset="0.55" stop-color="#d2ad76"/>
+            <stop offset="1" stop-color="#b4824e"/>
+        </linearGradient>
+
+        <!-- Spára mezi lamelami -->
+        <linearGradient id="seam" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0"   stop-color="#5a4328" stop-opacity="0.10"/>
+            <stop offset="0.5" stop-color="#3b2a16" stop-opacity="0.35"/>
+            <stop offset="1"   stop-color="#5a4328" stop-opacity="0.10"/>
+        </linearGradient>
+
+        <!-- Lesk na desce (nahoře) -->
+        <linearGradient id="boardShine" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0"   stop-color="#ffffff" stop-opacity="0.45"/>
+            <stop offset="0.12" stop-color="#ffffff" stop-opacity="0.18"/>
+            <stop offset="0.4" stop-color="#ffffff" stop-opacity="0"/>
+        </linearGradient>
+
+        <!-- Stín -->
+        <filter id="shadow" x="-20%" y="-20%" width="160%" height="180%">
+            <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.22"/>
+        </filter>
+
+        <!-- Zaoblený klip pro desku -->
+        <clipPath id="boardClip">
+            <rect x="26" y="8" width="76" height="56" rx="8" ry="8"/>
+        </clipPath>
+    </defs>
+
+    <!-- CELÁ SCÉNA SE STÍNEM -->
+    <g filter="url(#shadow)">
+        <!-- SPÁROVKA VYČUHOVANÁ Z KELÍMKU -->
+        <!-- rám desky -->
+        <rect x="26" y="8" width="76" height="56" rx="8" ry="8" fill="#e3c18a" stroke="#6b4b24" stroke-width="1.2"/>
+
+        <!-- obsah desky: lamely + spáry + kresba -->
+        <g clip-path="url(#boardClip)">
+            <!-- lamely: 6 ks, spára ~2 px -->
+            <!-- LAMELA 1 -->
+            <rect x="26" y="8" width="11" height="56" fill="url(#oakA)"/>
+            <rect x="37" y="8" width="2" height="56" fill="url(#seam)"/>
+            <!-- LAMELA 2 -->
+            <rect x="39" y="8" width="11" height="56" fill="url(#oakB)"/>
+            <rect x="50" y="8" width="2" height="56" fill="url(#seam)"/>
+            <!-- LAMELA 3 -->
+            <rect x="52" y="8" width="11" height="56" fill="url(#oakA)"/>
+            <rect x="63" y="8" width="2" height="56" fill="url(#seam)"/>
+            <!-- LAMELA 4 -->
+            <rect x="65" y="8" width="11" height="56" fill="url(#oakB)"/>
+            <rect x="76" y="8" width="2" height="56" fill="url(#seam)"/>
+            <!-- LAMELA 5 -->
+            <rect x="78" y="8" width="11" height="56" fill="url(#oakA)"/>
+            <rect x="89" y="8" width="2" height="56" fill="url(#seam)"/>
+            <!-- LAMELA 6 -->
+            <rect x="91" y="8" width="11" height="56" fill="url(#oakB)"/>
+
+            <!-- jemná kresba (obloučky jako letokruhy) -->
+            <g opacity="0.25" stroke="#7d5830" stroke-linecap="round" fill="none">
+                <path d="M30 16 C 36 10, 40 24, 34 30 S 40 42, 32 48" stroke-width="1.4"/>
+                <path d="M44 14 C 50 8, 56 22, 48 28 S 54 40, 46 46" stroke-width="1.3"/>
+                <path d="M58 20 C 64 14, 68 26, 60 34 S 66 46, 58 52" stroke-width="1.3"/>
+                <path d="M72 18 C 78 12, 84 26, 76 32 S 82 44, 74 50" stroke-width="1.2"/>
+                <path d="M86 22 C 92 16, 96 28, 90 36 S 96 48, 88 52" stroke-width="1.2"/>
+            </g>
+
+            <!-- horní jemný lesk -->
+            <rect x="26" y="8" width="76" height="16" fill="url(#boardShine)"/>
+        </g>
+
+        <!-- horní obrys desky (čistý řez) -->
+        <rect x="26" y="8" width="76" height="56" rx="8" ry="8" fill="none" stroke="#60421e" stroke-opacity="0.55" stroke-width="0.8"/>
+
+        <!-- KELÍMEK (červený), do kterého je deska zasunutá -->
+        <!-- tělo kelímku -->
+        <path d="M26,60
+             C26,60 36,56 64,56
+             C92,56 102,60 102,60
+             L94,112
+             C94,112 81,114 64,114
+             C47,114 34,112 34,112
+             Z"
+              fill="url(#cupFace)"/>
+
+        <!-- orámování a tvarování -->
+        <path d="M26,60
+             C26,60 36,56 64,56
+             C92,56 102,60 102,60"
+              fill="none" stroke="url(#cupRim)" stroke-width="3"/>
+
+        <!-- světelný pruh na kelímku (jemný, zlatý odkaz na hranolky) -->
+        <path d="M38,66 C40,80 40,98 38,108
+             C44,109 48,110 54,111
+             C56,93 56,75 54,60
+             C48,59 44,60 38,66 Z"
+              fill="url(#grad1)" opacity="0.18"/>
+
+        <!-- spodní linka a obrys -->
+        <path d="M34,112 C34,112 47,114 64,114 C81,114 94,112 94,112"
+              fill="none" stroke="#a10e1b" stroke-width="1.2" opacity="0.9"/>
+        <path d="M26,60 L34,112 M102,60 L94,112"
+              fill="none" stroke="#a10e1b" stroke-width="1" opacity="0.6"/>
+    </g>
+</svg>
