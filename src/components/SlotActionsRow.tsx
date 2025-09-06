@@ -45,7 +45,7 @@ const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClos
                                         {action.quantityChange >= 0 ? '+' : ''}{action.quantityChange}
                                     </div>
                                     <div className="col-span-2 text-sm">
-                                        {action.userId}
+                                        {action.userId.substring(0, 3)}
                                     </div>
                                     <div className="col-span-3 text-sm text-gray-600">
                                         {formatCsDate(action.timestamp?.toDate())}
