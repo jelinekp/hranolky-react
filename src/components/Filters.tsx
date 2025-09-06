@@ -52,7 +52,7 @@ import {ChipGroup, ChipItem, type Selection} from 'actify'
                             newFilters.widthFilters = new Set(Array.from(value).map(item => parseFloat(item as string)));
                             break;
                         case 'lengthInterval':
-                            const intervalSet = new Set<IntervalMmClass>();
+                            { const intervalSet = new Set<IntervalMmClass>();
                             for (const possibleInterval of allFilters.lengthIntervalFilters) {
                                 for (const item of value) {
                                     if (possibleInterval.toString() === item) {
@@ -61,7 +61,7 @@ import {ChipGroup, ChipItem, type Selection} from 'actify'
                                 }
                             }
                             newFilters.lengthIntervalFilters = intervalSet;
-                            break;
+                            break; }
                         case 'allLength':
                             newFilters.allLengthFilters = new Set(Array.from(value).map(item => parseFloat(item as string)));
                             break;

@@ -1,22 +1,15 @@
-import React from "react";
-import {useFetchAllWarehouseSlots} from "./hooks/useFetchAllWarehouseSlots.ts";
-import WarehouseSlotsList from "./components/WarehouseSlotList.tsx";
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import Hranolky from './screens/Hranolky'
+import Sparovky from './screens/Sparovky'
 
-const App: React.FC = () => {
-    const {warehouseSlots, loading} = useFetchAllWarehouseSlots("WarehouseSlots");
-
+export default function App() {
     return (
-        <div className={"m-6 container min-h-screen"}>
-            <div className={"flex justify-between items-center"}>
-                <div className={"flex flex-row items-center gap-3"}>
-                    <img src="src/assets/ic_launcher.webp" alt="Hranolky icon" width="64" height="64"/>
-                    <h1>Hranolky</h1>
-                </div>
-                <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-8"/>
-            </div>
-            <WarehouseSlotsList warehouseSlots={warehouseSlots} loading={loading}/>
-        </div>
-    );
-};
-
-export default App;
+        <BrowserRouter basename="/app">
+            <Routes>
+                <Route path="/" element={<Navigate to="hranolky" replace />} />
+                <Route path="hranolky" element={<Hranolky />} />
+                <Route path="sparovky" element={<Sparovky />} />
+            </Routes>
+        </BrowserRouter>
+    )
+}

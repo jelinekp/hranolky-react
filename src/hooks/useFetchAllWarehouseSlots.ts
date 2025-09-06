@@ -1,51 +1,94 @@
 import {useEffect, useState} from "react"
-import {collection, getDocs, limit, orderBy, query, onSnapshot} from "firebase/firestore"
+import {
+    collection,
+    query,
+    where,
+    documentId,
+    onSnapshot,
+    orderBy,
+    limit,
+    Query
+} from "firebase/firestore"
 import {db} from "../firebase"
 import {WarehouseSlotClass} from "../model/WarehouseSlot.ts"
 import {SlotActionClass} from "../model/SlotAction.ts"
+import {SlotType} from "../model/SlotType.ts";
 
-export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string) => {
+export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slotType: SlotType) => {
     const [data, setData] = useState<WarehouseSlotClass[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        // Listen to the main WarehouseSlots collection
-        const warehouseSlotsRef = collection(db, warehouseSlotsCollection)
-        const unsubscribeWarehouseSlots = onSnapshot(warehouseSlotsRef, (snapshot) => {
+        let innerUnsubscribes: (() => void)[] = []
+
+        // 1. Define the base reference to the collection
+        const collectionRef = collection(db, warehouseSlotsCollection);
+        let warehouseSlotsQuery: Query;
+
+        // 2. Build the query with server-side filtering based on slotType
+        switch (slotType) {
+            case SlotType.Jointer:
+                warehouseSlotsQuery = query(collectionRef, where(documentId(), ">=", "S"), where(documentId(), "<", "T"));
+                break;
+
+            case SlotType.Beam:
+                warehouseSlotsQuery = query(collectionRef, where(documentId(), ">=", "D"), where(documentId(), "<", "I"));
+                break;
+
+            default:
+                // No filter applied, fetches all documents from the collection
+                warehouseSlotsQuery = query(collectionRef);
+                break;
+        }
+
+
+        const unsubscribeWarehouseSlots = onSnapshot(warehouseSlotsQuery, (snapshot) => {
+            // Clean previous inner subscriptions to prevent memory leaks
+            innerUnsubscribes.forEach((u) => u())
+            innerUnsubscribes = []
+
             const warehouseSlotsMap: Record<string, WarehouseSlotClass> = {}
 
             snapshot.docs.forEach((doc) => {
-                const slot = new WarehouseSlotClass(doc.id, doc.data()).parsePropertiesFromProductId()
-                warehouseSlotsMap[doc.id] = slot
+                const id = doc.id
+                const slot = new WarehouseSlotClass(id, doc.data()).parsePropertiesFromProductId()
+                warehouseSlotsMap[id] = slot
             });
 
-            // Listen for latest SlotAction for each slot
-            const unsubscribes: (() => void)[] = Object.keys(warehouseSlotsMap).map((slotId) => {
+            // Listen for the latest SlotAction for each slot returned by the query
+            innerUnsubscribes = Object.keys(warehouseSlotsMap).map((slotId) => {
                 const slotActionsRef = collection(db, warehouseSlotsCollection, slotId, "SlotActions")
                 const latestActionQuery = query(slotActionsRef, orderBy("timestamp", "desc"), limit(1))
 
                 return onSnapshot(latestActionQuery, (slotSnapshot) => {
+                    const slot = warehouseSlotsMap[slotId];
                     if (!slotSnapshot.empty) {
                         const latestAction = slotSnapshot.docs[0].data()
-                        warehouseSlotsMap[slotId].lastSlotAction = latestAction.action || "-"
-                        warehouseSlotsMap[slotId].lastSlotQuantityChange = latestAction.quantityChange || 0
+                        slot.lastSlotAction = latestAction.action || "-"
+                        slot.lastSlotQuantityChange = latestAction.quantityChange ?? 0
                     } else {
-                        warehouseSlotsMap[slotId].lastSlotAction = "-"
-                        warehouseSlotsMap[slotId].lastSlotQuantityChange = null
+                        slot.lastSlotAction = "-"
+                        slot.lastSlotQuantityChange = null
                     }
-                    // Update state when latest action changes
+                    // Update state when latest action changes. A new array is created from the map values.
                     setData(Object.values(warehouseSlotsMap))
-                    setLoading(false)
                 });
             });
 
-            return () => {
-                unsubscribes.forEach((unsubscribe) => unsubscribe());
-            };
+            // Set initial state and turn off loading indicator
+            setData(Object.values(warehouseSlotsMap))
+            setLoading(false)
+        }, (error) => {
+            console.error("Firebase query error:", error);
+            setLoading(false);
         });
 
-        return () => unsubscribeWarehouseSlots();
-    }, [warehouseSlotsCollection])
+        // Cleanup function runs when the component unmounts or dependencies change
+        return () => {
+            unsubscribeWarehouseSlots()
+            innerUnsubscribes.forEach((u) => u())
+        }
+    }, [warehouseSlotsCollection, slotType])
 
     return { warehouseSlots: data, loading }
 };
