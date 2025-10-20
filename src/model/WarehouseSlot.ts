@@ -40,6 +40,45 @@ export class WarehouseSlotClass implements WarehouseSlot {
         this.length = data.length || null;
     }
 
+    private getFullQualityName(parsedQuality: string | null) : string {
+        switch (parsedQuality) {
+            case null:
+                return "";
+            case "DUB-A|A":
+                return "DUB A/A";
+            case "DUB-A|B":
+                return "DUB A/B";
+            case "DUB-ABP":
+                return "DUB A/B-P";
+            case "DUB-RST":
+                return "DUB RUSTIK";
+            case "DUB-CNK":
+                return "DUB CINK";
+            case "DUB-RSC":
+                return "DUB RUSTIK CINK";
+            case "ZIR-ZIR":
+                return "ZIRBE";
+            case "ZIR-BMS":
+                return "ZIRBE MS";
+            case "ZIR-CNK":
+                return "ZIRBE CINK";
+            case "ZBD-BDC":
+                return "ZIRBE+BUK/DUB/BUK CINK/DUB CINK";
+            case "ZBD-CNK":
+                return "ZIRBE CINK+BUK/DUB/BUK CINK/DUB CINK";
+            case "BUK-BUK":
+                return "BUK";
+            case "BUK-CNK":
+                return "BUK CINK";
+            case "JSN-JSN":
+                return "JASAN";
+            case "KŠT-KŠT":
+                return "KAŠTAN";
+            default:
+                return parsedQuality;
+        }
+    }
+
     /**
      * Parses properties from the productId string to populate the object's attributes.
      * This logic is a direct translation of the provided Kotlin code.
@@ -51,31 +90,23 @@ export class WarehouseSlotClass implements WarehouseSlot {
         let type = "";
         let processedProductId = initialProductId;
 
-        // Determine the type and update productId, mirroring the Kotlin logic.
-        // If the ID starts with "H" or "S", we extract it as the type and
-        // remove the prefix (e.g., "H-") from the ID string before parsing.
         if (initialProductId.startsWith("H-") || initialProductId.startsWith("S-")) {
             type = initialProductId.substring(0, 1);
             processedProductId = initialProductId.substring(2);
         } else {
-            // No type prefix, so type is empty and product ID remains unchanged
             type = "";
             processedProductId = initialProductId;
         }
 
-
-        // Extract quality and split parts from the potentially modified product ID
-        const quality = processedProductId.substring(0, 5);
         const parts = processedProductId.split("-");
+        const quality = parts[0] + "-" + parts[1];
+        const fullQualityName = this.getFullQualityName(quality);
 
         if (parts.length < 5) {
             console.log(`Could not parse ID "${processedProductId}". Found only ${parts.length} parts.`);
-            return this; // Return the original object if parsing fails
+            return this;
         }
 
-        // --- Value Parsing and Mapping ---
-
-        // Map thickness based on specific raw values
         const rawThickness = parseFloat(parts[2]);
         let thickness;
         switch (rawThickness) {
@@ -92,35 +123,33 @@ export class WarehouseSlotClass implements WarehouseSlot {
                 thickness = rawThickness;
         }
 
-        // Map width based on specific raw values
         const rawWidth = parseFloat(parts[3]);
         const width = rawWidth === 42.0 ? 42.4 : rawWidth;
 
         const length = parseInt(parts[4], 10);
 
-        // Determine slot type from the prefix we found earlier
-        let slotType;
+        let slotType: SlotType;
         switch (type) {
             case "H":
-                slotType = "Beam"; // Corresponds to SlotType.Beam
+                slotType = SlotType.Beam;
                 break;
             case "S":
-                slotType = "Jointer"; // Corresponds to SlotType.Jointer
+                slotType = SlotType.Jointer;
                 break;
             default:
-                slotType = "Beam"; // Default type if no prefix
+                slotType = SlotType.Beam;
         }
 
-        // Create a new instance with all the original and updated properties
         return new WarehouseSlotClass(this.productId, {
             ...this,
-            slotType: slotType,
-            quality: quality,
+            type: slotType,
+            quality: fullQualityName,
             thickness: thickness,
             width: width,
             length: length,
         });
     }
+
 
     getVolume(): number | null {
         if (this.width == null || this.thickness == null || this.length == null) {

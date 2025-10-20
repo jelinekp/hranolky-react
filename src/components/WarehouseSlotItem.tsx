@@ -25,7 +25,7 @@ const WarehouseSlotItem: React.FC<WarehouseSlotItemProps> = ({ slot, sortingBy, 
             className={`${getBackgroundClass()} cursor-pointer hover:bg-[var(--md-rgb-color-surface-container)] transition-colors duration-150`}
             onClick={onToggle}
         >
-            <td className={`pl-2 leading-8 ${sortingBy === SortingBy.quality ? 'font-medium' : ''}`}>{slot.quality}</td>
+            <td className={`pl-2 pr-2 leading-8 ${sortingBy === SortingBy.quality ? 'font-medium' : ''}`}>{slot.quality}</td>
             <td className={sortingBy === SortingBy.thickness ? 'font-medium' : ''}>{slot.thickness}</td>
             <td className={sortingBy === SortingBy.width ? 'font-medium' : ''}>{slot.width}</td>
             <td className={sortingBy === SortingBy.length ? 'font-medium' : ''}>{slot.length}</td>
