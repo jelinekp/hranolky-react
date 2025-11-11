@@ -12,6 +12,9 @@ function Informations() {
                <li>
                    Jednotlivé řádky lze rozkliknout a zobrazit historii pohybů.
                </li>
+               <li>
+                 <a href="https://jelinekp.cz/vypocet_sparovky/x_nejlepsich.html">Aplikace pro výpočet ideální kombinace hranolků do spárovky →</a>
+               </li>
            </ul>
         </div>
     );
