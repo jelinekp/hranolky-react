@@ -2,7 +2,6 @@
 import React from "react";
 import {SlotActionClass} from "../model/SlotAction";
 import {formatCsDate} from "./FormatDate";
-import SlotActionsSkeleton from "./SlotActionsSkeleton";
 
 interface SlotActionsRowProps {
     actions: SlotActionClass[];
@@ -11,10 +10,6 @@ interface SlotActionsRowProps {
 }
 
 const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClosing = false}) => {
-    if (loading) {
-        return <SlotActionsSkeleton/>;
-    }
-
     const animationClass = isClosing
         ? "animate-[slideUp_400ms_ease-out]"
         : "animate-[slideDown_400ms_ease-out]";
@@ -31,13 +26,21 @@ const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClos
                         <div className="col-span-3">Čas</div>
                     </div>
 
-                    {/* Data rows */}
-                    {actions.length === 0 ? (
+                    {/* Data rows with staggered animations */}
+                    {loading && actions.length === 0 ? (
+                        <p className="text-gray-500">Načítání akcí...</p>
+                    ) : actions.length === 0 ? (
                         <p className="text-gray-500">Žádné akce nenalezeny</p>
                     ) : (
                         <div className="space-y-1">
                             {actions.map((action, index) => (
-                                <div key={index} className="grid grid-cols-9 gap-2 py-1 px-2 bg-[var(--md-rgb-color-surface)] rounded">
+                                <div
+                                    key={`${action.userId}-${action.timestamp?.toMillis() || index}`}
+                                    className="grid grid-cols-9 gap-2 py-1 px-2 bg-[var(--md-rgb-color-surface)] rounded animate-[fadeInSlideUp_300ms_ease-out_forwards]"
+                                    style={{
+                                        animationDelay: `${index * 50}ms`
+                                    }}
+                                >
                                     <div className="col-span-2 font-medium">
                                         {action.action || "Neznámá akce"}
                                     </div>
