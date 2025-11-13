@@ -1,6 +1,6 @@
 import React from "react";
 import {useFetchAllWarehouseSlots} from "../hooks/useFetchAllWarehouseSlots.ts";
-import WarehouseSlotsList from "../components/WarehouseSlotList.tsx";
+import ContentLayoutContainer from "../components/ContentLayoutContainer.tsx";
 import {SlotType} from "../model/SlotType.ts";
 import {useNavigate} from "react-router-dom";
 
@@ -9,7 +9,7 @@ const Sparovky: React.FC = () => {
     const {warehouseSlots, loading} = useFetchAllWarehouseSlots("WarehouseSlots", SlotType.Jointer);
 
     return (
-        <div className={"m-6 container min-h-screen"}>
+        <div className={"m-6 max-w-[1920px] min-h-screen"}>
             <div className={"flex justify-between items-center"}>
                 <div className={"flex flex-row items-center gap-3"}>
                     <img src="src/assets/sparovky_foreground.svg" alt="Spárovky icon" width="64" height="64"/>
@@ -22,9 +22,9 @@ const Sparovky: React.FC = () => {
                     <span className="text-xl leading-none">Přepnout na Hranolky</span>
                     <img src="src/assets/hranolky_foreground.svg" alt="Hranolky icon" width="48" height="48"/>
                 </button>
-                <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-8"/>
+                <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-2"/>
             </div>
-            <WarehouseSlotsList warehouseSlots={warehouseSlots} loading={loading}/>
+            <ContentLayoutContainer warehouseSlots={warehouseSlots} loading={loading}/>
         </div>
     );
 };

@@ -1,5 +1,6 @@
 import SortableTableHeader from "./SortableTableHeader.tsx";
-import {SortingBy, SortingOrder} from "./WarehouseSlotList.tsx";
+import {SortingBy, SortingOrder} from "./ContentLayoutContainer.tsx";
+import TableSpannedHeader from "./TableSpannedHeader.tsx";
 
 function TableSkeleton() {
     const skeletonRows = Array.from({ length: 18 }, (_, i) => (
@@ -35,27 +36,31 @@ function TableSkeleton() {
     ));
 
     return (
-        <table>
+        <table className={"w-full"}>
             <thead>
             <tr>
+              <TableSpannedHeader label="Položka" colSpan={6} />
+              <TableSpannedHeader label="Poslední pohyb" colSpan={3} />
+            </tr>
+            <tr>
                 <SortableTableHeader label="Kvalita" sortingBy={SortingBy.quality} currentSortingBy={SortingBy.none}
-                                     sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
-                <SortableTableHeader label="Tloušťka" sortingBy={SortingBy.thickness} currentSortingBy={SortingBy.none}
+                                     sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}} className="pl-2 pr-4"/>
+                <SortableTableHeader label="Tloušť" sortingBy={SortingBy.thickness} currentSortingBy={SortingBy.none}
                                      sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
                 <SortableTableHeader label="Šířka" sortingBy={SortingBy.width} currentSortingBy={SortingBy.none}
                                      sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
                 <SortableTableHeader label="Délka" sortingBy={SortingBy.length} currentSortingBy={SortingBy.none}
                                      sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
-                <SortableTableHeader label="Množství" sortingBy={SortingBy.quantity} currentSortingBy={SortingBy.none}
+                <SortableTableHeader label="Množst" sortingBy={SortingBy.quantity} currentSortingBy={SortingBy.none}
                                      sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
                 <SortableTableHeader label="Objem m³" sortingBy={SortingBy.volume} currentSortingBy={SortingBy.none}
                                      sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
-                <SortableTableHeader label="Naposledy změněno" sortingBy={SortingBy.lastModified}
+                <SortableTableHeader label="Změněno" sortingBy={SortingBy.lastModified}
                                      currentSortingBy={SortingBy.none} sortingOrder={SortingOrder.desc}
-                                     setSortingByAndOrder={() => {}}/>
-                <SortableTableHeader label="Poslední akce" sortingBy={SortingBy.lastAction} currentSortingBy={SortingBy.none}
-                                     sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}}/>
-                <SortableTableHeader label="Poslední změna" sortingBy={SortingBy.lastChange}
+                                     setSortingByAndOrder={() => {}} className="pr-13"/>
+                <SortableTableHeader label="Akce" sortingBy={SortingBy.lastAction} currentSortingBy={SortingBy.none}
+                                     sortingOrder={SortingOrder.desc} setSortingByAndOrder={() => {}} className="pl-2"/>
+                <SortableTableHeader label="Změna" sortingBy={SortingBy.lastChange}
                                      currentSortingBy={SortingBy.none} sortingOrder={SortingOrder.desc}
                                      setSortingByAndOrder={() => {}}/>
             </tr>

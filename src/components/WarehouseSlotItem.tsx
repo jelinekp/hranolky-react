@@ -2,7 +2,7 @@
 import React from "react";
 import { WarehouseSlotClass } from "../model/WarehouseSlot";
 import { formatCsDate } from "./FormatDate";
-import { SortingBy } from "./WarehouseSlotList";
+import { SortingBy } from "./ContentLayoutContainer.tsx";
 
 interface WarehouseSlotItemProps {
     slot: WarehouseSlotClass;
@@ -32,7 +32,7 @@ const WarehouseSlotItem: React.FC<WarehouseSlotItemProps> = ({ slot, sortingBy, 
             <td className={sortingBy === SortingBy.quantity ? 'font-medium' : ''}>{slot.quantity}</td>
             <td className={sortingBy === SortingBy.volume ? 'font-medium' : ''}>{slot.getVolume()?.toFixed(3)}</td>
             <td className={sortingBy === SortingBy.lastModified ? 'font-medium' : ''}>{formatCsDate(slot.lastModified?.toDate())}</td>
-            <td className={sortingBy === SortingBy.lastAction ? 'font-medium' : ''}>{slot.lastSlotAction ?? ""}</td>
+            <td className={`pl-2 pr-2 ${sortingBy === SortingBy.lastAction ? 'font-medium' : ''}`}>{slot.lastSlotAction ?? ""}</td>
             <td className={sortingBy === SortingBy.lastChange ? 'font-medium' : ''}>{slot.lastSlotQuantityChange ?? ""}</td>
         </tr>
     );
