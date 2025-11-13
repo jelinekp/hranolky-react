@@ -5,8 +5,8 @@
 
 import {collection, doc, getDocs, writeBatch, Timestamp} from 'firebase/firestore';
 import {db} from '../firebase';
-import {WarehouseSlotClass} from "../model/WarehouseSlot.ts";
-import {SlotType} from "../model/SlotType.ts";
+import {WarehouseSlotClass} from "../../common";
+import {SlotType} from "../../common/SlotType.ts";
 
 interface SlotAction {
     action: string;

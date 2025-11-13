@@ -10,9 +10,9 @@ import {
     Query, getDocs
 } from "firebase/firestore"
 import {db} from "../firebase"
-import {WarehouseSlotClass} from "../model/WarehouseSlot.ts"
-import {SlotActionClass} from "../model/SlotAction.ts"
-import {SlotType} from "../model/SlotType.ts";
+import {WarehouseSlotClass} from "../../common"
+import {SlotActionClass} from "../../common/SlotAction.ts"
+import {SlotType} from "../../common/SlotType.ts";
 
 export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slotType: SlotType) => {
     const [data, setData] = useState<WarehouseSlotClass[]>([])

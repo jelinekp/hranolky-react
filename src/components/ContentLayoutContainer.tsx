@@ -1,7 +1,7 @@
 import {useState, useMemo} from "react";
-import {WarehouseSlotClass} from "../model/WarehouseSlot.ts";
+import {WarehouseSlotClass} from "hranolky-firestore-common/WarehouseSlot.ts";
 import {SlotFiltersClass} from "../model/SlotFilter.ts";
-import {SlotType} from "../model/SlotType.ts";
+import {SlotType} from "hranolky-firestore-common/SlotType.ts";
 import Filters from "./Filters.tsx";
 import TableSkeleton from "./TableSkeleton.tsx";
 import Information from "./Informations.tsx";

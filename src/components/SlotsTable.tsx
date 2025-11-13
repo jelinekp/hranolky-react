@@ -1,4 +1,4 @@
-import {WarehouseSlotClass} from "../model/WarehouseSlot.ts";
+import {WarehouseSlotClass} from "hranolky-firestore-common/WarehouseSlot.ts";
 import {SlotFiltersClass} from "../model/SlotFilter.ts";
 import {useState} from "react";
 import {useFetchSlotActions} from "../hooks/useFetchSlotActions.ts";

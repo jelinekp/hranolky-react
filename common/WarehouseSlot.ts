@@ -160,6 +160,13 @@ export class WarehouseSlotClass implements WarehouseSlot {
         return ((this.quantity * this.length * this.thickness * this.width) / 1_000_000_000);
     }
 
+    getVolumeDm(): number | null {
+        if (this.width == null || this.thickness == null || this.length == null) {
+            return null;
+        }
+        return ((this.quantity * this.length * this.thickness * this.width) / 1_000_000);
+    }
+
     hasAllProperties(): boolean {
         return this.quality !== null && this.width !== null && this.thickness !== null && this.length !== null;
     }

@@ -1,6 +1,6 @@
 // src/components/SlotActionsRow.tsx
 import React from "react";
-import {SlotActionClass} from "../model/SlotAction";
+import {SlotActionClass} from "hranolky-firestore-common/SlotAction.ts";
 import {formatCsDate} from "./FormatDate";
 
 interface SlotActionsRowProps {

@@ -1,7 +1,7 @@
 import React from "react";
 import {useFetchAllWarehouseSlots} from "../hooks/useFetchAllWarehouseSlots.ts";
 import ContentLayoutContainer from "../components/ContentLayoutContainer.tsx";
-import {SlotType} from "../model/SlotType.ts";
+import {SlotType} from "../../common/SlotType.ts";
 import {useNavigate} from "react-router-dom";
 
 const Sparovky: React.FC = () => {
