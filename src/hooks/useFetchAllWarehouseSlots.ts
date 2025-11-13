@@ -7,7 +7,7 @@ import {
     onSnapshot,
     orderBy,
     limit,
-    Query
+    Query, getDocs
 } from "firebase/firestore"
 import {db} from "../firebase"
 import {WarehouseSlotClass} from "../model/WarehouseSlot.ts"
