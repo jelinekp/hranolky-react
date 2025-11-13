@@ -1,11 +1,20 @@
 import {ChipGroup, ChipItem, type Selection} from 'actify'
-        import {IntervalMmClass, SlotFiltersClass} from "../model/SlotFilter.ts";
-        import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-        import {faArrowRotateLeft} from "@fortawesome/free-solid-svg-icons/faArrowRotateLeft";
+import {IntervalMmClass, SlotFiltersClass} from "../model/SlotFilter.ts";
+import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
+import {faArrowRotateLeft} from "@fortawesome/free-solid-svg-icons/faArrowRotateLeft";
 
-        type FilterType = 'quality' | 'thickness' | 'width' | 'lengthInterval' | 'allLength';
+type FilterType = 'quality' | 'thickness' | 'width' | 'lengthInterval' | 'allLength';
 
-        function Filters(props: {
+type FilterConfig<T> = {
+    type: FilterType;
+    label: string;
+    data: Set<T>;
+    selectedKeys: Set<string>;
+    formatValue: (item: T) => string;
+    formatDisplay: (item: T) => string;
+};
+
+function Filters(props: {
             activeFilters: SlotFiltersClass,
             setActiveFilters: (value: (((prevState: SlotFiltersClass) => SlotFiltersClass) | SlotFiltersClass)) => void,
             distinctQualityFilters: Set<string>,
@@ -71,70 +80,72 @@ import {ChipGroup, ChipItem, type Selection} from 'actify'
                 });
             };
 
-            const filterConfigs = [
-                {
-                    type: 'quality' as FilterType,
-                    label: "Filtr kvality",
-                    data: allFilters.qualityFilters,
-                    selectedKeys: activeFilters.qualityFilters,
-                    formatValue: (item: string) => item,
-                    formatDisplay: (item: string) => item
-                },
-                {
-                    type: 'thickness' as FilterType,
-                    label: "Filtr tloušťky",
-                    data: allFilters.thicknessFilters,
-                    selectedKeys: new Set(Array.from(activeFilters.thicknessFilters).map(filter => filter.toString())),
-                    formatValue: (item: number) => `${item} mm`,
-                    formatDisplay: (item: number) => `${item} mm`
-                },
-                {
-                    type: 'width' as FilterType,
-                    label: "Filtr šířky",
-                    data: allFilters.widthFilters,
-                    selectedKeys: new Set(Array.from(activeFilters.widthFilters).map(filter => filter.toString())),
-                    formatValue: (item: number) => `${item} mm`,
-                    formatDisplay: (item: number) => `${item} mm`
-                },
-                {
-                    type: 'lengthInterval' as FilterType,
-                    label: "Filtr délky",
-                    data: allFilters.lengthIntervalFilters,
-                    selectedKeys: new Set(Array.from(activeFilters.lengthIntervalFilters).map(interval => interval.toString())),
-                    formatValue: (item: IntervalMmClass) => `${item.toString()} mm`,
-                    formatDisplay: (item: IntervalMmClass) => `${item.toString()} mm`
-                },
-                {
-                    type: 'allLength' as FilterType,
-                    label: "Filtr délky (konkrétní hodnoty)",
-                    data: new Set(Array.from(allFilters.allLengthFilters).sort((a, b) => a - b)),
-                    selectedKeys: new Set(Array.from(activeFilters.allLengthFilters).map(filter => filter.toString())),
-                    formatValue: (item: number) => `${item} mm`,
-                    formatDisplay: (item: number) => `${item} mm`
-                }
-            ];
+        const filterConfigs: Array<FilterConfig<string> | FilterConfig<number> | FilterConfig<IntervalMmClass>> = [
+            {
+                type: 'quality' as FilterType,
+                label: "Filtr kvality",
+                data: allFilters.qualityFilters,
+                selectedKeys: activeFilters.qualityFilters,
+                formatValue: (item: string) => item,
+                formatDisplay: (item: string) => item
+            },
+            {
+                type: 'thickness' as FilterType,
+                label: "Filtr tloušťky",
+                data: allFilters.thicknessFilters,
+                selectedKeys: new Set(Array.from(activeFilters.thicknessFilters).map(filter => filter.toString())),
+                formatValue: (item: number) => `${item} mm`,
+                formatDisplay: (item: number) => `${item} mm`
+            },
+            {
+                type: 'width' as FilterType,
+                label: "Filtr šířky",
+                data: allFilters.widthFilters,
+                selectedKeys: new Set(Array.from(activeFilters.widthFilters).map(filter => filter.toString())),
+                formatValue: (item: number) => `${item} mm`,
+                formatDisplay: (item: number) => `${item} mm`
+            },
+            {
+                type: 'lengthInterval' as FilterType,
+                label: "Filtr délky",
+                data: allFilters.lengthIntervalFilters,
+                selectedKeys: new Set(Array.from(activeFilters.lengthIntervalFilters).map(interval => interval.toString())),
+                formatValue: (item: IntervalMmClass) => `${item.toString()} mm`,
+                formatDisplay: (item: IntervalMmClass) => `${item.toString()} mm`
+            },
+            {
+                type: 'allLength' as FilterType,
+                label: "Filtr délky (konkrétní hodnoty)",
+                data: new Set(Array.from(allFilters.allLengthFilters).sort((a, b) => a - b)),
+                selectedKeys: new Set(Array.from(activeFilters.allLengthFilters).map(filter => filter.toString())),
+                formatValue: (item: number) => `${item} mm`,
+                formatDisplay: (item: number) => `${item} mm`
+            }
+        ];
 
-            return (
-                <div className="flex-y space-y-4">
-                    <h3>Filtry</h3>
-                    {filterConfigs.map(config => (
-                        <ChipGroup
-                            key={config.type}
-                            label={config.label}
-                            selectionMode="multiple"
-                            selectedKeys={config.selectedKeys}
-                            onSelectionChange={handleFilterSelect(config.type)}
-                        >
-                            {Array.from(config.data).map((filter) => (
-                                <ChipItem
-                                    key={filter.toString()}
-                                    textValue={config.formatValue(filter as any)}
-                                >
-                                    {config.formatDisplay(filter as any)}
-                                </ChipItem>
-                            ))}
-                        </ChipGroup>
-                    ))}
+        const renderFilterGroup = <T,>(config: FilterConfig<T>) => (
+            <ChipGroup
+                key={config.type}
+                label={config.label}
+                selectionMode="multiple"
+                selectedKeys={config.selectedKeys}
+                onSelectionChange={handleFilterSelect(config.type)}
+            >
+                {Array.from(config.data).map((filter) => (
+                    <ChipItem
+                        key={filter.toString()}
+                        textValue={config.formatValue(filter)}
+                    >
+                        {config.formatDisplay(filter)}
+                    </ChipItem>
+                ))}
+            </ChipGroup>
+        );
+
+        return (
+            <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg flex-y space-y-4">
+                <h3>Filtry</h3>
+                {filterConfigs.map(config => renderFilterGroup(config))}
 
                     <button
                         onClick={() => setActiveFilters(SlotFiltersClass.EMPTY)}

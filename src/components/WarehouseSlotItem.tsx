@@ -2,7 +2,7 @@
 import React from "react";
 import { WarehouseSlotClass } from "../model/WarehouseSlot";
 import { formatCsDate } from "./FormatDate";
-import { SortingBy } from "./ContentLayoutContainer.tsx";
+import {SortingBy} from "../model/Sorting.ts";
 
 interface WarehouseSlotItemProps {
     slot: WarehouseSlotClass;

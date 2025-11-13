@@ -1,8 +1,8 @@
 function Informations() {
   return (
-    <div>
+    <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg space-y-1">
       <h3>Informace</h3>
-      <ul className="list-disc ml-4 space-y-2">
+      <ul className="list-disc ml-4 space-y-1">
         <li>
           Stránku netřeba aktualizovat (znovu načítat), data se aktualizují při každém pohybu okamžitě automaticky.
         </li>

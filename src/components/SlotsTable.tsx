@@ -6,7 +6,7 @@ import TableSpannedHeader from "./TableSpannedHeader.tsx";
 import SortableTableHeader from "./SortableTableHeader.tsx";
 import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
 import SlotActionsRow from "./SlotActionsRow.tsx";
-import {SortingBy, SortingOrder} from "./ContentLayoutContainer.tsx";
+import {SortingBy, SortingOrder} from "../model/Sorting.ts";
 
 function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, setSortingByAndOrder}: {
   warehouseSlots: WarehouseSlotClass[],
@@ -33,22 +33,9 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
     }
   };
 
-  const filteredSlots = warehouseSlots.filter((slot) => {
-    if (activeFilters.isEmpty()) {
-      return true;
-    }
-
-    const matchesQuality = activeFilters.qualityFilters.size === 0 || activeFilters.qualityFilters.has(slot.quality ?? "");
-    const matchesThickness = activeFilters.thicknessFilters.size === 0 || activeFilters.thicknessFilters.has(slot.thickness ?? 0);
-    const matchesWidth = activeFilters.widthFilters.size === 0 || activeFilters.widthFilters.has(slot.width ?? 0);
-    const matchesLength = activeFilters.lengthIntervalFilters.size === 0 || Array.from(activeFilters.lengthIntervalFilters).some(interval => interval.contains(slot.length ?? 0));
-    const matchesAllLength = activeFilters.allLengthFilters.size === 0 || activeFilters.allLengthFilters.has(slot.length ?? 0);
-
-    return matchesQuality && matchesThickness && matchesWidth && matchesLength && matchesAllLength;
-  });
-
-  const quantitySum = filteredSlots.reduce((sum, slot) => sum + slot.quantity, 0);
-  const volumeSum = filteredSlots.reduce((sum, slot) => sum + (slot.getVolume() ?? 0), 0);
+  // warehouseSlots are already filtered by parent component
+  const quantitySum = warehouseSlots.reduce((sum, slot) => sum + slot.quantity, 0);
+  const volumeSum = warehouseSlots.reduce((sum, slot) => sum + (slot.getVolume() ?? 0), 0);
 
   return (
     <table className={"w-full"}>
@@ -83,7 +70,7 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
       </tr>
       </thead>
       <tbody>
-      {filteredSlots.length === 0 ? (
+      {warehouseSlots.length === 0 ? (
         <tr>
           <td colSpan={9} className="text-center py-8 text-gray-500">
             {activeFilters.isEmpty()
@@ -94,7 +81,7 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
         </tr>
       ) : (
         <>
-          {filteredSlots
+          {warehouseSlots
             .sort((a, b) => {
               if (sortingBy === SortingBy.quality) {
                 if (a.quality?.localeCompare && b.quality?.localeCompare) {
@@ -171,7 +158,7 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
             })
           }
           <tr className="font-bold">
-            <td colSpan={2} className="pl-2">{filteredSlots.length} řádků</td>
+            <td colSpan={2} className="pl-2">{warehouseSlots.length} řádků</td>
             <td colSpan={2} className="pl-2">Součet:</td>
             <td>{quantitySum}</td>
             <td>{volumeSum.toFixed(3)} m³</td>

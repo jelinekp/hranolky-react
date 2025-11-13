@@ -10,7 +10,7 @@ const Hranolky: React.FC = () => {
 
     return (
         <div className={"m-6 max-w-[1920px] min-h-screen"}>
-            <div className={"flex justify-between items-center"}>
+            <div className={"flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 mb-6"}>
                 <div className={"flex flex-row items-center gap-3"}>
                     <img src="src/assets/ic_launcher.webp" alt="Hranolky icon" width="64" height="64"/>
                     <h1>Hranolky</h1>
