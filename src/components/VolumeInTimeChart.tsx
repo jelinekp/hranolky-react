@@ -1,7 +1,7 @@
 import React, {useMemo} from "react";
-import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
+import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine} from 'recharts';
 import {useFetchVolumeHistory} from "../hooks/useFetchVolumeHistory.ts";
-import {SlotType} from "../model/SlotType.ts";
+import {SlotType} from "../../common/SlotType.ts";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
@@ -38,6 +38,15 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({ currentVolume, sl
       yDomain: [0, actualMax],
       yTicks: ticks
     };
+  }, [volumeData]);
+
+  // Calculate inventory check weeks (weeks 1, 14, 27, 40)
+  const inventoryCheckWeeks = useMemo(() => {
+    const checkWeeks = [1, 14, 27, 40];
+    // Filter to only include weeks that are present in the data
+    return volumeData
+      .filter(d => checkWeeks.includes(parseInt(d.week)))
+      .map(d => d.week);
   }, [volumeData]);
 
   // Custom tooltip component
@@ -81,6 +90,24 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({ currentVolume, sl
               width={40}
             />
             <Tooltip content={<CustomTooltip />} />
+
+            {/* Inventory check reference lines */}
+            {inventoryCheckWeeks.map(week => (
+              <ReferenceLine
+                key={week}
+                x={week}
+                stroke="red"
+                strokeWidth={2}
+                strokeDasharray="3 3"
+                label={{
+                  value: 'Inventura',
+                  position: 'top',
+                  fill: 'red',
+                  fontSize: 10
+                }}
+              />
+            ))}
+
             <Line
               type="monotone"
               dataKey="volume"
@@ -93,6 +120,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({ currentVolume, sl
         </ResponsiveContainer>
       )}
 
+        <span className="text-sm">Červené čáry značí provedené inventury</span>
       {/* Current volume indicator */}
       <div className="mt-4 pt-4 border-t border-[var(--color-text-03)]">
         <div className="flex justify-between items-center">
