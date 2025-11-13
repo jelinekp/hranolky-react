@@ -24,7 +24,7 @@ const Sparovky: React.FC = () => {
                 </button>
                 <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-2"/>
             </div>
-            <ContentLayoutContainer warehouseSlots={warehouseSlots} loading={loading}/>
+            <ContentLayoutContainer warehouseSlots={warehouseSlots} loading={loading} slotType={SlotType.Jointer}/>
         </div>
     );
 };

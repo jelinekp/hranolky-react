@@ -1,6 +1,7 @@
 import {useState, useMemo} from "react";
 import {WarehouseSlotClass} from "../model/WarehouseSlot.ts";
 import {SlotFiltersClass} from "../model/SlotFilter.ts";
+import {SlotType} from "../model/SlotType.ts";
 import Filters from "./Filters.tsx";
 import TableSkeleton from "./TableSkeleton.tsx";
 import Information from "./Informations.tsx";
@@ -9,7 +10,7 @@ import VolumeInTimeChart from "./VolumeInTimeChart.tsx";
 import {SortingBy, SortingOrder} from "../model/Sorting.ts";
 
 function ContentLayoutContainer(
-  props: { warehouseSlots: WarehouseSlotClass[], loading: boolean }
+  props: { warehouseSlots: WarehouseSlotClass[], loading: boolean, slotType: SlotType }
 ) {
 
   const [sortingBy, setSortingBy] = useState<SortingBy>(SortingBy.none)
@@ -82,7 +83,7 @@ function ContentLayoutContainer(
                  distinctThicknessFilters={distinctThicknessFilters}
                  distinctWidthFilters={distinctWidthFilters} distinctLengthFilters={distinctLengthFilters}/>
         <Information/>
-        <VolumeInTimeChart currentVolume={volumeSum}/>
+        <VolumeInTimeChart currentVolume={volumeSum} slotType={props.slotType}/>
       </div>
     </div>
   )
