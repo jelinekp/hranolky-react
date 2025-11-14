@@ -57,6 +57,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   const [displayData, setDisplayData] = useState<VolumeDataPoint[]>(() => generateMockVolumeData());
   const [goofyOffsets, setGoofyOffsets] = useState<number[]>([]);
   const [manualLoadRequested, setManualLoadRequested] = useState(false);
+  const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
   // Extract slot IDs from filtered slots
   const filteredSlotIds = useMemo(() =>
@@ -102,6 +103,9 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
           const baseValue = displayData[index]?.volume || 50;
           return offset * baseValue * 0.15; // Max 15% up or down
         }));
+
+        // Force React to re-render by updating a counter
+        setForceUpdateCounter(prev => prev + 1);
       }, 50); // Update every 50ms for smooth goofy animation
 
       return () => clearInterval(interval);
@@ -127,16 +131,23 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
 
   // Apply goofy bouncing offsets to data during loading
   // Don't memoize this - we want it to recalculate every render during animation!
+  // Force a completely new array reference to trigger Recharts re-render
   const animatedData = (() => {
     if (!loading || goofyOffsets.length === 0) {
       return displayData;
     }
 
     // Make each point bounce up and down by different amounts!
-    return displayData.map((point, index) => ({
-      ...point,
-      volume: Math.max(0, point.volume + (goofyOffsets[index] || 0))
-    }));
+    // Create a COMPLETELY NEW array with new object references to force Recharts update
+    return displayData.map((point, index) => {
+      const offset = goofyOffsets[index] || 0;
+      return {
+        week: point.week,
+        volume: Math.max(0, point.volume + offset),
+        // Add a random key to force object difference detection
+        _animKey: Math.random()
+      };
+    });
   })();
 
   // Calculate Y-axis domain and ticks
@@ -202,10 +213,16 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
         )}
       </div>
 
-      <div className="relative">
+      <div className="relative h-[400px]">
         {/* Overlay when manual load is required */}
         {shouldWaitForManualLoad && !manualLoadRequested && (
-          <div className="absolute inset-0 bg-gray-100 bg-opacity-50 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+          <div
+            className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(2px)'
+            }}
+          >
             <div className="bg-white p-6 rounded-lg shadow-xl text-center">
               <p className="text-gray-700 mb-4">
                 Zobrazeno {filteredSlots.length} položek
@@ -221,7 +238,11 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
         )}
 
         <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={animatedData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <LineChart
+            data={animatedData}
+            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            key={loading ? 'loading' : 'loaded'}
+          >
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
             <XAxis
               dataKey="week"
