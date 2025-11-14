@@ -91,7 +91,12 @@ function ContentLayoutContainer(
                  distinctQualityFilters={distinctQualityFilters}
                  distinctThicknessFilters={distinctThicknessFilters}
                  distinctWidthFilters={distinctWidthFilters} distinctLengthFilters={distinctLengthFilters}/>
-          <VolumeInTimeChart currentVolume={volumeSum} slotType={props.slotType}/>
+          <VolumeInTimeChart
+            currentVolume={volumeSum}
+            slotType={props.slotType}
+            filteredSlots={filteredSlots}
+            hasActiveFilters={!activeFilters.isEmpty()}
+          />
           <Information/>
       </div>
     </div>

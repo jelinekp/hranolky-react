@@ -1,11 +1,13 @@
 import React, {useMemo} from "react";
 import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine} from 'recharts';
-import {useFetchVolumeHistory} from "../hooks/useFetchVolumeHistory.ts";
-import {SlotType} from "hranolky-firestore-common";
+import {useFetchFilteredVolumeHistory} from "../hooks/useFetchFilteredVolumeHistory.ts";
+import {SlotType, WarehouseSlotClass} from "hranolky-firestore-common";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
   slotType?: SlotType;
+  filteredSlots: WarehouseSlotClass[];
+  hasActiveFilters: boolean;
 }
 
 interface VolumeDataPoint {
@@ -13,9 +15,25 @@ interface VolumeDataPoint {
   volume: number;
 }
 
-const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({ currentVolume, slotType = SlotType.Beam }) => {
+const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
+  currentVolume,
+  slotType = SlotType.Beam,
+  filteredSlots,
+  hasActiveFilters
+}) => {
 
-  const { volumeData, loading } = useFetchVolumeHistory(slotType, 500);
+  // Extract slot IDs from filtered slots
+  const filteredSlotIds = useMemo(() =>
+    filteredSlots.map(slot => slot.productId),
+    [filteredSlots]
+  );
+
+  const { volumeData, loading } = useFetchFilteredVolumeHistory(
+    slotType,
+    filteredSlotIds,
+    hasActiveFilters,
+    500
+  );
 
   // Calculate Y-axis domain and ticks
   const { yDomain, yTicks } = useMemo(() => {
