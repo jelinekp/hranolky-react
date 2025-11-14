@@ -91,6 +91,13 @@ export const useFetchFilteredVolumeHistory = (
         let isCancelled = false;
 
         const fetchVolumeHistory = async () => {
+            // Early return if no slots to fetch (manual load not requested yet)
+            if (filteredSlotIds.length === 0) {
+                console.log('⏹️  Skipping fetch - no slots provided');
+                setLoading(false);
+                return;
+            }
+
             console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
             console.log('   SlotType:', slotType);
             console.log('   Has Active Filters:', hasActiveFilters);
@@ -99,7 +106,7 @@ export const useFetchFilteredVolumeHistory = (
             setLoading(true);
 
             try {
-                if (!hasActiveFilters || filteredSlotIds.length === 0) {
+                if (!hasActiveFilters) {
                     // Use aggregate reports when no filters
                     await fetchAggregateReports(slotType, weeksToShow, () => isCancelled);
                 } else {

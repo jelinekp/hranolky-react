@@ -55,6 +55,8 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   // State for pulsing animation
   const [pulseOpacity, setPulseOpacity] = useState(1);
   const [displayData, setDisplayData] = useState<VolumeDataPoint[]>(() => generateMockVolumeData());
+  const [goofyOffsets, setGoofyOffsets] = useState<number[]>([]);
+  const [manualLoadRequested, setManualLoadRequested] = useState(false);
 
   // Extract slot IDs from filtered slots
   const filteredSlotIds = useMemo(() =>
@@ -62,28 +64,52 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     [filteredSlots]
   );
 
+  // Determine if we should wait for manual load
+  const shouldWaitForManualLoad = hasActiveFilters && filteredSlots.length > 10;
+  const shouldFetchData = !shouldWaitForManualLoad || manualLoadRequested;
+
   const { volumeData, loading } = useFetchFilteredVolumeHistory(
     slotType,
-    filteredSlotIds,
-    hasActiveFilters,
+    shouldFetchData ? filteredSlotIds : [], // Pass empty array to prevent fetch
+    shouldFetchData && hasActiveFilters,
     500
   );
 
-  // Pulsing animation effect when loading
+  // Reset manual load request when filters change
+  useEffect(() => {
+    if (hasActiveFilters && filteredSlots.length > 10) {
+      setManualLoadRequested(false);
+    } else {
+      setManualLoadRequested(true); // Auto-load when conditions don't require manual load
+    }
+  }, [hasActiveFilters, filteredSlots.length]);
+
+  // Goofy pulsing animation effect when loading - each point bounces differently!
   useEffect(() => {
     if (loading) {
       const interval = setInterval(() => {
         setPulseOpacity(() => {
-          // Goofy bouncy pulse between 0.3 and 1
+          // Overall opacity pulse between 0.3 and 1
           return 0.65 + Math.sin(Date.now() / 200) * 0.35;
         });
-      }, 50); // Update every 50ms for smooth animation
+
+        // Each data point gets a random-ish offset for goofy up/down bouncing
+        setGoofyOffsets(displayData.map((_, index) => {
+          // Different frequency for each point based on index
+          const time = Date.now() / 300;
+          const offset = Math.sin(time + index * 0.5) * Math.cos(time * 0.7 + index * 0.3);
+          // Scale to make a subtle wavy effect (max 15% variation)
+          const baseValue = displayData[index]?.volume || 50;
+          return offset * baseValue * 0.15; // Max 15% up or down
+        }));
+      }, 50); // Update every 50ms for smooth goofy animation
 
       return () => clearInterval(interval);
     } else {
       setPulseOpacity(1);
+      setGoofyOffsets([]);
     }
-  }, [loading]);
+  }, [loading, displayData]);
 
   // Update display data when real data loads
   useEffect(() => {
@@ -99,28 +125,48 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     }
   }, [loading, volumeData]);
 
+  // Apply goofy bouncing offsets to data during loading
+  // Don't memoize this - we want it to recalculate every render during animation!
+  const animatedData = (() => {
+    if (!loading || goofyOffsets.length === 0) {
+      return displayData;
+    }
+
+    // Make each point bounce up and down by different amounts!
+    return displayData.map((point, index) => ({
+      ...point,
+      volume: Math.max(0, point.volume + (goofyOffsets[index] || 0))
+    }));
+  })();
+
   // Calculate Y-axis domain and ticks
-  const { yDomain, yTicks } = useMemo(() => {
-    if (displayData.length === 0) {
+  // Keep axis FIXED during loading so wave is visible!
+  const { yDomain, yTicks } = (() => {
+    // Always use base displayData for Y-axis calculation (not animated data)
+    const dataToUse = displayData;
+
+    if (dataToUse.length === 0) {
       return {
-        yDomain: [0, 100],
+        yDomain: [0, 100] as [number, number],
         yTicks: [0, 25, 50, 75, 100]
       };
     }
 
-    const maxValue = Math.max(...displayData.map(d => d.volume));
-    const roundedMax = Math.ceil(maxValue / 5) * 5; // Round up to nearest multiple of 5
-    const step = roundedMax / 4; // Divide into 4 intervals (5 labels: 0, 1, 2, 3, 4)
-    const roundedStep = Math.ceil(step / 5) * 5; // Round step to multiple of 5
-    const actualMax = roundedStep * 4; // Recalculate max based on rounded step
+    const maxValue = Math.max(...dataToUse.map(d => d.volume));
+
+    // Add 20% padding to accommodate the wave effect
+    const roundedMax = Math.ceil(maxValue * 1.2 / 5) * 5;
+    const step = roundedMax / 4;
+    const roundedStep = Math.ceil(step / 5) * 5;
+    const actualMax = roundedStep * 4;
 
     const ticks = [0, roundedStep, roundedStep * 2, roundedStep * 3, actualMax];
 
     return {
-      yDomain: [0, actualMax],
+      yDomain: [0, actualMax] as [number, number],
       yTicks: ticks
     };
-  }, [displayData]);
+  })();
 
   // Calculate inventory check weeks (weeks 1, 14, 27, 40)
   const inventoryCheckWeeks = useMemo(() => {
@@ -149,56 +195,76 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-bold">Objem v čase po týdnech (m³)</h3>
-        {loading && (
+        {loading && shouldFetchData && (
           <span className="text-sm text-gray-500 italic animate-pulse">
             Aktualizuji data...
           </span>
         )}
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={displayData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
-          <XAxis
-            dataKey="week"
-            style={{ fontSize: '12px' }}
-          />
-          <YAxis
-            domain={yDomain}
-            ticks={yTicks}
-            style={{ fontSize: '12px' }}
-            width={40}
-          />
-          <Tooltip content={<CustomTooltip />} />
+      <div className="relative">
+        {/* Overlay when manual load is required */}
+        {shouldWaitForManualLoad && !manualLoadRequested && (
+          <div className="absolute inset-0 bg-gray-100 bg-opacity-50 backdrop-blur-sm rounded-lg z-10 flex items-center justify-center">
+            <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+              <p className="text-gray-700 mb-4">
+                Zobrazeno {filteredSlots.length} položek
+              </p>
+              <button
+                onClick={() => setManualLoadRequested(true)}
+                className="bg-[var(--color-primary)] px-6 py-3 rounded-lg font-semibold hover:bg-[var(--color-primary-dark)] transition-colors"
+              >
+                Načíst data
+              </button>
+            </div>
+          </div>
+        )}
 
-          {/* Inventory check reference lines */}
-          {inventoryCheckWeeks.map(week => (
-            <ReferenceLine
-              key={week}
-              x={week}
-              stroke="red"
-              strokeWidth={2}
-              strokeDasharray="3 3"
-              label={{
-                value: 'Inventura',
-                position: 'top',
-                fill: 'red',
-                fontSize: 10
-              }}
+        <ResponsiveContainer width="100%" height={400}>
+          <LineChart data={animatedData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
+            <XAxis
+              dataKey="week"
+              style={{ fontSize: '12px' }}
             />
-          ))}
+            <YAxis
+              domain={yDomain}
+              ticks={yTicks}
+              style={{ fontSize: '12px' }}
+              width={40}
+            />
+            <Tooltip content={<CustomTooltip />} />
 
-          <Line
-            type="monotone"
-            dataKey="volume"
-            stroke="var(--color-primary)"
-            strokeWidth={3}
-            strokeOpacity={pulseOpacity}
-            dot={{ fill: 'var(--color-primary)', r: 4, opacity: pulseOpacity }}
-            activeDot={{ r: 6, fill: 'var(--color-primary-dark)' }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+            {/* Inventory check reference lines */}
+            {inventoryCheckWeeks.map(week => (
+              <ReferenceLine
+                key={week}
+                x={week}
+                stroke="red"
+                strokeWidth={2}
+                strokeDasharray="3 3"
+                label={{
+                  value: 'Inventura',
+                  position: 'top',
+                  fill: 'red',
+                  fontSize: 10
+                }}
+              />
+            ))}
+
+            <Line
+              type={loading ? "natural" : "monotone"}
+              dataKey="volume"
+              stroke="var(--color-primary)"
+              strokeWidth={3}
+              strokeOpacity={pulseOpacity}
+              dot={{ fill: 'var(--color-primary)', r: 4, opacity: pulseOpacity }}
+              activeDot={{ r: 6, fill: 'var(--color-primary-dark)' }}
+              animationDuration={loading ? 0 : 300}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
 
       <span className="text-sm">Červené čáry značí provedené inventury</span>
       {/* Current volume indicator */}
