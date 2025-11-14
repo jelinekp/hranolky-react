@@ -1,5 +1,5 @@
-/* Generate weekly reports in Firestore database
-   This script populates historical weekly reports for Beams and Jointers
+/* Generate weekly reports per slot in Firestore database
+   This script populates historical weekly reports for each individual warehouse slot
    Run this once to generate all historical data.
  */
 
@@ -20,9 +20,9 @@ interface SlotData {
     actions: SlotAction[];
 }
 
-interface WeeklyReport {
-    totalQuantity: number;
-    totalVolumeDm: number;
+interface SlotWeeklyReport {
+    quantity: number;
+    volumeDm: number;
 }
 
 // Helper function to get week number from date
@@ -49,7 +49,6 @@ function calculateVolume(slot: WarehouseSlotClass, quantity: number): number {
     if (!slot.thickness || !slot.width || !slot.length) {
         return 0;
     }
-
     // Convert mm³ to dm³: thickness * width * length (all in mm) * quantity / 1,000,000
     return (quantity * slot.length * slot.thickness * slot.width) / 1_000_000;
 }
@@ -108,87 +107,96 @@ function getSlotQuantityAtTime(slotData: SlotData, endTime: Date): number {
     return latestQuantity;
 }
 
-// Generate reports for all weeks (in memory)
-function generateReportsInMemory(
-    allData: Map<string, SlotData>,
+// Generate reports for a single slot across all weeks
+function generateSlotReportsInMemory(
+    _slotId: string,
+    slotData: SlotData,
     startWeek: number,
     endWeek: number,
-    year: number,
-    slotType: SlotType
-): Map<string, WeeklyReport> {
-    const reports = new Map<string, WeeklyReport>();
-
-    console.log(`📊 Processing ${slotType === SlotType.Beam ? 'Beam' : 'Jointer'} reports...`);
+    year: number
+): Map<string, SlotWeeklyReport> {
+    const reports = new Map<string, SlotWeeklyReport>();
+    let previousQuantity = 0;
 
     for (let week = startWeek; week <= endWeek; week++) {
         const weekId = `${year}_${String(week).padStart(2, '0')}`;
         const endOfWeek = getEndOfWeek(year, week);
 
-        let totalQuantity = 0;
-        let totalVolumeDm = 0;
+        // Get quantity at end of week
+        const quantity = getSlotQuantityAtTime(slotData, endOfWeek);
 
-        for (const [slotId, slotData] of allData.entries()) {
-            // Filter by slot type
-            const isJointer = slotId.startsWith('S-');
-            const isBeam = slotId.startsWith('H-') || !slotId.startsWith('S-');
+        // Only create a report if quantity changed from previous week
+        if (quantity !== previousQuantity) {
+            const volumeDm = calculateVolume(slotData.slot, quantity);
 
-            if ((slotType === SlotType.Jointer && !isJointer) || (slotType === SlotType.Beam && !isBeam)) {
-                continue;
-            }
+            reports.set(weekId, {
+                quantity,
+                volumeDm: parseFloat(volumeDm.toFixed(3))
+            });
 
-            // Get quantity at end of week
-            const quantity = getSlotQuantityAtTime(slotData, endOfWeek);
-
-            if (quantity > 0) {
-                totalQuantity += quantity;
-                const volume = calculateVolume(slotData.slot, quantity);
-                totalVolumeDm += volume;
-            }
+            previousQuantity = quantity;
         }
-
-        reports.set(weekId, {
-            totalQuantity,
-            totalVolumeDm: parseFloat(totalVolumeDm.toFixed(3))
-        });
-
-        console.log(`   Week ${weekId}: ${totalQuantity} units, ${parseFloat(totalVolumeDm.toFixed(3))} dm³`);
     }
 
     return reports;
 }
 
-// Batch write reports to Firestore
-async function batchWriteReports(
-    reports: Map<string, WeeklyReport>,
+// Batch write reports for all slots to Firestore
+async function batchWriteSlotReports(
+    allData: Map<string, SlotData>,
+    startWeek: number,
+    endWeek: number,
+    year: number,
     slotType: SlotType
 ): Promise<void> {
-    const collectionName = slotType === SlotType.Beam ? 'WeeklyBeamReports' : 'WeeklyJointerReports';
+    console.log(`\n💾 Writing per-slot weekly reports for ${slotType === SlotType.Beam ? 'Beams' : 'Jointers'}...`);
 
-    console.log(`\n💾 Writing ${reports.size} reports to ${collectionName}...`);
+    let totalReports = 0;
+    let batch = writeBatch(db);
+    let operationCount = 0;
+    const batchSize = 500; // Firestore batch write limit
 
-    // Firestore batch writes are limited to 500 operations
-    const batchSize = 500;
-    const reportEntries = Array.from(reports.entries());
+    for (const [slotId, slotData] of allData.entries()) {
+        // Filter by slot type
+        const isJointer = slotId.startsWith('S-');
+        const isBeam = slotId.startsWith('H-') || !slotId.startsWith('S-');
 
-    for (let i = 0; i < reportEntries.length; i += batchSize) {
-        const batch = writeBatch(db);
-        const batchEntries = reportEntries.slice(i, i + batchSize);
-
-        for (const [weekId, reportData] of batchEntries) {
-            const reportDoc = doc(db, collectionName, weekId);
-            batch.set(reportDoc, reportData);
+        if ((slotType === SlotType.Jointer && !isJointer) || (slotType === SlotType.Beam && !isBeam)) {
+            continue;
         }
 
-        await batch.commit();
-        console.log(`   Wrote batch ${Math.floor(i / batchSize) + 1} (${batchEntries.length} documents)`);
+        // Generate reports for this slot
+        const slotReports = generateSlotReportsInMemory(slotId, slotData, startWeek, endWeek, year);
+
+        // Write each report
+        for (const [weekId, reportData] of slotReports.entries()) {
+            const reportDoc = doc(db, 'WarehouseSlots', slotId, 'SlotWeeklyReport', weekId);
+            batch.set(reportDoc, reportData);
+            operationCount++;
+            totalReports++;
+
+            // Commit batch if we've reached the limit
+            if (operationCount >= batchSize) {
+                await batch.commit();
+                console.log(`   Committed batch (${operationCount} operations)`);
+                batch = writeBatch(db);
+                operationCount = 0;
+            }
+        }
     }
 
-    console.log(`✅ All ${slotType} reports written successfully!\n`);
+    // Commit any remaining operations
+    if (operationCount > 0) {
+        await batch.commit();
+        console.log(`   Committed final batch (${operationCount} operations)`);
+    }
+
+    console.log(`✅ Wrote ${totalReports} slot weekly reports for ${slotType === SlotType.Beam ? 'Beams' : 'Jointers'}!\n`);
 }
 
-// Main function to generate all reports
-export async function generateAllWeeklyReports(): Promise<void> {
-    console.log('🚀 Starting weekly report generation...\n');
+// Main function to generate all per-slot weekly reports
+export async function generateAllSlotWeeklyReports(): Promise<void> {
+    console.log('🚀 Starting per-slot weekly report generation...\n');
 
     const currentDate = new Date();
     const currentWeek = getWeekNumber(currentDate);
@@ -196,18 +204,16 @@ export async function generateAllWeeklyReports(): Promise<void> {
     // Step 1: Download all data into memory (ONE TIME)
     const allData = await downloadAllData();
 
-    // Step 2: Generate Jointer reports in memory
-    const jointerReports = generateReportsInMemory(allData, 40, currentWeek.week, 2025, SlotType.Jointer);
-    await batchWriteReports(jointerReports, SlotType.Jointer);
+    // Step 2: Generate Beam reports (week 27 to current)
+    console.log('📊 Generating Beam slot reports from week 2025_27 to current...');
+    await batchWriteSlotReports(allData, 27, currentWeek.week, 2025, SlotType.Beam);
 
-    // Step 3: Generate Beam reports in memory
-    const beamReports = generateReportsInMemory(allData, 26, currentWeek.week, 2025, SlotType.Beam);
-    await batchWriteReports(beamReports, SlotType.Beam);
+    // Step 3: Generate Jointer reports (week 45 to current)
+    console.log('📊 Generating Jointer slot reports from week 2025_45 to current...');
+    await batchWriteSlotReports(allData, 45, currentWeek.week, 2025, SlotType.Jointer);
 
-    console.log('✅ All weekly reports generated successfully!');
-    console.log(`📊 Total: ${jointerReports.size} Jointer reports + ${beamReports.size} Beam reports`);
+    console.log('✅ All per-slot weekly reports generated successfully!');
 }
 
 // Uncomment to run the generation
-// generateAllWeeklyReports().catch(console.error);
-
+// generateAllSlotWeeklyReports().catch(console.error);

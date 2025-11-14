@@ -1,6 +1,6 @@
 // src/components/WarehouseSlotItem.tsx
 import React from "react";
-import {WarehouseSlotClass} from "hranolky-firestore-common/WarehouseSlot.ts";
+import {WarehouseSlotClass} from "hranolky-firestore-common";
 import {formatCsDate} from "./FormatDate";
 import {SortingBy} from "../model/Sorting.ts";
 

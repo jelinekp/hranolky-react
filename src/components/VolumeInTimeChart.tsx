@@ -1,7 +1,7 @@
 import React, {useMemo} from "react";
 import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine} from 'recharts';
 import {useFetchVolumeHistory} from "../hooks/useFetchVolumeHistory.ts";
-import {SlotType} from "../../common/SlotType.ts";
+import {SlotType} from "hranolky-firestore-common";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { SlotType } from "../../common/SlotType.ts";
+import { SlotType } from "hranolky-firestore-common";
 
 interface VolumeDataPoint {
     week: string;

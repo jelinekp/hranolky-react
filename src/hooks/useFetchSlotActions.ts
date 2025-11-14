@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query, limit } from "firebase/firestore";
 import { db } from "../firebase";
-import { SlotActionClass } from "../../common/SlotAction.ts";
+import { SlotActionClass } from "hranolky-firestore-common";
 
 export const useFetchSlotActions = (slotId: string | null) => {
     const [slotActions, setSlotActions] = useState<SlotActionClass[]>([]);

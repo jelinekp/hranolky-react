@@ -1,5 +1,5 @@
 import {useState, useMemo} from "react";
-import {WarehouseSlotClass} from "hranolky-firestore-common/WarehouseSlot.ts";
+import {WarehouseSlotClass} from "hranolky-firestore-common";
 import {SlotFiltersClass} from "../model/SlotFilter.ts";
 import {SlotType} from "hranolky-firestore-common/SlotType.ts";
 import Filters from "./Filters.tsx";

@@ -1,4 +1,4 @@
-import {SlotType} from "hranolky-firestore-common/SlotType.ts";
+import {SlotType} from "hranolky-firestore-common";
 
 interface IntervalMm {
     start: number

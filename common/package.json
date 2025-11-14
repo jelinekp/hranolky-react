@@ -1,6 +1,7 @@
 {
   "name": "hranolky-firestore-common",
   "version": "1.0.0",
-  "main": "WarehouseSlot.js",
-  "types": "WarehouseSlot.ts"
+  "main": "index.ts",
+  "types": "index.ts",
+  "type": "module"
 }
