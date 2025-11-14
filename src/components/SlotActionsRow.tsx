@@ -19,7 +19,7 @@ const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClos
             <td colSpan={9} className="p-4 bg-[var(--md-rgb-color-surface-container)]">
                 <div className="space-y-2">
                     {/* Headers row */}
-                    <div className="grid grid-cols-9 gap-2 font-semibold mb-3">
+                    <div className="grid grid-cols-9 px-2 gap-2 font-semibold mb-3">
                         <div className="col-span-2">Akce</div>
                         <div className="col-span-2">Změna</div>
                         <div className="col-span-2">Terminál</div>
@@ -36,15 +36,15 @@ const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClos
                             {actions.map((action, index) => (
                                 <div
                                     key={`${action.userId}-${action.timestamp?.toMillis() || index}`}
-                                    className="grid grid-cols-9 gap-2 py-1 px-2 bg-[var(--md-rgb-color-surface)] rounded animate-[fadeInSlideUp_300ms_ease-out_forwards]"
+                                    className="grid grid-cols-9 gap-2 py-1 px-2 bg-[var(--md-rgb-color-surface)] rounded animate-[fadeInSlideUp_300ms_ease-out_forwards] items-end"
                                     style={{
                                         animationDelay: `${index * 50}ms`
                                     }}
                                 >
-                                    <div className="col-span-2 font-medium">
-                                        {action.action || "Neznámá akce"}
+                                    <div className={`col-span-2 font-medium align-bottom ${action.action === "vydej" ? 'text-green-700' : action.action === "prijem" ? 'text-red-600' : 'text-blue-700'}`}>
+                                        {action.getActionString() || "Neznámá akce"}
                                     </div>
-                                    <div className={`col-span-2 ${action.quantityChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                    <div className={`col-span-2 align-bottom ${action.quantityChange > 0 ? 'text-red-600' : action.quantityChange == 0 ? 'text-blue-700' : 'text-green-700'}`}>
                                         {action.quantityChange >= 0 ? '+' : ''}{action.quantityChange}
                                     </div>
                                     <div className="col-span-2 text-sm">

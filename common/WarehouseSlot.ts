@@ -167,7 +167,21 @@ export class WarehouseSlotClass implements WarehouseSlot {
         return ((this.quantity * this.length * this.thickness * this.width) / 1_000_000);
     }
 
-    hasAllProperties(): boolean {
+  getLastActionString(): string {
+    switch (this.lastSlotAction) {
+      case "prijem":
+        return "Příjem";
+      case "vydej":
+        return "Výdej";
+      case "inventura":
+        return "Inventura";
+      default:
+        return "-";
+    }
+  }
+
+
+  hasAllProperties(): boolean {
         return this.quality !== null && this.width !== null && this.thickness !== null && this.length !== null;
     }
 }

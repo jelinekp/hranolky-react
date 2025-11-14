@@ -34,4 +34,17 @@ export class SlotActionClass implements SlotAction {
         this.userName = data.userName || "";
         this.timestamp = data.timestamp || null;
     }
+
+  getActionString(): string {
+    switch (this.action) {
+      case "prijem":
+        return "Příjem";
+      case "vydej":
+        return "Výdej";
+      case "inventura":
+        return "Inventura";
+      default:
+        return "-";
+    }
+  }
 }
