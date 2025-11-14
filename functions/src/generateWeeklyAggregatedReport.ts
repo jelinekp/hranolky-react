@@ -7,29 +7,11 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 // Import the necessary Firebase modules
-import {setGlobalOptions} from "firebase-functions";
 import {WarehouseSlotClass} from "./WarehouseSlot";
 import {onSchedule} from "firebase-functions/v2/scheduler";
-import {initializeApp} from "firebase-admin/app";
 import {getFirestore} from "firebase-admin/firestore";
 
-// Start writing functions
-// https://firebase.google.com/docs/functions/typescript
-
-// For cost control, you can set the maximum number of containers that can be
-// running at the same time. This helps mitigate the impact of unexpected
-// traffic spikes by instead downgrading performance. This limit is a
-// per-function limit. You can override the limit for each function using the
-// `maxInstances` option in the function's options, e.g.
-// `onRequest({ maxInstances: 5 }, (req, res) => { ... })`.
-// NOTE: setGlobalOptions does not apply to functions using the v1 API. V1
-// functions should each use functions.runWith({ maxInstances: 10 }) instead.
-// In the v1 API, each function can only serve one request per container, so
-// this will be the maximum concurrent request count.
-setGlobalOptions({ maxInstances: 10 });
-
-// Initialize the Firebase Admin SDK
-initializeApp();
+// ...existing code...
 
 /**
  * Helper function to get the current date as "YYYY_WW" (ISO week number).
@@ -52,7 +34,7 @@ function getYearAndWeek() {
 
 // --- Your Scheduled Function ---
 
-exports.generateWeeklyReports = onSchedule(
+export const generateWeeklyReports = onSchedule(
   // Runs every Sunday at 8:00 PM (20:00).
   // Format: (minute hour day-of-month month day-of-week)
   // '0 20 * * 0' means "at minute 0, hour 20, every day, every month, on Sunday (0)"
