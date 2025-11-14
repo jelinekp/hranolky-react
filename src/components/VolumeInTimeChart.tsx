@@ -232,8 +232,25 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
       </div>
 
       <div className="relative h-[400px]">
+        {/* Overlay when no slots match filters */}
+        {hasActiveFilters && filteredSlots.length === 0 && (
+          <div
+            className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
+            style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.5)',
+              backdropFilter: 'blur(2px)'
+            }}
+          >
+            <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+              <p className="text-gray-700 text-lg">
+                Pro zobrazení dat zvolte jinou kombinaci filtrů
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Overlay when manual load is required */}
-        {shouldWaitForManualLoad && !manualLoadRequested && (
+        {shouldWaitForManualLoad && !manualLoadRequested && filteredSlots.length > 0 && (
           <div
             className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
             style={{
