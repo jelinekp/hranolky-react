@@ -133,7 +133,7 @@ function Filters(props: {
             >
                 {Array.from(config.data).map((filter) => (
                     <ChipItem
-                        key={filter.toString()}
+                        key={String(filter)}
                         textValue={config.formatValue(filter)}
                     >
                         {config.formatDisplay(filter)}
@@ -145,7 +145,7 @@ function Filters(props: {
         return (
             <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg flex-y space-y-4">
                 <h3>Filtry</h3>
-                {filterConfigs.map(config => renderFilterGroup(config))}
+                {filterConfigs.map(config => renderFilterGroup(config as FilterConfig<string | number | IntervalMmClass>))}
 
                     <button
                         onClick={() => setActiveFilters(SlotFiltersClass.EMPTY)}

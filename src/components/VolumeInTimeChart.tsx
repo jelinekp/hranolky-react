@@ -61,7 +61,6 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   const [displayData, setDisplayData] = useState<VolumeDataPoint[]>(() => generateMockVolumeData());
   const [goofyOffsets, setGoofyOffsets] = useState<number[]>([]);
   const [manualLoadRequested, setManualLoadRequested] = useState(false);
-  const [forceUpdateCounter, setForceUpdateCounter] = useState(0);
 
   // Extract slot IDs from filtered slots
   const filteredSlotIds = useMemo(() =>
@@ -107,9 +106,6 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
           const baseValue = displayData[index]?.volume || 50;
           return offset * baseValue * 0.15; // Max 15% up or down
         }));
-
-        // Force React to re-render by updating a counter
-        setForceUpdateCounter(prev => prev + 1);
       }, 50); // Update every 50ms for smooth goofy animation
 
       return () => clearInterval(interval);
