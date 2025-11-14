@@ -88,6 +88,8 @@ export const useFetchFilteredVolumeHistory = (
     }, [hasActiveFilters, filteredSlotIds]);
 
     useEffect(() => {
+        let isCancelled = false;
+
         const fetchVolumeHistory = async () => {
             console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
             console.log('   SlotType:', slotType);
@@ -99,20 +101,29 @@ export const useFetchFilteredVolumeHistory = (
             try {
                 if (!hasActiveFilters || filteredSlotIds.length === 0) {
                     // Use aggregate reports when no filters
-                    await fetchAggregateReports(slotType, weeksToShow);
+                    await fetchAggregateReports(slotType, weeksToShow, () => isCancelled);
                 } else {
                     // Use per-slot reports when filters are active
-                    await fetchPerSlotReports(filteredSlotIds, weeksToShow);
+                    await fetchPerSlotReports(filteredSlotIds, weeksToShow, () => isCancelled);
                 }
             } catch (error) {
-                console.error('❌ Error fetching volume history:', error);
-                setVolumeData([]);
+                if (!isCancelled) {
+                    console.error('❌ Error fetching volume history:', error);
+                    setVolumeData([]);
+                }
             } finally {
-                setLoading(false);
+                if (!isCancelled) {
+                    setLoading(false);
+                }
             }
         };
 
-        const fetchAggregateReports = async (type: SlotType, weeks: number) => {
+        const fetchAggregateReports = async (type: SlotType, weeks: number, checkCancelled: () => boolean) => {
+            if (checkCancelled()) {
+                console.log('⏹️  Aggregate fetch cancelled before starting');
+                return;
+            }
+
             console.log('   Using aggregate reports (no filters)');
 
             const collectionName = type === SlotType.Beam
@@ -122,30 +133,52 @@ export const useFetchFilteredVolumeHistory = (
             const reportsRef = collection(db, collectionName);
             const snapshot = await getDocs(reportsRef);
 
+            if (checkCancelled()) {
+                console.log('⏹️  Aggregate fetch cancelled after getDocs');
+                return;
+            }
+
             console.log(`   Found ${snapshot.size} aggregate reports`);
 
-            const data: VolumeDataPoint[] = snapshot.docs
-                .slice(0, weeks)
+            // Sort documents by ID to ensure chronological order
+            const sortedDocs = snapshot.docs.sort((a, b) => a.id.localeCompare(b.id));
+
+            const data: VolumeDataPoint[] = sortedDocs
                 .map(doc => {
                     const weekId = doc.id;
                     const reportData = doc.data() as WeeklyReport;
 
                     const [_year, week] = weekId.split('_');
                     const weekNumber = parseInt(week, 10);
-                    const label = `${weekNumber}`;
                     const volumeInM3 = reportData.totalVolumeDm / 1000;
 
                     return {
-                        week: label,
+                        week: weekNumber.toString(),
                         volume: parseFloat(volumeInM3.toFixed(3))
                     };
                 });
 
-            console.log('✅ Aggregate data loaded:', data.length, 'weeks');
-            setVolumeData(data);
+            // Fill missing weeks to create continuous data
+            const filledData = fillMissingWeeks(data);
+
+            // Take last N weeks after filling
+            const finalData = filledData.slice(-weeks);
+
+            if (checkCancelled()) {
+                console.log('⏹️  Aggregate fetch cancelled before setting state');
+                return;
+            }
+
+            console.log('✅ Aggregate data loaded:', finalData.length, 'weeks (filled)');
+            setVolumeData(finalData);
         };
 
-        const fetchPerSlotReports = async (slotIds: string[], weeks: number) => {
+        const fetchPerSlotReports = async (slotIds: string[], weeks: number, checkCancelled: () => boolean) => {
+            if (checkCancelled()) {
+                console.log('⏹️  Per-slot fetch cancelled before starting');
+                return;
+            }
+
             console.log('   Using per-slot reports (filters active)');
 
             // Collect all per-slot data with filled weeks
@@ -153,10 +186,20 @@ export const useFetchFilteredVolumeHistory = (
 
             // Fetch SlotWeeklyReport for each filtered slot
             for (const slotId of slotIds) {
+                if (checkCancelled()) {
+                    console.log('⏹️  Per-slot fetch cancelled during slot iteration');
+                    return;
+                }
+
                 const slotWeeklyReportRef = collection(db, 'WarehouseSlots', slotId, 'SlotWeeklyReport');
 
                 try {
                     const snapshot = await getDocs(slotWeeklyReportRef);
+
+                    if (checkCancelled()) {
+                        console.log('⏹️  Per-slot fetch cancelled after slot getDocs');
+                        return;
+                    }
 
                     // Convert this slot's data to VolumeDataPoint array
                     const slotData: VolumeDataPoint[] = snapshot.docs.map(doc => {
@@ -177,8 +220,15 @@ export const useFetchFilteredVolumeHistory = (
 
                     allSlotData.set(slotId, filledSlotData);
                 } catch (error) {
-                    console.warn(`   Failed to fetch reports for slot ${slotId}:`, error);
+                    if (!checkCancelled()) {
+                        console.warn(`   Failed to fetch reports for slot ${slotId}:`, error);
+                    }
                 }
+            }
+
+            if (checkCancelled()) {
+                console.log('⏹️  Per-slot fetch cancelled before aggregation');
+                return;
             }
 
             console.log(`   Loaded data for ${allSlotData.size} slots`);
@@ -208,11 +258,22 @@ export const useFetchFilteredVolumeHistory = (
             // Take last N weeks
             const finalData = sortedData.slice(-weeks);
 
+            if (checkCancelled()) {
+                console.log('⏹️  Per-slot fetch cancelled before setting state');
+                return;
+            }
+
             console.log('✅ Per-slot data aggregated:', finalData.length, 'weeks');
             setVolumeData(finalData);
         };
 
         fetchVolumeHistory();
+
+        // Cleanup function to cancel ongoing fetch when filters change
+        return () => {
+            isCancelled = true;
+            console.log('🛑 Fetch operation cancelled (filters changed or component unmounted)');
+        };
     }, [slotType, cacheKey, hasActiveFilters, filteredSlotIds, weeksToShow]);
 
     return { volumeData, loading };
