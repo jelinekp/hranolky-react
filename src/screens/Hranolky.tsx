@@ -1,5 +1,6 @@
 import React from "react";
 import {useFetchAllWarehouseSlots} from "../hooks/useFetchAllWarehouseSlots.ts";
+import {useFetchUserDevices} from "../hooks/useFetchUserDevices.ts";
 import ContentLayoutContainer from "../components/ContentLayoutContainer.tsx";
 import {SlotType} from "../../common/SlotType.ts";
 import {useNavigate} from "react-router-dom";
@@ -7,6 +8,7 @@ import {useNavigate} from "react-router-dom";
 const Hranolky: React.FC = () => {
     const navigate = useNavigate();
     const {warehouseSlots, loading} = useFetchAllWarehouseSlots("WarehouseSlots", SlotType.Beam);
+    const {devices, loading: devicesLoading} = useFetchUserDevices();
 
     return (
         <div className={"m-6 max-w-[1920px] min-h-screen"}>
@@ -24,7 +26,12 @@ const Hranolky: React.FC = () => {
                 </button>
                 <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-2"/>
             </div>
-            <ContentLayoutContainer warehouseSlots={warehouseSlots} loading={loading} slotType={SlotType.Beam}/>
+            <ContentLayoutContainer
+                warehouseSlots={warehouseSlots}
+                loading={loading || devicesLoading}
+                slotType={SlotType.Beam}
+                devices={devices}
+            />
         </div>
     );
 };

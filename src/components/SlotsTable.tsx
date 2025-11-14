@@ -8,12 +8,13 @@ import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
 import SlotActionsRow from "./SlotActionsRow.tsx";
 import {SortingBy, SortingOrder} from "../model/Sorting.ts";
 
-function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, setSortingByAndOrder}: {
+function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, setSortingByAndOrder, devices}: {
   warehouseSlots: WarehouseSlotClass[],
   activeFilters: SlotFiltersClass,
   sortingBy: SortingBy,
   sortingOrder: SortingOrder,
-  setSortingByAndOrder: (sortingBy: SortingBy) => void
+  setSortingByAndOrder: (sortingBy: SortingBy) => void,
+  devices: Map<string, string | null>
 }) {
   const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null);
   const [closingSlotId, setClosingSlotId] = useState<string | null>(null);
@@ -152,6 +153,7 @@ function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, set
                     actions={slotActions}
                     loading={actionsLoading}
                     isClosing={isClosing}
+                    devices={devices}
                   />
                 ] : [])
               ];

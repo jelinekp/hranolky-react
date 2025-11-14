@@ -7,9 +7,10 @@ interface SlotActionsRowProps {
     actions: SlotActionClass[];
     loading: boolean;
     isClosing?: boolean;
+    devices: Map<string, string | null>;
 }
 
-const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClosing = false}) => {
+const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClosing = false, devices}) => {
     const animationClass = isClosing
         ? "animate-[slideUp_400ms_ease-out]"
         : "animate-[slideDown_400ms_ease-out]";
@@ -48,7 +49,7 @@ const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClos
                                         {action.quantityChange >= 0 ? '+' : ''}{action.quantityChange}
                                     </div>
                                     <div className="col-span-2 text-sm">
-                                        {action.userId.substring(0, 3)}
+                                        {devices.get(action.userId) || action.userId.substring(0, 3)}
                                     </div>
                                     <div className="col-span-3 text-sm text-gray-600">
                                         {formatCsDate(action.timestamp?.toDate())}

@@ -10,7 +10,12 @@ import VolumeInTimeChart from "./VolumeInTimeChart.tsx";
 import {SortingBy, SortingOrder} from "../model/Sorting.ts";
 
 function ContentLayoutContainer(
-  props: { warehouseSlots: WarehouseSlotClass[], loading: boolean, slotType: SlotType }
+  props: {
+    warehouseSlots: WarehouseSlotClass[],
+    loading: boolean,
+    slotType: SlotType,
+    devices: Map<string, string | null>
+  }
 ) {
 
   const [sortingBy, setSortingBy] = useState<SortingBy>(SortingBy.none)
@@ -71,10 +76,14 @@ function ContentLayoutContainer(
         {props.loading ? (
           <TableSkeleton/>
         ) : (
-          <SlotsTable warehouseSlots={filteredSlots} activeFilters={activeFilters}
-                      sortingBy={sortingBy}
-                      sortingOrder={sortingOrder}
-                      setSortingByAndOrder={setSortingByAndOrder}/>
+          <SlotsTable
+            warehouseSlots={filteredSlots}
+            activeFilters={activeFilters}
+            sortingBy={sortingBy}
+            sortingOrder={sortingOrder}
+            setSortingByAndOrder={setSortingByAndOrder}
+            devices={props.devices}
+          />
         )}
       </div>
       <div className={"flex-[1] min-w-[200px] basis-full lg:basis-0 flex flex-col gap-6 order-1 lg:order-2"}>
