@@ -1,5 +1,5 @@
-import React, {useMemo, useState, useEffect} from "react";
-import {CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis, ReferenceLine} from 'recharts';
+import React, {useEffect, useMemo, useState} from "react";
+import {CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
 import {useFetchFilteredVolumeHistory} from "../hooks/useFetchFilteredVolumeHistory.ts";
 import {SlotType, WarehouseSlotClass} from "hranolky-firestore-common";
 
@@ -15,28 +15,32 @@ interface VolumeDataPoint {
   volume: number;
 }
 
+// Helper function to get current week number (ISO 8601)
+const getCurrentWeekNumber = (): number => {
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+};
+
 // Mock data generator for initial loading animation
 const generateMockVolumeData = (): VolumeDataPoint[] => {
   const data: VolumeDataPoint[] = [];
-  const today = new Date();
-  const weeksToShow = 30; // Show last 30 weeks
+  const startWeek = 27; // 2025 week 27
+  const currentWeek = getCurrentWeekNumber();
 
-  for (let i = weeksToShow - 1; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - (i * 7));
-
-    // Find the most recent Sunday
-    const dayOfWeek = date.getDay();
-    const daysToSubtract = dayOfWeek === 0 ? 0 : dayOfWeek;
-    date.setDate(date.getDate() - daysToSubtract);
-
-    const weekLabel = `${date.getDate()}.${date.getMonth() + 1}.`;
+  for (let week = startWeek; week <= currentWeek; week++) {
+    const weekLabel = week.toString();
 
     // Generate mock volume data with some variation (fixed seed for consistency)
     const baseVolume = 45;
-    const seasonalVariation = Math.sin((i / weeksToShow) * Math.PI * 2) * 5;
-    const trend = (weeksToShow - i) * 0.5; // Slight upward trend
-    const randomNoise = (Math.sin(i * 123.456) + 1) * 2.5; // Deterministic "random"
+    const weekOffset = week - startWeek;
+    const totalWeeks = currentWeek - startWeek + 1;
+    const seasonalVariation = Math.sin((weekOffset / totalWeeks) * Math.PI * 2) * 5;
+    const trend = weekOffset * 0.5; // Slight upward trend
+    const randomNoise = (Math.sin(week * 123.456) + 1) * 2.5; // Deterministic "random"
     const volume = parseFloat((baseVolume + seasonalVariation + trend + randomNoise).toFixed(2));
 
     data.push({ week: weekLabel, volume });
@@ -133,21 +137,35 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   // Don't memoize this - we want it to recalculate every render during animation!
   // Force a completely new array reference to trigger Recharts re-render
   const animatedData = (() => {
-    if (!loading || goofyOffsets.length === 0) {
-      return displayData;
+    let baseData = displayData;
+
+    if (loading && goofyOffsets.length > 0) {
+      // Make each point bounce up and down by different amounts!
+      // Create a COMPLETELY NEW array with new object references to force Recharts update
+      baseData = displayData.map((point, index) => {
+        const offset = goofyOffsets[index] || 0;
+        return {
+          week: point.week,
+          volume: Math.max(0, point.volume + offset),
+          // Add a random key to force object difference detection
+          _animKey: Math.random()
+        };
+      });
     }
 
-    // Make each point bounce up and down by different amounts!
-    // Create a COMPLETELY NEW array with new object references to force Recharts update
-    return displayData.map((point, index) => {
-      const offset = goofyOffsets[index] || 0;
-      return {
-        week: point.week,
-        volume: Math.max(0, point.volume + offset),
-        // Add a random key to force object difference detection
-        _animKey: Math.random()
-      };
-    });
+    // Always add current volume as the last point
+    const currentWeek = getCurrentWeekNumber();
+    const currentWeekStr = currentWeek.toString();
+
+    // Check if current week already exists in data
+    const hasCurrentWeek = baseData.some(d => d.week === currentWeekStr);
+
+    if (!hasCurrentWeek) {
+      // Add current volume as a new data point
+      return [...baseData, { week: currentWeekStr, volume: currentVolume }];
+    }
+
+    return baseData;
   })();
 
   // Calculate Y-axis domain and ticks
