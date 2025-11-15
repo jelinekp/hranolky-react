@@ -12,11 +12,19 @@ import {
 import {db} from "../firebase"
 import {WarehouseSlotClass, SlotActionClass, SlotType} from "hranolky-firestore-common"
 
-export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slotType: SlotType) => {
+export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slotType: SlotType, options?: { enabled?: boolean }) => {
+    const enabled = options?.enabled ?? true
     const [data, setData] = useState<WarehouseSlotClass[]>([])
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
+        // If fetching is disabled (e.g., waiting for auth), keep loading true and do nothing.
+        if (!enabled) {
+            setData([])
+            setLoading(true)
+            return
+        }
+
         let innerUnsubscribes: (() => void)[] = []
 
         // 1. Define the base reference to the collection
@@ -86,7 +94,7 @@ export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slot
             unsubscribeWarehouseSlots()
             innerUnsubscribes.forEach((u) => u())
         }
-    }, [warehouseSlotsCollection, slotType])
+    }, [warehouseSlotsCollection, slotType, enabled])
 
     return { warehouseSlots: data, loading }
 };

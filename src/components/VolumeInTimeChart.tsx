@@ -262,7 +262,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
                 onClick={() => setManualLoadRequested(true)}
                 className="bg-[var(--color-primary)] px-6 py-3 rounded-lg font-semibold hover:bg-[var(--color-primary-dark)] transition-colors"
               >
-                Načíst data
+                Načíst graf
               </button>
             </div>
           </div>
