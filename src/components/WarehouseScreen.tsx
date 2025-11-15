@@ -1,10 +1,10 @@
-// filepath: /home/pavel/Jelinek/hranolky-react/src/components/WarehouseScreen.tsx
+// filepath: `src/components/WarehouseScreen.tsx`
 import React from "react";
-import { useNavigate } from "react-router-dom";
-import { SlotType } from "../../common/SlotType.ts";
+import {useNavigate} from "react-router-dom";
+import {SlotType} from "../../common/SlotType.ts";
 import useAnonymousAuth from "../hooks/signInAnonymously.ts";
-import { useFetchAllWarehouseSlots } from "../hooks/useFetchAllWarehouseSlots.ts";
-import { useFetchUserDevices } from "../hooks/useFetchUserDevices.ts";
+import {useFetchAllWarehouseSlots} from "../hooks/useFetchAllWarehouseSlots.ts";
+import {useFetchUserDevices} from "../hooks/useFetchUserDevices.ts";
 import ContentLayoutContainer from "./ContentLayoutContainer.tsx";
 
 export type WarehouseScreenProps = {
@@ -24,23 +24,23 @@ export type WarehouseScreenProps = {
 };
 
 const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
-  slotType,
-  title,
-  titleIconSrc,
-  titleIconWidth,
-  titleIconHeight,
-  switchTo,
-}) => {
+                                                           slotType,
+                                                           title,
+                                                           titleIconSrc,
+                                                           titleIconWidth,
+                                                           titleIconHeight,
+                                                           switchTo,
+                                                         }) => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAnonymousAuth();
+  const {user, loading: authLoading} = useAnonymousAuth();
 
   const enabled = !!user && !authLoading;
-  const { warehouseSlots, loading: slotsLoading } = useFetchAllWarehouseSlots(
+  const {warehouseSlots, loading: slotsLoading} = useFetchAllWarehouseSlots(
     "WarehouseSlots",
     slotType,
-    { enabled }
+    {enabled}
   );
-  const { devices, loading: devicesLoading } = useFetchUserDevices({ enabled });
+  const {devices, loading: devicesLoading} = useFetchUserDevices({enabled});
 
   const loading = authLoading || slotsLoading || devicesLoading;
 
@@ -48,7 +48,7 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
     <div className={"m-6 max-w-[1920px] min-h-screen"}>
       <div className={"flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 mb-6"}>
         <div className={"flex flex-row items-center gap-3"}>
-          <img src={titleIconSrc} alt={`${title} icon`} width={titleIconWidth} height={titleIconHeight} />
+          <img src={titleIconSrc} alt={`${title} icon`} width={titleIconWidth} height={titleIconHeight}/>
           <h1>{title}</h1>
         </div>
         <button
@@ -59,14 +59,15 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
           }
         >
           <span className="text-xl leading-none">{switchTo.label}</span>
-          <img src={switchTo.iconSrc} alt={`${switchTo.label} icon`} width={switchTo.iconWidth} height={switchTo.iconHeight} />
+          <img src={switchTo.iconSrc} alt={`${switchTo.label} icon`} width={switchTo.iconWidth}
+               height={switchTo.iconHeight}/>
         </button>
-        <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-2" />
+        <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline mr-2"/>
       </div>
 
       {authLoading && (
         <div className="mb-4 rounded-lg p-3 bg-[var(--color-bg-01)] shadow-inner flex items-center gap-2">
-          <span className="inline-block h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
+          <span className="inline-block h-2 w-2 rounded-full bg-[var(--color-primary)] animate-pulse"/>
           <span>Probíhá přihlašování...</span>
         </div>
       )}
@@ -82,4 +83,3 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
 };
 
 export default WarehouseScreen;
-
