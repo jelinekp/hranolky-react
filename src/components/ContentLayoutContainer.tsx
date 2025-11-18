@@ -83,6 +83,7 @@ function ContentLayoutContainer(
             sortingOrder={sortingOrder}
             setSortingByAndOrder={setSortingByAndOrder}
             devices={props.devices}
+            slotType={props.slotType}
           />
         )}
       </div>

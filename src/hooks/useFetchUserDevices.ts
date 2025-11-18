@@ -20,7 +20,7 @@ export const useFetchUserDevices = (options?: { enabled?: boolean }) => {
             setLoading(true);
 
             try {
-                const devicesRef = collection(db, 'devices');
+                const devicesRef = collection(db, 'Devices');
                 const snapshot = await getDocs(devicesRef);
 
                 console.log(`   Found ${snapshot.size} devices`);

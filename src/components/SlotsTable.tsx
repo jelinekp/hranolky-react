@@ -1,4 +1,4 @@
-import {WarehouseSlotClass} from "hranolky-firestore-common";
+import {SlotType, WarehouseSlotClass} from "hranolky-firestore-common";
 import {SlotFiltersClass} from "../model/SlotFilter.ts";
 import {useState} from "react";
 import {useFetchSlotActions} from "../hooks/useFetchSlotActions.ts";
@@ -8,17 +8,18 @@ import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
 import SlotActionsRow from "./SlotActionsRow.tsx";
 import {SortingBy, SortingOrder} from "../model/Sorting.ts";
 
-function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, setSortingByAndOrder, devices}: {
+function SlotsTable({warehouseSlots, activeFilters, sortingBy, sortingOrder, setSortingByAndOrder, devices, slotType}: {
   warehouseSlots: WarehouseSlotClass[],
   activeFilters: SlotFiltersClass,
   sortingBy: SortingBy,
   sortingOrder: SortingOrder,
   setSortingByAndOrder: (sortingBy: SortingBy) => void,
-  devices: Map<string, string | null>
+  devices: Map<string, string | null>,
+  slotType: SlotType
 }) {
   const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null);
   const [closingSlotId, setClosingSlotId] = useState<string | null>(null);
-  const {slotActions, loading: actionsLoading} = useFetchSlotActions(expandedSlotId);
+  const {slotActions, loading: actionsLoading} = useFetchSlotActions(expandedSlotId, slotType);
 
   const handleSlotToggle = (slotId: string) => {
     if (expandedSlotId === slotId) {

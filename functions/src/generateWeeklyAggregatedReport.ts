@@ -14,8 +14,8 @@ import {getFirestore} from "firebase-admin/firestore";
 // ...existing code...
 
 /**
- * Helper function to get the current date as "YYYY_WW" (ISO week number).
- * @returns {string} The formatted date string, e.g., "2025_46".
+ * Helper function to get the current date as "YY_WW" (ISO week number).
+ * @returns {string} The formatted date string, e.g., "25_46".
  */
 function getYearAndWeek() {
     const d = new Date();
@@ -26,10 +26,11 @@ function getYearAndWeek() {
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     // Calculate full weeks to nearest Thursday
     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    // Pad week number with leading zero if needed
+    // Pad week and year number with leading zeros if needed
     const weekString = String(weekNo).padStart(2, '0');
+    const year2 = String(d.getUTCFullYear() % 100).padStart(2, '0');
 
-    return `${d.getUTCFullYear()}_${weekString}`;
+    return `${year2}_${weekString}`;
 }
 
 // --- Your Scheduled Function ---
@@ -101,8 +102,9 @@ export const generateWeeklyReports = onSchedule(
       // 6. Write to Firestore using a batch for atomicity
       const batch = db.batch();
 
-      const jointerReportRef = db.collection("WeeklyJointerReports").doc(documentId);
-      const beamReportRef = db.collection("WeeklyBeamReports").doc(documentId);
+      // New nested collection paths
+      const jointerReportRef = db.collection("WeeklyReports").doc("Sparovky").collection("WeeklyData").doc(documentId);
+      const beamReportRef = db.collection("WeeklyReports").doc("Hranolky").collection("WeeklyData").doc(documentId);
 
       // Using .set() with merge: true will create or overwrite the doc
       batch.set(jointerReportRef, jointerReportData, { merge: true });

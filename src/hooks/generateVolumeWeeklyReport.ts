@@ -121,7 +121,8 @@ function generateReportsInMemory(
     console.log(`📊 Processing ${slotType === SlotType.Beam ? 'Beam' : 'Jointer'} reports...`);
 
     for (let week = startWeek; week <= endWeek; week++) {
-        const weekId = `${year}_${String(week).padStart(2, '0')}`;
+        const year2 = String(year % 100).padStart(2, '0');
+        const weekId = `${year2}_${String(week).padStart(2, '0')}`;
         const endOfWeek = getEndOfWeek(year, week);
 
         let totalQuantity = 0;
@@ -162,9 +163,12 @@ async function batchWriteReports(
     reports: Map<string, WeeklyReport>,
     slotType: SlotType
 ): Promise<void> {
-    const collectionName = slotType === SlotType.Beam ? 'WeeklyBeamReports' : 'WeeklyJointerReports';
+    // New nested collection structure
+    const collectionSegments = slotType === SlotType.Beam
+        ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
+        : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
 
-    console.log(`\n💾 Writing ${reports.size} reports to ${collectionName}...`);
+    console.log(`\n💾 Writing ${reports.size} reports to ${collectionSegments.join('/')}...`);
 
     // Firestore batch writes are limited to 500 operations
     const batchSize = 500;
@@ -175,7 +179,8 @@ async function batchWriteReports(
         const batchEntries = reportEntries.slice(i, i + batchSize);
 
         for (const [weekId, reportData] of batchEntries) {
-            const reportDoc = doc(db, collectionName, weekId);
+            const collectionPath = collectionSegments.join('/');
+            const reportDoc = doc(db, collectionPath, weekId);
             batch.set(reportDoc, reportData);
         }
 
@@ -210,4 +215,3 @@ export async function generateAllWeeklyReports(): Promise<void> {
 
 // Uncomment to run the generation
 // generateAllWeeklyReports().catch(console.error);
-

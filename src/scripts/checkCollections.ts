@@ -9,12 +9,16 @@ import { db } from '../firebase';
 async function checkCollections() {
     console.log('🔍 Checking Firestore collections...\n');
     
-    const collections = ['WeeklyBeamReports', 'WeeklyJointerReports'];
-    
-    for (const collectionName of collections) {
-        console.log(`📊 Checking ${collectionName}:`);
+    const paths: Array<string[]> = [
+        ['WeeklyReports', 'Hranolky', 'WeeklyData'],
+        ['WeeklyReports', 'Sparovky', 'WeeklyData'],
+    ];
+
+    for (const segments of paths) {
+        const label = segments.join('/');
+        console.log(`📊 Checking ${label}:`);
         try {
-            const ref = collection(db, collectionName);
+            const ref = collection(db, label);
             const snapshot = await getDocs(ref);
             
             console.log(`   Documents found: ${snapshot.size}`);
@@ -43,4 +47,3 @@ checkCollections()
         console.error('Fatal error:', error);
         process.exit(1);
     });
-

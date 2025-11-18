@@ -1,19 +1,19 @@
-    // Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
+// Import the functions you need from the SDKs you need
+import {initializeApp} from "firebase/app";
 // import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from 'firebase/firestore';
+import {getAuth} from "firebase/auth";
+import {getFirestore} from 'firebase/firestore';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "AIzaSyDgbaJXpxEKBJUGf_t0GBHR3DfiRzxVF2Y",
-    authDomain: "hranolky-firestore.firebaseapp.com",
-    projectId: "hranolky-firestore",
-    storageBucket: "hranolky-firestore.firebasestorage.app",
-    messagingSenderId: "1055149203936",
-    appId: "1:1055149203936:web:c32b7ee666696693290b85",
-    measurementId: "G-MF90Y152K5"
+  apiKey: "AIzaSyAfciuaeJTK1nu76Q4M57r0oUg5GkYrSOg",
+  authDomain: "hranolky-a-sparovky.firebaseapp.com",
+  projectId: "hranolky-a-sparovky",
+  storageBucket: "hranolky-a-sparovky.firebasestorage.app",
+  messagingSenderId: "657740368257",
+  appId: "1:657740368257:web:03c0e35169436374fc0080",
+  measurementId: "G-EBTM0VBQN4"
 };
 
 // Initialize Firebase

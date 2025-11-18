@@ -27,13 +27,14 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
             setLoading(true);
             
             try {
-                const collectionName = slotType === SlotType.Beam 
-                    ? 'WeeklyBeamReports' 
-                    : 'WeeklyJointerReports';
-                
-                console.log('   Collection name:', collectionName);
+                const collectionSegments = slotType === SlotType.Beam
+                    ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
+                    : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
 
-                const reportsRef = collection(db, collectionName);
+                const collectionPath = collectionSegments.join('/');
+                console.log('   Collection path:', collectionPath);
+
+                const reportsRef = collection(db, collectionPath);
                 // Don't use orderBy to avoid requiring a Firestore index
                 // We'll sort in JavaScript instead
 
@@ -45,7 +46,7 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
                 console.log('   Document IDs:', snapshot.docs.map(doc => doc.id));
 
                 if (snapshot.empty) {
-                    console.warn('⚠️  No documents found in collection:', collectionName);
+                    console.warn('⚠️  No documents found in collection:', collectionPath);
                     setVolumeData([]);
                     setLoading(false);
                     return;
@@ -66,7 +67,7 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
                         console.log(`   Processing doc ${weekId}:`, reportData);
 
                         // Parse week number for display
-                        const [_year, week] = weekId.split('_');
+                        const week = weekId.split('_')[1];
                         const weekNumber = parseInt(week, 10);
                         
                         // Create a simple label (you can customize this)
@@ -97,4 +98,3 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
 
     return { volumeData, loading };
 };
-

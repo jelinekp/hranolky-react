@@ -36,7 +36,6 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
 
   const enabled = !!user && !authLoading;
   const {warehouseSlots, loading: slotsLoading} = useFetchAllWarehouseSlots(
-    "WarehouseSlots",
     slotType,
     {enabled}
   );

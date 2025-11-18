@@ -2,8 +2,6 @@ import {useEffect, useState} from "react"
 import {
     collection,
     query,
-    where,
-    documentId,
     onSnapshot,
     orderBy,
     limit,
@@ -11,11 +9,13 @@ import {
 } from "firebase/firestore"
 import {db} from "../firebase"
 import {WarehouseSlotClass, SlotActionClass, SlotType} from "hranolky-firestore-common"
+import {toFirestoreCollectionName} from "hranolky-firestore-common/SlotType.ts";
 
-export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slotType: SlotType, options?: { enabled?: boolean }) => {
+export const useFetchAllWarehouseSlots = (slotType: SlotType, options?: { enabled?: boolean }) => {
     const enabled = options?.enabled ?? true
     const [data, setData] = useState<WarehouseSlotClass[]>([])
     const [loading, setLoading] = useState(true)
+  const warehouseSlotsCollection = toFirestoreCollectionName(slotType)
 
     useEffect(() => {
         // If fetching is disabled (e.g., waiting for auth), keep loading true and do nothing.
@@ -29,24 +29,7 @@ export const useFetchAllWarehouseSlots = (warehouseSlotsCollection: string, slot
 
         // 1. Define the base reference to the collection
         const collectionRef = collection(db, warehouseSlotsCollection);
-        let warehouseSlotsQuery: Query;
-
-        // 2. Build the query with server-side filtering based on slotType
-        switch (slotType) {
-            case SlotType.Jointer:
-                warehouseSlotsQuery = query(collectionRef, where(documentId(), ">=", "S"), where(documentId(), "<", "T"));
-                break;
-
-            case SlotType.Beam:
-                warehouseSlotsQuery = query(collectionRef, where(documentId(), ">=", "D"), where(documentId(), "<", "I"));
-                break;
-
-            default:
-                // No filter applied, fetches all documents from the collection
-                warehouseSlotsQuery = query(collectionRef);
-                break;
-        }
-
+        const warehouseSlotsQuery: Query = query(collectionRef);
 
         const unsubscribeWarehouseSlots = onSnapshot(warehouseSlotsQuery, (snapshot) => {
             // Clean previous inner subscriptions to prevent memory leaks

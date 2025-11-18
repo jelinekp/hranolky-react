@@ -9,7 +9,7 @@ import {onSchedule} from "firebase-functions/v2/scheduler";
 import {getFirestore} from "firebase-admin/firestore";
 
 /**
- * Helper function to get the current date as "YYYY_WW" (ISO week number).
+ * Helper function to get the current date as "YY_WW" (ISO week number).
  */
 function getYearAndWeek(): string {
     const d = new Date();
@@ -17,7 +17,8 @@ function getYearAndWeek(): string {
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
     const weekString = String(weekNo).padStart(2, '0');
-    return `${d.getUTCFullYear()}_${weekString}`;
+    const year2 = String(d.getUTCFullYear() % 100).padStart(2, '0');
+    return `${year2}_${weekString}`;
 }
 
 /**
@@ -145,5 +146,3 @@ export const generateWeeklySlotReports = onSchedule(
         console.log(`   Total slots processed: ${slotsSnapshot.size}`);
     }
 );
-
-

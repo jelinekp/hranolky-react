@@ -1,288 +1,304 @@
 // src/hooks/useFetchFilteredVolumeHistory.ts
-import { useEffect, useState, useMemo } from "react";
-import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
-import { SlotType } from "hranolky-firestore-common";
+import {useEffect, useMemo, useState} from "react";
+import {collection, getDocs} from "firebase/firestore";
+import {db} from "../firebase";
+import {SlotType} from "hranolky-firestore-common";
 
 interface VolumeDataPoint {
-    week: string;
-    volume: number;
+  week: string;
+  volume: number;
 }
 
 interface WeeklyReport {
-    totalQuantity: number;
-    totalVolumeDm: number;
+  totalQuantity: number;
+  totalVolumeDm: number;
 }
 
 interface SlotWeeklyReport {
-    quantity: number;
-    volumeDm: number;
+  quantity: number;
+  volumeDm: number;
 }
 
 // Helper function to get current week number (ISO 8601)
 function getCurrentWeekNumber(): number {
-    const now = new Date();
-    const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-    const dayNum = d.getUTCDay() || 7;
-    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    return weekNo;
+  const now = new Date();
+  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  return weekNo;
 }
 
 // Helper function to fill missing weeks with previous week's value
 function fillMissingWeeks(data: VolumeDataPoint[]): VolumeDataPoint[] {
-    if (data.length === 0) return data;
+  if (data.length === 0) return data;
 
-    // Extract week numbers from labels (e.g., "W27" or "27" -> 27)
-    const weeksWithData = data.map(d => ({
-        weekNumber: parseInt(d.week),
-        volume: d.volume
-    }));
+  // Extract week numbers from labels (e.g., "W27" or "27" -> 27)
+  const weeksWithData = data.map(d => ({
+    weekNumber: parseInt(d.week),
+    volume: d.volume
+  }));
 
-    // Find min week from data
-    const minWeek = Math.min(...weeksWithData.map(w => w.weekNumber));
+  // Find min week from data
+  const minWeek = Math.min(...weeksWithData.map(w => w.weekNumber));
 
-    // Max week is always the previous week (last Sunday)
-    const currentWeek = getCurrentWeekNumber();
-    const maxWeek = currentWeek - 1;
+  // Max week is always the previous week (last Sunday)
+  const currentWeek = getCurrentWeekNumber();
+  const maxWeek = currentWeek - 1;
 
-    // Create a map for quick lookup
-    const weekMap = new Map(weeksWithData.map(w => [w.weekNumber, w.volume]));
+  // Create a map for quick lookup
+  const weekMap = new Map(weeksWithData.map(w => [w.weekNumber, w.volume]));
 
-    // Fill in all weeks from min to max
-    const filledData: VolumeDataPoint[] = [];
-    let lastVolume = 0;
+  // Fill in all weeks from min to max
+  const filledData: VolumeDataPoint[] = [];
+  let lastVolume = 0;
 
-    for (let week = minWeek; week <= maxWeek; week++) {
-        const volume = weekMap.get(week);
+  for (let week = minWeek; week <= maxWeek; week++) {
+    const volume = weekMap.get(week);
 
-        if (volume !== undefined) {
-            // Week exists in data, use it
-            lastVolume = volume;
-        }
-        // else: Week is missing, use lastVolume (carries forward from previous week)
-
-        filledData.push({
-            week: `${week}`,
-            volume: lastVolume
-        });
+    if (volume !== undefined) {
+      // Week exists in data, use it
+      lastVolume = volume;
     }
+    // else: Week is missing, use lastVolume (carries forward from previous week)
 
-    return filledData;
+    filledData.push({
+      week: `${week}`,
+      volume: lastVolume
+    });
+  }
+
+  return filledData;
 }
 
 export const useFetchFilteredVolumeHistory = (
-    slotType: SlotType,
-    filteredSlotIds: string[],
-    hasActiveFilters: boolean,
-    weeksToShow: number = 12
+  slotType: SlotType,
+  filteredSlotIds: string[],
+  hasActiveFilters: boolean,
+  weeksToShow: number = 12
 ) => {
-    const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([]);
-    const [loading, setLoading] = useState(true);
+  const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([]);
+  const [loading, setLoading] = useState(true);
 
-    // Create a stable cache key based on filtered slot IDs
-    const cacheKey = useMemo(() => {
-        if (!hasActiveFilters) return 'aggregate';
-        return filteredSlotIds.sort().join(',');
-    }, [hasActiveFilters, filteredSlotIds]);
+  // Create a stable cache key based on filtered slot IDs
+  const cacheKey = useMemo(() => {
+    if (!hasActiveFilters) return 'aggregate';
+    return filteredSlotIds.sort().join(',');
+  }, [hasActiveFilters, filteredSlotIds]);
 
-    useEffect(() => {
-        let isCancelled = false;
+  useEffect(() => {
+    let isCancelled = false;
 
-        const fetchVolumeHistory = async () => {
-            // Early return if no slots to fetch (manual load not requested yet)
-            if (filteredSlotIds.length === 0) {
-                console.log('⏹️  Skipping fetch - no slots provided');
-                setLoading(false);
-                return;
-            }
+    const fetchVolumeHistory = async () => {
+      // Only skip when filters are active and no slots are selected
+      if (hasActiveFilters && filteredSlotIds.length === 0) {
+        console.log('⏹️  Skipping fetch - filters active but no slots provided');
+        setLoading(false);
+        return;
+      }
 
-            console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
-            console.log('   SlotType:', slotType);
-            console.log('   Has Active Filters:', hasActiveFilters);
-            console.log('   Filtered Slots Count:', filteredSlotIds.length);
+      console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
+      console.log('   SlotType:', slotType);
+      console.log('   Has Active Filters:', hasActiveFilters);
+      console.log('   Filtered Slots Count:', filteredSlotIds.length);
 
-            setLoading(true);
+      setLoading(true);
 
-            try {
-                if (!hasActiveFilters) {
-                    // Use aggregate reports when no filters
-                    await fetchAggregateReports(slotType, weeksToShow, () => isCancelled);
-                } else {
-                    // Use per-slot reports when filters are active
-                    await fetchPerSlotReports(filteredSlotIds, weeksToShow, () => isCancelled);
-                }
-            } catch (error) {
-                if (!isCancelled) {
-                    console.error('❌ Error fetching volume history:', error);
-                    setVolumeData([]);
-                }
-            } finally {
-                if (!isCancelled) {
-                    setLoading(false);
-                }
-            }
-        };
+      try {
+        if (!hasActiveFilters) {
+          // Use aggregate reports when no filters
+          await fetchAggregateReports(slotType, weeksToShow, () => isCancelled);
+        } else {
+          // Use per-slot reports when filters are active
+          await fetchPerSlotReports(slotType, filteredSlotIds, weeksToShow, () => isCancelled);
+        }
+      } catch (error) {
+        if (!isCancelled) {
+          console.error('❌ Error fetching volume history:', error);
+          setVolumeData([]);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
 
-        const fetchAggregateReports = async (type: SlotType, weeks: number, checkCancelled: () => boolean) => {
-            if (checkCancelled()) {
-                console.log('⏹️  Aggregate fetch cancelled before starting');
-                return;
-            }
+    const fetchAggregateReports = async (type: SlotType, weeks: number, checkCancelled: () => boolean) => {
+      if (checkCancelled()) {
+        console.log('⏹️  Aggregate fetch cancelled before starting');
+        return;
+      }
 
-            console.log('   Using aggregate reports (no filters)');
+      console.log('   Using aggregate reports (no filters)');
 
-            const collectionName = type === SlotType.Beam
-                ? 'WeeklyBeamReports'
-                : 'WeeklyJointerReports';
+      // Updated to new nested collection paths
+      const collectionSegments = type === SlotType.Beam
+        ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
+        : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
 
-            const reportsRef = collection(db, collectionName);
-            const snapshot = await getDocs(reportsRef);
+      const reportsRef = collection(db, collectionSegments.join('/'));
+      const snapshot = await getDocs(reportsRef);
 
-            if (checkCancelled()) {
-                console.log('⏹️  Aggregate fetch cancelled after getDocs');
-                return;
-            }
+      if (checkCancelled()) {
+        console.log('⏹️  Aggregate fetch cancelled after getDocs');
+        return;
+      }
 
-            console.log(`   Found ${snapshot.size} aggregate reports`);
+      console.log(`   Found ${snapshot.size} aggregate reports`);
 
-            // Sort documents by ID to ensure chronological order
-            const sortedDocs = snapshot.docs.sort((a, b) => a.id.localeCompare(b.id));
+      // Sort documents by ID to ensure chronological order
+      const sortedDocs = snapshot.docs.sort((a, b) => a.id.localeCompare(b.id));
 
-            const data: VolumeDataPoint[] = sortedDocs
-                .map(doc => {
-                    const weekId = doc.id;
-                    const reportData = doc.data() as WeeklyReport;
+      const data: VolumeDataPoint[] = sortedDocs
+        .map(doc => {
+          const weekId = doc.id;
+          const reportData = doc.data() as WeeklyReport;
 
-                    const [_year, week] = weekId.split('_');
-                    const weekNumber = parseInt(week, 10);
-                    const volumeInM3 = reportData.totalVolumeDm / 1000;
+          const week = weekId.split('_')[1];
+          const weekNumber = parseInt(week, 10);
+          const volumeInM3 = reportData.totalVolumeDm / 1000;
 
-                    return {
-                        week: weekNumber.toString(),
-                        volume: parseFloat(volumeInM3.toFixed(3))
-                    };
-                });
+          return {
+            week: weekNumber.toString(),
+            volume: parseFloat(volumeInM3.toFixed(3))
+          };
+        });
 
-            // Fill missing weeks to create continuous data
-            const filledData = fillMissingWeeks(data);
+      // Fill missing weeks to create continuous data
+      const filledData = fillMissingWeeks(data);
 
-            // Take last N weeks after filling
-            const finalData = filledData.slice(-weeks);
+      // Take last N weeks after filling
+      const finalData = filledData.slice(-weeks);
 
-            if (checkCancelled()) {
-                console.log('⏹️  Aggregate fetch cancelled before setting state');
-                return;
-            }
+      if (checkCancelled()) {
+        console.log('⏹️  Aggregate fetch cancelled before setting state');
+        return;
+      }
 
-            console.log('✅ Aggregate data loaded:', finalData.length, 'weeks (filled)');
-            setVolumeData(finalData);
-        };
+      console.log('✅ Aggregate data loaded:', finalData.length, 'weeks (filled)');
+      setVolumeData(finalData);
+    };
 
-        const fetchPerSlotReports = async (slotIds: string[], weeks: number, checkCancelled: () => boolean) => {
-            if (checkCancelled()) {
-                console.log('⏹️  Per-slot fetch cancelled before starting');
-                return;
-            }
+    const fetchPerSlotReports = async (slotType: SlotType, slotIds: string[], weeks: number, checkCancelled: () => boolean) => {
+      if (checkCancelled()) {
+        console.log('⏹️  Per-slot fetch cancelled before starting');
+        return;
+      }
 
-            console.log('   Using per-slot reports (filters active)');
+      console.log('   Using per-slot reports (filters active)');
 
-            // Collect all per-slot data with filled weeks
-            const allSlotData: Map<string, VolumeDataPoint[]> = new Map();
+      // Collect all per-slot data with filled weeks
+      const allSlotData: Map<string, VolumeDataPoint[]> = new Map();
 
-            // Fetch SlotWeeklyReport for each filtered slot
-            for (const slotId of slotIds) {
-                if (checkCancelled()) {
-                    console.log('⏹️  Per-slot fetch cancelled during slot iteration');
-                    return;
-                }
+      // Fetch SlotWeeklyReport for each filtered slot
+      for (const slotId of slotIds) {
+        if (checkCancelled()) {
+          console.log('⏹️  Per-slot fetch cancelled during slot iteration');
+          return;
+        }
 
-                const slotWeeklyReportRef = collection(db, 'WarehouseSlots', slotId, 'SlotWeeklyReport');
+        // Determine collection and document ID based on slot type
+        let collectionName: string;
 
-                try {
-                    const snapshot = await getDocs(slotWeeklyReportRef);
+        if (slotType === SlotType.Beam) {
+          collectionName = 'Hranolky';
+        } else if (slotType === SlotType.Jointer) {
+          collectionName = 'Sparovky';
+        } else {
+          // DUB- or other prefixes go to Hranolky without stripping
+          collectionName = 'Hranolky';
+        }
 
-                    if (checkCancelled()) {
-                        console.log('⏹️  Per-slot fetch cancelled after slot getDocs');
-                        return;
-                    }
+        const primaryRef = collection(db, collectionName, slotId, 'SlotWeeklyReport');
 
-                    // Convert this slot's data to VolumeDataPoint array
-                    const slotData: VolumeDataPoint[] = snapshot.docs.map(doc => {
-                        const weekId = doc.id;
-                        const reportData = doc.data() as SlotWeeklyReport;
+        try {
+          const snapshot = await getDocs(primaryRef);
+          // If primary succeeded but returned no docs, try fallback
+          if (snapshot.empty) {
+            console.log(`   No docs under SlotWeeklyReport, trying SlotWeeklyReports at ${collectionName}/${slotId}...`);
+          }
 
-                        const [_year, week] = weekId.split('_');
-                        const weekNumber = parseInt(week, 10);
 
-                        return {
-                            week: `${weekNumber}`,
-                            volume: reportData.volumeDm / 1000 // Convert to m³
-                        };
-                    }).sort((a, b) => parseInt(a.week) - parseInt(b.week));
+          if (checkCancelled()) {
+            console.log('⏹️  Per-slot fetch cancelled after slot getDocs');
+            return;
+          }
 
-                    // Fill missing weeks for THIS slot
-                    const filledSlotData = fillMissingWeeks(slotData);
+          // Convert this slot's data to VolumeDataPoint array
+          const slotData: VolumeDataPoint[] = snapshot.docs.map(doc => {
+            const weekId = doc.id; // YY_WW expected
+            const reportData = doc.data() as SlotWeeklyReport;
 
-                    allSlotData.set(slotId, filledSlotData);
-                } catch (error) {
-                    if (!checkCancelled()) {
-                        console.warn(`   Failed to fetch reports for slot ${slotId}:`, error);
-                    }
-                }
-            }
+            const week = weekId.split('_')[1];
+            const weekNumber = parseInt(week, 10);
 
-            if (checkCancelled()) {
-                console.log('⏹️  Per-slot fetch cancelled before aggregation');
-                return;
-            }
+            return {
+              week: `${weekNumber}`,
+              volume: reportData.volumeDm / 1000 // Convert to m³
+            };
+          }).sort((a, b) => parseInt(a.week) - parseInt(b.week));
+          // Fill missing weeks for THIS slot
+          const filledSlotData = fillMissingWeeks(slotData);
 
-            console.log(`   Loaded data for ${allSlotData.size} slots`);
+          allSlotData.set(slotId, filledSlotData);
+        } catch (error) {
+          if (!checkCancelled()) {
+            console.warn(`   Failed to fetch reports for slot ${slotId}:`, error);
+          }
+        }
+      }
 
-            // Now aggregate across all slots per week
-            const weeklyAggregates = new Map<number, number>();
+      if (checkCancelled()) {
+        console.log('⏹️  Per-slot fetch cancelled before aggregation');
+        return;
+      }
 
-            // For each slot's filled data, add to the weekly aggregates
-            for (const [_slotId, slotData] of allSlotData.entries()) {
-                for (const dataPoint of slotData) {
-                    const weekNumber = parseInt(dataPoint.week);
-                    const currentVolume = weeklyAggregates.get(weekNumber) || 0;
-                    weeklyAggregates.set(weekNumber, currentVolume + dataPoint.volume);
-                }
-            }
+      console.log(`   Loaded data for ${allSlotData.size} slots`);
 
-            console.log(`   Aggregated ${weeklyAggregates.size} weeks of data`);
+      // Now aggregate across all slots per week
+      const weeklyAggregates = new Map<number, number>();
 
-            // Convert to sorted array
-            const sortedData = Array.from(weeklyAggregates.entries())
-                .sort((a, b) => a[0] - b[0]) // Sort by week number
-                .map(([weekNumber, volume]) => ({
-                    week: `${weekNumber}`,
-                    volume: parseFloat(volume.toFixed(3))
-                }));
+      // For each slot's filled data, add to the weekly aggregates
+      for (const [, slotData] of allSlotData.entries()) {
+        for (const dataPoint of slotData) {
+          const weekNumber = parseInt(dataPoint.week);
+          const currentVolume = weeklyAggregates.get(weekNumber) || 0;
+          weeklyAggregates.set(weekNumber, currentVolume + dataPoint.volume);
+        }
+      }
 
-            // Take last N weeks
-            const finalData = sortedData.slice(-weeks);
+      console.log(`   Aggregated ${weeklyAggregates.size} weeks of data`);
 
-            if (checkCancelled()) {
-                console.log('⏹️  Per-slot fetch cancelled before setting state');
-                return;
-            }
+      // Convert to sorted array
+      const sortedData = Array.from(weeklyAggregates.entries())
+        .sort((a, b) => a[0] - b[0]) // Sort by week number
+        .map(([weekNumber, volume]) => ({
+          week: `${weekNumber}`,
+          volume: parseFloat(volume.toFixed(3))
+        }));
 
-            console.log('✅ Per-slot data aggregated:', finalData.length, 'weeks');
-            setVolumeData(finalData);
-        };
+      // Take last N weeks
+      const finalData = sortedData.slice(-weeks);
 
-        fetchVolumeHistory();
+      if (checkCancelled()) {
+        console.log('⏹️  Per-slot fetch cancelled before setting state');
+        return;
+      }
 
-        // Cleanup function to cancel ongoing fetch when filters change
-        return () => {
-            isCancelled = true;
-            console.log('🛑 Fetch operation cancelled (filters changed or component unmounted)');
-        };
-    }, [slotType, cacheKey, hasActiveFilters, filteredSlotIds, weeksToShow]);
+      console.log('✅ Per-slot data aggregated:', finalData.length, 'weeks');
+      setVolumeData(finalData);
+    };
 
-    return { volumeData, loading };
+    fetchVolumeHistory();
+
+    // Cleanup function to cancel ongoing fetch when filters change
+    return () => {
+      isCancelled = true;
+      console.log('🛑 Fetch operation cancelled (filters changed or component unmounted)');
+    };
+  }, [slotType, cacheKey, hasActiveFilters, filteredSlotIds, weeksToShow]);
+
+  return {volumeData, loading};
 };
-
