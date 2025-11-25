@@ -1,12 +1,12 @@
 /**
  * Firebase Scheduled Function to generate per-slot weekly reports.
- * Runs every Sunday at 10:00 PM (22:00) Prague time.
+ * Runs every Sunday at 8:00 PM (20:00) Prague time.
  * Only creates a new SlotWeeklyReport if the quantity changed from the previous week.
  */
 
-import {WarehouseSlotClass} from "./WarehouseSlot";
-import {onSchedule} from "firebase-functions/v2/scheduler";
-import {getFirestore} from "firebase-admin/firestore";
+import { WarehouseSlotClass } from "./WarehouseSlot";
+import { onSchedule } from "firebase-functions/v2/scheduler";
+import { getFirestore } from "firebase-admin/firestore";
 
 /**
  * Helper function to get the current date as "YY_WW" (ISO week number).
@@ -24,9 +24,7 @@ function getYearAndWeek(): string {
 
 /**
  * Get the latest SlotWeeklyReport for a slot to check if quantity changed.
- * @param db Firestore instance
- * @param collectionName The collection name ('Hranolky' or 'Sparovky')
- * @param documentId The document ID (without H- or S- prefix)
+ * THROWS an error if the read fails, rather than returning null.
  */
 async function getLatestSlotReport(
   db: FirebaseFirestore.Firestore,
@@ -35,42 +33,34 @@ async function getLatestSlotReport(
 ): Promise<{
   quantity: number;
   volumeDm: number;
+  weekId: string;
 } | null> {
-  try {
-    const reportsRef = db.collection(collectionName).doc(documentId).collection("SlotWeeklyReport");
-    const snapshot = await reportsRef.orderBy("__name__", "desc").limit(1).get();
+  const reportsRef = db.collection(collectionName).doc(documentId).collection("SlotWeeklyReport");
 
-    if (snapshot.empty) {
-      return null;
-    }
+  // Since IDs are zero-padded (YY_WW), string sorting works correctly.
+  const snapshot = await reportsRef.orderBy("__name__", "desc").limit(1).get();
 
-    const latestDoc = snapshot.docs[0];
-    const data = latestDoc.data();
-
-    return {
-      quantity: data.quantity || 0,
-      volumeDm: data.volumeDm || 0
-    };
-  } catch (error) {
-    console.warn(`Failed to get latest report for ${collectionName}/${documentId}:`, error);
+  if (snapshot.empty) {
     return null;
   }
+
+  const latestDoc = snapshot.docs[0];
+  const data = latestDoc.data();
+
+  return {
+    quantity: Number(data.quantity) || 0, // Explicitly cast to Number to avoid string/number mismatch
+    volumeDm: Number(data.volumeDm) || 0,
+    weekId: latestDoc.id
+  };
 }
 
 /**
  * Process a collection and generate weekly reports for all slots
- * @param db Firestore instance
- * @param collectionName The collection name ('Hranolky' or 'Sparovky')
- * @param documentId Week ID in YY_WW format
- * @param batch Current batch for writes
- * @param operationCount Current number of operations in batch
- * @param batchSize Maximum batch size
- * @returns Updated batch, operation count, reports created, and slots unchanged counts
  */
 async function processCollection(
   db: FirebaseFirestore.Firestore,
   collectionName: string,
-  documentId: string,
+  documentId: string, // Current Week ID (e.g. 25_48)
   batch: FirebaseFirestore.WriteBatch,
   operationCount: number,
   batchSize: number
@@ -85,70 +75,98 @@ async function processCollection(
 
   if (snapshot.empty) {
     console.log(`   No slots found in ${collectionName}`);
-    return {batch, operationCount, reportsCreated: 0, slotsUnchanged: 0};
+    return { batch, operationCount, reportsCreated: 0, slotsUnchanged: 0 };
   }
 
   console.log(`Found ${snapshot.size} ${collectionName} slots`);
 
   let reportsCreated = 0;
   let slotsUnchanged = 0;
+  let errors = 0;
 
   for (const slotDoc of snapshot.docs) {
-    const documentId_slot = slotDoc.id; // Already without H- or S- prefix in new structure
+    const documentId_slot = slotDoc.id;
     const slot = new WarehouseSlotClass(documentId_slot, slotDoc.data()).parsePropertiesFromProductId();
 
-    // Get current quantity and volume
-    const currentQuantity = slot.quantity || 0;
-    const currentVolume = slot.getVolumeDm() || 0;
+    const currentQuantity = Number(slot.quantity) || 0;
+    const currentVolume = Number(slot.getVolumeDm()) || 0;
 
-    // Get the latest SlotWeeklyReport for this slot
-    const latestReport = await getLatestSlotReport(db, collectionName, documentId_slot);
+    try {
+      // Get the latest SlotWeeklyReport for this slot
+      const latestReport = await getLatestSlotReport(db, collectionName, documentId_slot);
 
-    // Determine if we need to create a new report
-    let shouldCreateReport = false;
+      // Determine if we need to create a new report
+      let shouldCreateReport = false;
+      let reason = "";
 
-    if (latestReport === null) {
-      // No previous report - create one if quantity > 0
-      shouldCreateReport = currentQuantity > 0;
-    } else {
-      // Previous report exists - only create if quantity changed
-      shouldCreateReport = currentQuantity != latestReport.quantity;
-    }
-
-    if (shouldCreateReport) {
-      const reportRef = db
-        .collection(collectionName)
-        .doc(documentId_slot)
-        .collection("SlotWeeklyReport")
-        .doc(documentId);
-
-      const reportData = {
-        quantity: currentQuantity,
-        volumeDm: parseFloat(currentVolume.toFixed(3))
-      };
-
-      batch.set(reportRef, reportData);
-      operationCount++;
-      reportsCreated++;
-
-      // Commit batch if we've reached the limit
-      if (operationCount >= batchSize) {
-        await batch.commit();
-        console.log(`Committed batch (${operationCount} operations)`);
-        batch = db.batch();
-        operationCount = 0;
+      if (latestReport === null) {
+        // CASE 1: No previous history exists.
+        // Only create a report if we actually have items (save DB space).
+        if (currentQuantity > 0) {
+          shouldCreateReport = true;
+          reason = "First report";
+        }
+      } else {
+        // CASE 2: Previous history exists.
+        // Check if the latest report is NOT from the current week (avoid overwriting if script re-runs)
+        if (latestReport.weekId === documentId) {
+          // We already have a report for THIS week.
+          // Only overwrite if value changed (e.g. data correction), otherwise skip.
+          shouldCreateReport = currentQuantity !== latestReport.quantity;
+          reason = `Update current week: ${latestReport.quantity} -> ${currentQuantity}`;
+        } else {
+          // Compare Current vs Previous Week
+          shouldCreateReport = currentQuantity !== latestReport.quantity;
+          reason = `Qty change: ${latestReport.quantity} -> ${currentQuantity}`;
+        }
       }
-    } else {
-      slotsUnchanged++;
+
+      if (shouldCreateReport) {
+        console.log(`   [${collectionName}/${documentId_slot}] Creating report: ${reason}`); // Uncomment for verbose debug
+
+        const reportRef = db
+          .collection(collectionName)
+          .doc(documentId_slot)
+          .collection("SlotWeeklyReport")
+          .doc(documentId);
+
+        const reportData = {
+          quantity: currentQuantity,
+          volumeDm: parseFloat(currentVolume.toFixed(3))
+        };
+
+        batch.set(reportRef, reportData);
+        operationCount++;
+        reportsCreated++;
+
+        if (operationCount >= batchSize) {
+          await batch.commit();
+          console.log(`Committed batch (${operationCount} operations)`);
+          batch = db.batch();
+          operationCount = 0;
+        }
+      } else {
+        slotsUnchanged++;
+      }
+
+    } catch (error) {
+      // CRITICAL FIX: If reading fails, LOG it and SKIP this slot.
+      // Do NOT default to creating a report, which causes duplicates.
+      console.error(`Skipping ${collectionName}/${documentId_slot} due to read error:`, error);
+      errors++;
     }
   }
 
-  return {batch, operationCount, reportsCreated, slotsUnchanged};
+  if (errors > 0) {
+    console.warn(`⚠️ Skipped ${errors} slots due to read errors.`);
+  }
+
+  return { batch, operationCount, reportsCreated, slotsUnchanged };
 }
 
 export const generateWeeklySlotReports = onSchedule(
   {
-    schedule: "0 22 * * 0", // Every Sunday at 8:00 PM
+    schedule: "0 22 * * 0", // Every Sunday at 10:00 PM
     timeoutSeconds: 300,
     timeZone: "Europe/Prague",
     region: "europe-central2",
@@ -162,7 +180,6 @@ export const generateWeeklySlotReports = onSchedule(
 
     console.log(`Generating reports for week: ${documentId}`);
 
-    // Use batched writes (max 500 operations per batch)
     let batch = db.batch();
     let operationCount = 0;
     let totalReportsCreated = 0;
