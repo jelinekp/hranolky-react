@@ -18,19 +18,19 @@ import {getFirestore} from "firebase-admin/firestore";
  * @returns {string} The formatted date string, e.g., "25_46".
  */
 function getYearAndWeek() {
-    const d = new Date();
-    // Set to nearest Thursday: current date + 4 - current day number
-    // Make Sunday's day number 7
-    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
-    // Get first day of year
-    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-    // Calculate full weeks to nearest Thursday
-    const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    // Pad week and year number with leading zeros if needed
-    const weekString = String(weekNo).padStart(2, '0');
-    const year2 = String(d.getUTCFullYear() % 100).padStart(2, '0');
+  const d = new Date();
+  // Set to nearest Thursday: current date + 4 - current day number
+  // Make Sunday's day number 7
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+  // Get first day of year
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  // Calculate full weeks to nearest Thursday
+  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  // Pad week and year number with leading zeros if needed
+  const weekString = String(weekNo).padStart(2, '0');
+  const year2 = String(d.getUTCFullYear() % 100).padStart(2, '0');
 
-    return `${year2}_${weekString}`;
+  return `${year2}_${weekString}`;
 }
 
 // --- Your Scheduled Function ---
@@ -39,79 +39,86 @@ export const generateWeeklyReports = onSchedule(
   // Runs every Sunday at 8:00 PM (20:00).
   // Format: (minute hour day-of-month month day-of-week)
   // '0 20 * * 0' means "at minute 0, hour 20, every day, every month, on Sunday (0)"
-  { schedule: "0 20 * * 0", timeZone: "Europe/Prague" },
+  {schedule: "0 22 * * 0", timeZone: "Europe/Prague", region: "europe-central2",},
 
   async (): Promise<void> => {
-      console.log("Running weekly report generation...");
+    console.log("Running weekly report generation...");
 
-      const db = getFirestore();
-      const documentId = getYearAndWeek();
+    const db = getFirestore();
+    const documentId = getYearAndWeek();
 
-      // 1. Initialize accumulators
-      let jointerTotalQty = 0;
-      let jointerTotalVol = 0;
-      let beamTotalQty = 0;
-      let beamTotalVol = 0;
+    // 1. Initialize accumulators
+    let jointerTotalQty = 0;
+    let jointerTotalVol = 0;
+    let beamTotalQty = 0;
+    let beamTotalVol = 0;
 
-      // 2. Read all documents from WarehouseSlots
-      const slotsSnapshot = await db.collection("WarehouseSlots").get();
+    // 2. Read all documents from Hranolky collection (Beams)
+    const hranolySnapshot = await db.collection("Hranolky").get();
 
-      if (slotsSnapshot.empty) {
-          console.log("No warehouse slots found. Exiting.");
-          return;
-      }
+    // 3. Read all documents from Sparovky collection (Jointers)
+    const sparovkySnapshot = await db.collection("Sparovky").get();
 
-      // 3. Loop through slots and sum totals
-      slotsSnapshot.forEach((doc) => {
-          const slotId = doc.id;
-          const slot = new WarehouseSlotClass(slotId, doc.data()).parsePropertiesFromProductId()
+    if (hranolySnapshot.empty && sparovkySnapshot.empty) {
+      console.log("No warehouse slots found. Exiting.");
+      return;
+    }
 
-          // Get quantity, defaulting to 0 if not present
-          const quantity = slot.quantity || 0;
+    // 4. Process Hranolky (Beams) slots
+    hranolySnapshot.forEach((doc) => {
+      const slotId = doc.id; // Already without H- prefix in new structure
+      const slot = new WarehouseSlotClass(slotId, doc.data()).parsePropertiesFromProductId()
 
-          const volume = slot.getVolumeDm() || 0;
+      // Get quantity, defaulting to 0 if not present
+      const quantity = slot.quantity || 0;
+      const volume = slot.getVolumeDm() || 0;
 
-          // 4. Sort into "Jointer" or "Beam"
-          if (slotId.startsWith("S-")) {
-              // This is a Jointer slot
-              jointerTotalQty += quantity;
-              jointerTotalVol += volume;
-          } else {
-              // This is a Beam slot (H- and all others)
-              beamTotalQty += quantity;
-              beamTotalVol += volume;
-          }
-      });
+      beamTotalQty += quantity;
+      beamTotalVol += volume;
+    });
 
-      console.log(`Jointer Totals: Qty=${jointerTotalQty}, Vol=${jointerTotalVol}`);
-      console.log(`Beam Totals: Qty=${beamTotalQty}, Vol=${beamTotalVol}`);
+    // 5. Process Sparovky (Jointers) slots
+    sparovkySnapshot.forEach((doc) => {
+      const slotId = doc.id; // Already without S- prefix in new structure
+      const slot = new WarehouseSlotClass(slotId, doc.data()).parsePropertiesFromProductId()
 
-      // 5. Prepare the report data
-      const jointerReportData = {
-          totalQuantity: jointerTotalQty,
-          totalVolumeDm: jointerTotalVol,
-          lastUpdated: new Date(),
-      };
+      // Get quantity, defaulting to 0 if not present
+      const quantity = slot.quantity || 0;
+      const volume = slot.getVolumeDm() || 0;
 
-      const beamReportData = {
-          totalQuantity: beamTotalQty,
-          totalVolumeDm: beamTotalVol,
-          lastUpdated: new Date(),
-      };
+      jointerTotalQty += quantity;
+      jointerTotalVol += volume;
+    });
 
-      // 6. Write to Firestore using a batch for atomicity
-      const batch = db.batch();
+    console.log(`Jointer Totals: Qty=${jointerTotalQty}, Vol=${jointerTotalVol}`);
+    console.log(`Beam Totals: Qty=${beamTotalQty}, Vol=${beamTotalVol}`);
 
-      // New nested collection paths
-      const jointerReportRef = db.collection("WeeklyReports").doc("Sparovky").collection("WeeklyData").doc(documentId);
-      const beamReportRef = db.collection("WeeklyReports").doc("Hranolky").collection("WeeklyData").doc(documentId);
+    // 6. Prepare the report data
+    const jointerReportData = {
+      totalQuantity: jointerTotalQty,
+      totalVolumeDm: jointerTotalVol,
+      lastUpdated: new Date(),
+    };
 
-      // Using .set() with merge: true will create or overwrite the doc
-      batch.set(jointerReportRef, jointerReportData, { merge: true });
-      batch.set(beamReportRef, beamReportData, { merge: true });
+    const beamReportData = {
+      totalQuantity: beamTotalQty,
+      totalVolumeDm: beamTotalVol,
+      lastUpdated: new Date(),
+    };
 
-      await batch.commit();
+    // 7. Write to Firestore using a batch for atomicity
+    const batch = db.batch();
 
-      console.log(`Weekly reports successfully written to document: ${documentId}`);
+    // New nested collection paths
+    const jointerReportRef = db.collection("WeeklyReports").doc("Sparovky").collection("WeeklyData").doc(documentId);
+    const beamReportRef = db.collection("WeeklyReports").doc("Hranolky").collection("WeeklyData").doc(documentId);
+
+    // Using .set() with merge: true will create or overwrite the doc
+    batch.set(jointerReportRef, jointerReportData, {merge: true});
+    batch.set(beamReportRef, beamReportData, {merge: true});
+
+    await batch.commit();
+
+    console.log(`Weekly reports successfully written to document: ${documentId}`);
   }
 );
