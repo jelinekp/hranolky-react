@@ -1,11 +1,12 @@
 /* Generate weekly reports per slot in Firestore database
    This script populates historical weekly reports for each individual warehouse slot
+   Updated to use new Firestore structure with Hranolky and Sparovky collections.
    Run this once to generate all historical data.
  */
 
-import {collection, doc, getDocs, writeBatch, Timestamp} from 'firebase/firestore';
-import {db} from '../firebase';
-import {WarehouseSlotClass, SlotType} from "hranolky-firestore-common";
+import { collection, doc, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase';
+import { WarehouseSlotClass } from "hranolky-firestore-common";
 
 interface SlotAction {
     action: string;
@@ -32,7 +33,14 @@ function getWeekNumber(date: Date): { year: number; week: number } {
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    return {year: d.getUTCFullYear(), week: weekNo};
+    return { year: d.getUTCFullYear(), week: weekNo };
+}
+
+// Helper function to format week ID as "YY_WW" (two-digit year)
+function formatWeekId(year: number, week: number): string {
+    const year2 = String(year % 100).padStart(2, '0');
+    const weekString = String(week).padStart(2, '0');
+    return `${year2}_${weekString}`;
 }
 
 // Helper function to get end of week (Sunday 23:59:59)
@@ -53,16 +61,16 @@ function calculateVolume(slot: WarehouseSlotClass, quantity: number): number {
     return (quantity * slot.length * slot.thickness * slot.width) / 1_000_000;
 }
 
-// Download all warehouse slots and their actions into memory
-async function downloadAllData(): Promise<Map<string, SlotData>> {
-    console.log('📥 Downloading all warehouse slots and actions into memory...');
+// Download all slots from a single collection into memory
+async function downloadCollection(collectionName: string): Promise<Map<string, SlotData>> {
+    console.log(`📥 Downloading ${collectionName} slots...`);
 
-    const warehouseSlotsRef = collection(db, 'WarehouseSlots');
-    const slotsSnapshot = await getDocs(warehouseSlotsRef);
+    const collectionRef = collection(db, collectionName);
+    const slotsSnapshot = await getDocs(collectionRef);
 
-    console.log(`   Found ${slotsSnapshot.size} warehouse slots`);
+    console.log(`   Found ${slotsSnapshot.size} ${collectionName} slots`);
 
-    const allData = new Map<string, SlotData>();
+    const data = new Map<string, SlotData>();
     let totalActions = 0;
 
     for (const slotDoc of slotsSnapshot.docs) {
@@ -70,7 +78,7 @@ async function downloadAllData(): Promise<Map<string, SlotData>> {
         const slot = new WarehouseSlotClass(slotId, slotDoc.data()).parsePropertiesFromProductId();
 
         // Download all actions for this slot
-        const slotActionsRef = collection(db, 'WarehouseSlots', slotId, 'SlotActions');
+        const slotActionsRef = collection(db, collectionName, slotId, 'SlotActions');
         const actionsSnapshot = await getDocs(slotActionsRef);
 
         const actions = actionsSnapshot.docs
@@ -78,14 +86,11 @@ async function downloadAllData(): Promise<Map<string, SlotData>> {
             .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()); // Sort by timestamp ascending
 
         totalActions += actions.length;
-
-        allData.set(slotId, { slot, actions });
+        data.set(slotId, { slot, actions });
     }
 
-    console.log(`   Downloaded ${totalActions} total actions`);
-    console.log('✅ All data loaded into memory!\n');
-
-    return allData;
+    console.log(`   Downloaded ${totalActions} actions for ${collectionName}`);
+    return data;
 }
 
 // Get quantity for a slot at a specific point in time (from in-memory data)
@@ -119,7 +124,7 @@ function generateSlotReportsInMemory(
     let previousQuantity = 0;
 
     for (let week = startWeek; week <= endWeek; week++) {
-        const weekId = `${year}_${String(week).padStart(2, '0')}`;
+        const weekId = formatWeekId(year, week);
         const endOfWeek = getEndOfWeek(year, week);
 
         // Get quantity at end of week
@@ -141,15 +146,15 @@ function generateSlotReportsInMemory(
     return reports;
 }
 
-// Batch write reports for all slots to Firestore
+// Batch write reports for all slots in a collection to Firestore
 async function batchWriteSlotReports(
+    collectionName: string,
     allData: Map<string, SlotData>,
     startWeek: number,
     endWeek: number,
-    year: number,
-    slotType: SlotType
+    year: number
 ): Promise<void> {
-    console.log(`\n💾 Writing per-slot weekly reports for ${slotType === SlotType.Beam ? 'Beams' : 'Jointers'}...`);
+    console.log(`\n💾 Writing per-slot weekly reports for ${collectionName}...`);
 
     let totalReports = 0;
     let batch = writeBatch(db);
@@ -157,20 +162,12 @@ async function batchWriteSlotReports(
     const batchSize = 500; // Firestore batch write limit
 
     for (const [slotId, slotData] of allData.entries()) {
-        // Filter by slot type
-        const isJointer = slotId.startsWith('S-');
-        const isBeam = slotId.startsWith('H-') || !slotId.startsWith('S-');
-
-        if ((slotType === SlotType.Jointer && !isJointer) || (slotType === SlotType.Beam && !isBeam)) {
-            continue;
-        }
-
         // Generate reports for this slot
         const slotReports = generateSlotReportsInMemory(slotId, slotData, startWeek, endWeek, year);
 
         // Write each report
         for (const [weekId, reportData] of slotReports.entries()) {
-            const reportDoc = doc(db, 'WarehouseSlots', slotId, 'SlotWeeklyReport', weekId);
+            const reportDoc = doc(db, collectionName, slotId, 'SlotWeeklyReport', weekId);
             batch.set(reportDoc, reportData);
             operationCount++;
             totalReports++;
@@ -191,7 +188,7 @@ async function batchWriteSlotReports(
         console.log(`   Committed final batch (${operationCount} operations)`);
     }
 
-    console.log(`✅ Wrote ${totalReports} slot weekly reports for ${slotType === SlotType.Beam ? 'Beams' : 'Jointers'}!\n`);
+    console.log(`✅ Wrote ${totalReports} slot weekly reports for ${collectionName}!\n`);
 }
 
 // Main function to generate all per-slot weekly reports
@@ -201,16 +198,15 @@ export async function generateAllSlotWeeklyReports(): Promise<void> {
     const currentDate = new Date();
     const currentWeek = getWeekNumber(currentDate);
 
-    // Step 1: Download all data into memory (ONE TIME)
-    const allData = await downloadAllData();
+    // Step 1: Download Hranolky (Beams) data
+    console.log('📊 Processing Hranolky (Beams)...');
+    const hranolyData = await downloadCollection('Hranolky');
+    await batchWriteSlotReports('Hranolky', hranolyData, 27, currentWeek.week, 2025);
 
-    // Step 2: Generate Beam reports (week 27 to current)
-    console.log('📊 Generating Beam slot reports from week 2025_27 to current...');
-    await batchWriteSlotReports(allData, 27, currentWeek.week, 2025, SlotType.Beam);
-
-    // Step 3: Generate Jointer reports (week 45 to current)
-    console.log('📊 Generating Jointer slot reports from week 2025_45 to current...');
-    await batchWriteSlotReports(allData, 45, currentWeek.week, 2025, SlotType.Jointer);
+    // Step 2: Download Sparovky (Jointers) data
+    console.log('📊 Processing Sparovky (Jointers)...');
+    const sparovkyData = await downloadCollection('Sparovky');
+    await batchWriteSlotReports('Sparovky', sparovkyData, 45, currentWeek.week, 2025);
 
     console.log('✅ All per-slot weekly reports generated successfully!');
 }
