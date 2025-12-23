@@ -1,16 +1,21 @@
 import { createContext, useContext, ReactNode } from 'react';
-import useAnonymousAuth from '../hooks/signInAnonymously';
+import useGoogleAuth from '../hooks/useGoogleAuth';
+import type { User } from 'firebase/auth';
 
 type AuthValue = {
-  user: any | null;
+  user: User | null;
   loading: boolean;
+  error: Error | null;
+  signIn: () => Promise<void>;
+  signOut: () => Promise<void>;
+  isAuthenticated: boolean;
 };
 
 const AuthContext = createContext<AuthValue | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  const { user, loading } = useAnonymousAuth();
-  return <AuthContext.Provider value={{ user, loading }}>{children}</AuthContext.Provider>;
+  const auth = useGoogleAuth();
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

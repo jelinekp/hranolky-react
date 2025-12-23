@@ -41,7 +41,17 @@ Each document has:
 
 ## Running the Script
 
-### Option 1: Direct execution (Recommended)
+### Authentication
+
+CLI scripts require authentication to access Firestore. Use the **email/password** script variant:
+
+```bash
+FIREBASE_EMAIL=your-email@example.com FIREBASE_PASSWORD=your-password npx tsx src/scripts/runSlotWeeklyReportGenerationWithAuth.ts
+```
+
+> **Note**: Google Sign-In is used for the web app but requires a browser. For CLI scripts, use the email/password method above.
+
+### Basic Execution (No Auth - may fail with permission errors)
 ```bash
 npx tsx src/scripts/runWeeklyReportGeneration.ts
 ```

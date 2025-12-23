@@ -38,7 +38,7 @@ function getYearAndWeek() {
 export const generateWeeklyReports = onSchedule(
   // Runs every Sunday at 8:00 PM (20:00).
   // Format: (minute hour day-of-month month day-of-week)
-  // '0 20 * * 0' means "at minute 0, hour 20, every day, every month, on Sunday (0)"
+  // '0 22 * * 0' means "at minute 0, hour 22, every day, every month, on Sunday (0)"
   {schedule: "0 22 * * 0", timeZone: "Europe/Prague", region: "europe-central2",},
 
   async (): Promise<void> => {
