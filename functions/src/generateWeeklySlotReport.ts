@@ -167,7 +167,7 @@ async function processCollection(
 export const generateWeeklySlotReports = onSchedule(
   {
     schedule: "0 22 * * 0", // Every Sunday at 10:00 PM
-    timeoutSeconds: 300,
+    timeoutSeconds: 1200,
     timeZone: "Europe/Prague",
     region: "europe-central2",
   },
