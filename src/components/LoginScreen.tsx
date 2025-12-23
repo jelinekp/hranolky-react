@@ -1,30 +1,38 @@
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import './LoginScreen.css';
 
 const LoginScreen: React.FC = () => {
   const { signIn, loading, error } = useAuth();
 
   return (
-    <div className="login-screen">
-      <div className="login-container">
-        <div className="login-header">
+    <div className="fixed inset-0 flex items-center justify-center bg-[var(--color-bg-05)]">
+      {/* Main container */}
+      <div className="w-full max-w-md flex flex-col items-center gap-12">
+        {/* Logo and branding */}
+        <div className="flex flex-col items-center gap-6">
           <img
-            src="src/assets/ic_launcher.webp"
-            alt="Jelínek Logo"
-            className="login-logo"
+            src="src/assets/logo_jelinek.svg"
+            alt="Logo Jelínek"
+            className="w-64 md:w-80"
           />
-          <h1 className="login-title">JELÍNEK</h1>
-          <p className="login-subtitle">Hranolky a Spárovky</p>
+          <p className="text-[var(--color-primary-dark)] text-xl font-semibold tracking-wide">
+            Hranolky a Spárovky
+          </p>
         </div>
 
-        <div className="login-content">
+        {/* Sign in section */}
+        <div className="w-full flex flex-col items-center gap-6">
           <button
-            className="google-sign-in-button"
             onClick={signIn}
             disabled={loading}
+            className="w-full max-w-xs flex items-center justify-center gap-3 px-6 py-4 
+                       bg-white border border-[var(--color-text-04)]/30 rounded-xl
+                       text-[var(--color-text-01)] font-medium text-base
+                       shadow-sm hover:shadow-md hover:border-[var(--color-primary)]
+                       transition-all duration-200 ease-out
+                       disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <svg className="google-icon" viewBox="0 0 24 24" width="24" height="24">
+            <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
               <path
                 fill="#4285F4"
                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -46,14 +54,17 @@ const LoginScreen: React.FC = () => {
           </button>
 
           {error && (
-            <p className="login-error">
-              Chyba přihlášení: {error.message}
-            </p>
+            <div className="w-full max-w-xs px-4 py-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm text-center">
+                Chyba přihlášení: {error.message}
+              </p>
+            </div>
           )}
         </div>
 
-        <p className="login-footer">
-          Systém pro správu skladu
+        {/* Footer */}
+        <p className="text-[var(--color-text-04)] text-sm">
+          Nedaří se přihlásit? Kontaktuj Pavla Jelínka
         </p>
       </div>
     </div>

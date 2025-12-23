@@ -20,34 +20,43 @@ function AppRoutes() {
     document.title = `${pageTitle} | ${baseTitle}`;
   }, [location.pathname]);
 
-  // Show loading spinner while checking auth state
-  if (loading) {
+  // Show login screen if not authenticated
+  if (!isAuthenticated) {
     return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-        color: '#ffffff',
-        fontSize: '1.25rem'
-      }}>
-        Načítání...
-      </div>
+      <>
+        <LoginScreen />
+        {/* Loading overlay */}
+        {loading && (
+          <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="flex flex-col items-center gap-4">
+              {/* Spinning circular progress indicator */}
+              <div className="w-12 h-12 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
+              <span className="text-[var(--color-text-01)] text-base">Přihlašování...</span>
+            </div>
+          </div>
+        )}
+      </>
     );
   }
 
-  // Show login screen if not authenticated
-  if (!isAuthenticated) {
-    return <LoginScreen />;
-  }
-
   return (
-    <Routes>
-      <Route path="/" element={<Navigate to="hranolky" replace />} />
-      <Route path="hranolky" element={<Hranolky />} />
-      <Route path="sparovky" element={<Sparovky />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/" element={<Navigate to="hranolky" replace />} />
+        <Route path="hranolky" element={<Hranolky />} />
+        <Route path="sparovky" element={<Sparovky />} />
+      </Routes>
+      {/* Loading overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="flex flex-col items-center gap-4">
+            {/* Spinning circular progress indicator */}
+            <div className="w-12 h-12 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
+            <span className="text-[var(--color-text-01)] text-base">Načítání...</span>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
 
