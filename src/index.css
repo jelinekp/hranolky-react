@@ -6,6 +6,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -17,6 +18,7 @@
     max-height: 0;
     opacity: 0;
   }
+
   100% {
     max-height: 500px;
     opacity: 1;
@@ -28,6 +30,7 @@
     max-height: 500px;
     opacity: 1;
   }
+
   100% {
     max-height: 0;
     opacity: 0;
@@ -66,7 +69,37 @@ body {
   min-height: 100vh;
 }
 
-html body .chip-module_label__rjLXc {
+/* Fix for Actify Chips outlines - restore visible borders */
+[class*="chip-module_outline"] {
+  border: 1px solid rgb(var(--md-sys-color-outline)) !important;
+}
+
+/* Fix for Actify Chips labeling and selection */
+[class*="chip-module_chip"] {
+  --_outline-color: rgb(var(--md-sys-color-outline)) !important;
+  --_selected-container-color: var(--md-rgb-color-surface-variant) !important;
+  --_selected-label-text-color: var(--md-rgb-color-on-primary-container) !important;
+}
+
+/* Smooth color transitions */
+[class*="chip-module_cell"] {
+  transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.1s ease !important;
+}
+
+/* Hover effect */
+[class*="chip-module_chip"]:hover [class*="chip-module_cell"] {
+  background-color: var(--color-bg-05) !important;
+}
+
+/* Click/Active effect (gradual color shift) */
+[class*="chip-module_chip"]:active [class*="chip-module_cell"] {
+  background-color: var(--color-primary-light) !important;
+  transform: scale(0.98);
+  transition: background-color 0.1s ease !important;
+}
+
+/* Update font family for Actify components using a hash-independent selector */
+[class*="chip-module_label"] {
   font-family: 'GTWalsheimPro', Verdana, sans-serif !important;
 }
 
@@ -114,9 +147,11 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
+
   a:hover {
     color: #747bff;
   }
+
   button {
     background-color: #f9f9f9;
   }
@@ -127,6 +162,7 @@ button:focus-visible {
     height: 0;
     transform: scaleY(0);
   }
+
   to {
     height: 90px;
     transform: scaleY(1);
@@ -138,6 +174,7 @@ button:focus-visible {
     height: 90px;
     transform: scaleY(1);
   }
+
   to {
     height: 0;
     transform: scaleY(0);
