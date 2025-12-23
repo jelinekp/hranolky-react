@@ -25,3 +25,22 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Firebase and local configuration
+.firebaserc
+firebase.json
+firestore.rules
+firestore.indexes.json
+
+# Documentation and Summaries
+*_SUMMARY.md
+*_UPDATE.md
+*_IMPLEMENTATION.md
+*_FIX.md
+*_FUNCTION.md
+*CONTINUOUS_WEEKS.md
+*FILTER_INTEGRATION.md
+
+# Build and package artifacts
+**/package-lock.json
+DEPLOY_FTP_DOCS.md
