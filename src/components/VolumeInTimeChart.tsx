@@ -191,13 +191,19 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
 
     const maxValue = Math.max(...dataToUse.map(d => d.volume));
 
-    // Add 20% padding to accommodate the wave effect
-    const roundedMax = Math.ceil(maxValue * 1.2 / 5) * 5;
-    const step = roundedMax / 4;
-    const roundedStep = Math.ceil(step / 5) * 5;
-    const actualMax = roundedStep * 4;
+    // Adaptive step calculation based on the max value
+    const paddedMax = maxValue * 1.02; // 2% padding
+    let step = 1;
 
-    const ticks = [0, roundedStep, roundedStep * 2, roundedStep * 3, actualMax];
+    if (paddedMax <= 10) step = 1;
+    else if (paddedMax <= 40) step = 5;
+    else if (paddedMax <= 100) step = 10;
+    else step = 25;
+
+    // Calculate actual max and generate ticks based on the chosen step
+    const numSteps = Math.ceil(paddedMax / step);
+    const actualMax = numSteps * step;
+    const ticks = Array.from({ length: numSteps + 1 }, (_, i) => i * step);
 
     return {
       yDomain: [0, actualMax] as [number, number],
