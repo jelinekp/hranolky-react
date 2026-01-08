@@ -67,21 +67,22 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
           <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline" />
           {user && (
             <div className="flex items-center gap-3">
-              {['jelinekp6@gmail.com', 'jelinekv007@gmail.com'].includes(user.email || '') && (
-                <button
-                  onClick={() => navigate('/admin')}
-                  className="p-2 text-[var(--color-text-01)] hover:bg-grey rounded-lg transition-colors border-0 outline-none bg-transparent cursor-pointer"
-                  title="Administrace zařízení"
-                >
-                  <FontAwesomeIcon icon={faGear} className="text-xl" />
-                </button>
-              )}
               {user.photoURL && (
                 <img
                   src={user.photoURL}
                   alt={user.displayName || 'User'}
                   className="w-10 h-10 rounded-full border-2 border-white/20"
                 />
+              )}
+              {['jelinekp6@gmail.com', 'jelinekv007@gmail.com'].includes(user.email || '') && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="p-2 text-[var(--color-text-01)] hover:bg-grey rounded-lg transition-colors border-0 outline-none bg-transparent cursor-pointer"
+                  title="Administrace zařízení"
+                >
+                  <FontAwesomeIcon icon={faGear} className="text-l pr-1" />
+                  Správa terminálů
+                </button>
               )}
               <button
                 onClick={signOut}
