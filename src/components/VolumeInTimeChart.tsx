@@ -18,15 +18,25 @@ interface VolumeDataPoint {
 // Helper function to get current week in YY_WW format
 const getCurrentWeekLabel = (): string => {
   const now = new Date();
-  const year = now.getFullYear() % 100; // Get last 2 digits
+  // Use UTC to avoid timezone issues in week calculation
   const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   const dayNum = d.getUTCDay() || 7;
+  // Set to nearest Thursday: current date + 4 - day number
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  let weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  let year = d.getUTCFullYear();
 
-  // Format as YY_WW with zero-padding
-  return `${year}_${weekNum.toString().padStart(2, '0')}`;
+  // Apply the rule: a year always has exactly 52 weeks
+  if (weekNum > 52) {
+    weekNum = 1;
+    year++;
+  }
+
+  const year2 = (year % 100).toString().padStart(2, '0');
+  const week2 = weekNum.toString().padStart(2, '0');
+
+  return `${year2}_${week2}`;
 };
 
 // Mock data generator for initial loading animation
@@ -153,18 +163,15 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
       });
     }
 
-    // Always add current volume as the last point
+    // Always add or update current volume as the last point
     const currentWeekLabel = getCurrentWeekLabel();
 
-    // Check if current week already exists in data
-    const hasCurrentWeek = baseData.some(d => d.week === currentWeekLabel);
+    // Filter out any existing data for the current week to avoid duplicates 
+    // and ensure the live 'currentVolume' value takes precedence
+    const filteredBaseData = baseData.filter(d => d.week !== currentWeekLabel);
 
-    if (!hasCurrentWeek) {
-      // Add current volume as a new data point
-      return [...baseData, { week: currentWeekLabel, volume: currentVolume }];
-    }
-
-    return baseData;
+    // Append the live current volume
+    return [...filteredBaseData, { week: currentWeekLabel, volume: currentVolume }];
   })();
 
   // Calculate Y-axis domain and ticks

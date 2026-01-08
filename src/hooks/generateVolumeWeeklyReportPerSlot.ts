@@ -198,15 +198,43 @@ export async function generateAllSlotWeeklyReports(): Promise<void> {
     const currentDate = new Date();
     const currentWeek = getWeekNumber(currentDate);
 
+    // Define start points
+    const hranolkyStartYear = 2025;
+    const hranolkyStartWeek = 27;
+    const sparovkyStartYear = 2025;
+    const sparovkyStartWeek = 45;
+
     // Step 1: Download Hranolky (Beams) data
     console.log('📊 Processing Hranolky (Beams)...');
     const hranolyData = await downloadCollection('Hranolky');
-    await batchWriteSlotReports('Hranolky', hranolyData, 27, currentWeek.week, 2025);
+
+    // Generate for all years from start to current
+    let year = hranolkyStartYear;
+    let week = hranolkyStartWeek;
+    while (year < currentWeek.year || (year === currentWeek.year && week <= currentWeek.week)) {
+        const endWeekThisYear = year < currentWeek.year ? 52 : currentWeek.week;
+        await batchWriteSlotReports('Hranolky', hranolyData, week, endWeekThisYear, year);
+
+        // Move to next year
+        year++;
+        week = 1; // Start from week 1 for subsequent years
+    }
 
     // Step 2: Download Sparovky (Jointers) data
     console.log('📊 Processing Sparovky (Jointers)...');
     const sparovkyData = await downloadCollection('Sparovky');
-    await batchWriteSlotReports('Sparovky', sparovkyData, 45, currentWeek.week, 2025);
+
+    // Generate for all years from start to current
+    year = sparovkyStartYear;
+    week = sparovkyStartWeek;
+    while (year < currentWeek.year || (year === currentWeek.year && week <= currentWeek.week)) {
+        const endWeekThisYear = year < currentWeek.year ? 52 : currentWeek.week;
+        await batchWriteSlotReports('Sparovky', sparovkyData, week, endWeekThisYear, year);
+
+        // Move to next year
+        year++;
+        week = 1; // Start from week 1 for subsequent years
+    }
 
     console.log('✅ All per-slot weekly reports generated successfully!');
 }

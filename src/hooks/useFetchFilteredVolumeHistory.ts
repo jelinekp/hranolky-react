@@ -62,9 +62,9 @@ function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
         const hasWeek53 = dayNum >= 4;
 
         if (w > (hasWeek53 ? 53 : 52)) {
-        w = 1;
-        y = (y + 1) % 100;
-      }
+          w = 1;
+          y = (y + 1) % 100;
+        }
       }
 
       const currentLabel = getLabel(y, w);

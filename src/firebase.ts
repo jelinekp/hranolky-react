@@ -19,7 +19,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const analytics = getAnalytics(app);
+
+// Initialize Analytics only in supported environments (browser)
+export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
 export const db = getFirestore(app);
 export const auth = getAuth(app);

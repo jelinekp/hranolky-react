@@ -54,16 +54,16 @@ function calculateVolume(slot: WarehouseSlotClass, quantity: number): number {
     return (quantity * slot.length * slot.thickness * slot.width) / 1_000_000;
 }
 
-// Download all warehouse slots and their actions into memory
-async function downloadAllData(): Promise<Map<string, SlotData>> {
-    console.log('📥 Downloading all warehouse slots and actions into memory...');
+// Download slots and their actions from a specific collection into memory
+async function downloadCollection(collectionName: string): Promise<Map<string, SlotData>> {
+    console.log(`📥 Downloading ${collectionName} slots and actions...`);
 
-    const warehouseSlotsRef = collection(db, 'WarehouseSlots');
-    const slotsSnapshot = await getDocs(warehouseSlotsRef);
+    const collectionRef = collection(db, collectionName);
+    const slotsSnapshot = await getDocs(collectionRef);
 
-    console.log(`   Found ${slotsSnapshot.size} warehouse slots`);
+    console.log(`   Found ${slotsSnapshot.size} ${collectionName} slots`);
 
-    const allData = new Map<string, SlotData>();
+    const data = new Map<string, SlotData>();
     let totalActions = 0;
 
     for (const slotDoc of slotsSnapshot.docs) {
@@ -71,22 +71,27 @@ async function downloadAllData(): Promise<Map<string, SlotData>> {
         const slot = new WarehouseSlotClass(slotId, slotDoc.data()).parsePropertiesFromProductId();
 
         // Download all actions for this slot
-        const slotActionsRef = collection(db, 'WarehouseSlots', slotId, 'SlotActions');
+        const slotActionsRef = collection(db, collectionName, slotId, 'SlotActions');
         const actionsSnapshot = await getDocs(slotActionsRef);
 
         const actions = actionsSnapshot.docs
             .map(doc => doc.data() as SlotAction)
-            .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis()); // Sort by timestamp ascending
+            .sort((a, b) => a.timestamp.toMillis() - b.timestamp.toMillis());
 
         totalActions += actions.length;
-
-        allData.set(slotId, { slot, actions });
+        data.set(slotId, { slot, actions });
     }
 
-    console.log(`   Downloaded ${totalActions} total actions`);
-    console.log('✅ All data loaded into memory!\n');
+    console.log(`   Downloaded ${totalActions} actions for ${collectionName}`);
+    return data;
+}
 
-    return allData;
+// Download all data from both collections
+async function downloadAllData(): Promise<{ hranolky: Map<string, SlotData>, sparovky: Map<string, SlotData> }> {
+    const hranolky = await downloadCollection('Hranolky');
+    const sparovky = await downloadCollection('Sparovky');
+    console.log('✅ All data loaded into memory!\n');
+    return { hranolky, sparovky };
 }
 
 // Get quantity for a slot at a specific point in time (from in-memory data)
@@ -201,16 +206,48 @@ export async function generateAllWeeklyReports(): Promise<void> {
     // Step 1: Download all data into memory (ONE TIME)
     const allData = await downloadAllData();
 
-    // Step 2: Generate Jointer reports in memory
-    const jointerReports = generateReportsInMemory(allData, 40, currentWeek.week, 2025, SlotType.Jointer);
-    await batchWriteReports(jointerReports, SlotType.Jointer);
+    // Define start points for each type (hardcoded reporting start dates)
+    const beamStartYear = 2025;
+    const beamStartWeek = 27;  // Hranolky reporting started week 27, 2025
+    const jointerStartYear = 2025;
+    const jointerStartWeek = 45;  // Sparovky reporting started week 45, 2025
 
-    // Step 3: Generate Beam reports in memory
-    const beamReports = generateReportsInMemory(allData, 26, currentWeek.week, 2025, SlotType.Beam);
-    await batchWriteReports(beamReports, SlotType.Beam);
+    // Generate reports for all years from start to current
+    let totalBeamReports = 0;
+    let totalJointerReports = 0;
+
+    // Generate Beam reports
+    console.log('\n📊 Generating Beam reports...');
+    let year = beamStartYear;
+    let week = beamStartWeek;
+    while (year < currentWeek.year || (year === currentWeek.year && week <= currentWeek.week)) {
+        const endWeekThisYear = year < currentWeek.year ? 52 : currentWeek.week;
+        const reports = generateReportsInMemory(allData.hranolky, week, endWeekThisYear, year, SlotType.Beam);
+        await batchWriteReports(reports, SlotType.Beam);
+        totalBeamReports += reports.size;
+
+        // Move to next year
+        year++;
+        week = 1; // Start from week 1 for subsequent years
+    }
+
+    // Generate Jointer reports
+    console.log('\n📊 Generating Jointer reports...');
+    year = jointerStartYear;
+    week = jointerStartWeek;
+    while (year < currentWeek.year || (year === currentWeek.year && week <= currentWeek.week)) {
+        const endWeekThisYear = year < currentWeek.year ? 52 : currentWeek.week;
+        const reports = generateReportsInMemory(allData.sparovky, week, endWeekThisYear, year, SlotType.Jointer);
+        await batchWriteReports(reports, SlotType.Jointer);
+        totalJointerReports += reports.size;
+
+        // Move to next year
+        year++;
+        week = 1; // Start from week 1 for subsequent years
+    }
 
     console.log('✅ All weekly reports generated successfully!');
-    console.log(`📊 Total: ${jointerReports.size} Jointer reports + ${beamReports.size} Beam reports`);
+    console.log(`📊 Total: ${totalJointerReports} Jointer reports + ${totalBeamReports} Beam reports`);
 }
 
 // Uncomment to run the generation
