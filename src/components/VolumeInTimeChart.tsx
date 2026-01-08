@@ -1,7 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useFetchFilteredVolumeHistory } from "../hooks/useFetchFilteredVolumeHistory.ts";
 import { SlotType, WarehouseSlotClass } from "hranolky-firestore-common";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
@@ -68,6 +70,27 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   const [displayData, setDisplayData] = useState<VolumeDataPoint[]>(() => generateMockVolumeData());
   const [goofyOffsets, setGoofyOffsets] = useState<number[]>([]);
   const [manualLoadRequested, setManualLoadRequested] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // ESC key handler to close expanded view
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape' && isExpanded) {
+      setIsExpanded(false);
+    }
+  }, [isExpanded]);
+
+  useEffect(() => {
+    if (isExpanded) {
+      document.addEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = 'hidden'; // Prevent background scroll
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [isExpanded, handleKeyDown]);
 
   // Extract slot IDs from filtered slots
   const filteredSlotIds = useMemo(() =>
@@ -211,9 +234,9 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     };
   })();
 
-  // Calculate inventory check weeks (weeks 14, 27, 40, 52)
+  // Calculate inventory check weeks (weeks 14, 27, 40, 51)
   const inventoryCheckWeeks = useMemo(() => {
-    const checkWeeks = [14, 27, 40, 52];
+    const checkWeeks = [14, 27, 40, 51];
     // Filter to only include weeks that are present in the data
     return displayData
       .filter(d => {
@@ -309,122 +332,148 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   };
 
   return (
-    <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-lg">
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-bold">Objem v čase po týdnech (m³)</h3>
-        {loading && shouldFetchData && (
-          <span className="text-sm text-gray-500 italic animate-pulse">
-            Aktualizuji data...
-          </span>
-        )}
-      </div>
-
-      <div className="relative h-[400px]">
-        {/* Overlay when no slots match filters */}
-        {hasActiveFilters && filteredSlots.length === 0 && (
-          <div
-            className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(2px)'
-            }}
-          >
-            <div className="bg-white p-6 rounded-lg shadow-xl text-center">
-              <p className="text-gray-700 text-lg">
-                Pro zobrazení dat zvolte jinou kombinaci filtrů
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Overlay when manual load is required */}
-        {shouldWaitForManualLoad && !manualLoadRequested && filteredSlots.length > 0 && (
-          <div
-            className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
-            style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.5)',
-              backdropFilter: 'blur(2px)'
-            }}
-          >
-            <div className="bg-white p-6 rounded-lg shadow-xl text-center">
-              <p className="text-gray-700 mb-4">
-                Zobrazeno {filteredSlots.length} položek
-              </p>
-              <button
-                onClick={() => setManualLoadRequested(true)}
-                className="bg-[var(--color-primary)] px-6 py-3 rounded-lg font-semibold hover:bg-[var(--color-primary-dark)] transition-colors"
-              >
-                Načíst graf
-              </button>
-            </div>
-          </div>
-        )}
-
-        <ResponsiveContainer width="100%" height={440}>
-          <LineChart
-            data={animatedData}
-            margin={{ top: 5, right: 10, left: 0, bottom: 45 }}
-            key={loading ? 'loading' : 'loaded'}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
-            <XAxis
-              dataKey="week"
-              tick={<CustomXAxisTick />}
-              tickLine={false}
-              axisLine={{ stroke: 'var(--color-text-03)' }}
-              height={55}
-              interval={0}
-            />
-            <YAxis
-              domain={yDomain}
-              ticks={yTicks}
-              style={{ fontSize: '12px' }}
-              width={40}
-            />
-            <Tooltip content={<CustomTooltip />} />
-
-            {/* Inventory check reference lines */}
-            {inventoryCheckWeeks.map(week => (
-              <ReferenceLine
-                key={week}
-                x={week}
-                stroke="red"
-                strokeWidth={2}
-                strokeDasharray="3 3"
-                label={{
-                  value: 'Inventura',
-                  position: 'top',
-                  fill: 'red',
-                  fontSize: 10
-                }}
+    <>
+      {isExpanded && (
+        <div
+          className="fixed inset-0 z-40"
+          style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)' }}
+          onClick={() => setIsExpanded(false)}
+        />
+      )}
+      <div
+        className={`bg-[var(--color-bg-01)] p-6 md:p-8 rounded-3xl shadow-lg transition-all duration-300 ${isExpanded ? 'fixed inset-6 md:inset-10 lg:inset-14 z-50 flex flex-col overflow-hidden' : ''
+          }`}
+      >
+        <div className="flex justify-between items-center mb-4 flex-none">
+          <h3 className="text-lg font-bold">Objem v čase po týdnech (m³)</h3>
+          <div className="flex items-center gap-3">
+            {loading && shouldFetchData && (
+              <span className="text-sm text-gray-500 italic animate-pulse">
+                Aktualizuji data...
+              </span>
+            )}
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="p-2 rounded-lg hover:bg-gray-200 transition-colors border-0 outline-none bg-transparent cursor-pointer focus:outline-none active:outline-none"
+              title={isExpanded ? 'Sbalit graf (Esc)' : 'Rozbalit graf'}
+            >
+              <FontAwesomeIcon
+                icon={isExpanded ? faCompress : faExpand}
+                className="text-gray-600"
               />
-            ))}
+            </button>
+          </div>
+        </div>
 
-            <Line
-              type={loading ? "natural" : "monotone"}
-              dataKey="volume"
-              stroke="var(--color-primary)"
-              strokeWidth={3}
-              strokeOpacity={pulseOpacity}
-              dot={{ fill: 'var(--color-primary)', r: 4, opacity: pulseOpacity }}
-              activeDot={{ r: 6, fill: 'var(--color-primary-dark)' }}
-              animationDuration={loading ? 0 : 300}
-            />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+        <div className={`relative ${isExpanded ? 'flex-1 min-h-0' : 'h-[400px]'}`}>
+          {/* Overlay when no slots match filters */}
+          {hasActiveFilters && filteredSlots.length === 0 && (
+            <div
+              className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(2px)'
+              }}
+            >
+              <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+                <p className="text-gray-700 text-lg">
+                  Pro zobrazení dat zvolte jinou kombinaci filtrů
+                </p>
+              </div>
+            </div>
+          )}
 
-      <span className="text-sm">Červené čáry značí provedené inventury</span>
-      {/* Current volume indicator */}
-      <div className="mt-4 pt-4 border-t border-[var(--color-text-03)]">
-        <div className="flex justify-between items-center">
-          <span className="text-sm">Aktuální objem na skladě:</span>
-          <span className="text-lg font-bold text-[var(--color-primary)]">
-            {currentVolume.toFixed(2)} m³
-          </span>
+          {/* Overlay when manual load is required */}
+          {shouldWaitForManualLoad && !manualLoadRequested && filteredSlots.length > 0 && (
+            <div
+              className="absolute inset-0 rounded-lg z-10 flex items-center justify-center"
+              style={{
+                backgroundColor: 'rgba(255, 255, 255, 0.5)',
+                backdropFilter: 'blur(2px)'
+              }}
+            >
+              <div className="bg-white p-6 rounded-lg shadow-xl text-center">
+                <p className="text-gray-700 mb-4">
+                  Zobrazeno {filteredSlots.length} položek
+                </p>
+                <button
+                  onClick={() => setManualLoadRequested(true)}
+                  className="bg-[var(--color-primary)] px-6 py-3 rounded-lg font-semibold hover:bg-[var(--color-primary-dark)] transition-colors"
+                >
+                  Načíst graf
+                </button>
+              </div>
+            </div>
+          )}
+
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart
+              data={animatedData}
+              margin={{ top: 5, right: 10, left: 0, bottom: 45 }}
+              key={loading ? 'loading' : 'loaded'}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
+              <XAxis
+                dataKey="week"
+                tick={<CustomXAxisTick />}
+                tickLine={false}
+                axisLine={{ stroke: 'var(--color-text-03)' }}
+                height={55}
+                interval={0}
+              />
+              <YAxis
+                domain={yDomain}
+                ticks={yTicks}
+                style={{ fontSize: '12px' }}
+                width={40}
+              />
+              <Tooltip content={<CustomTooltip />} />
+
+              {/* Inventory check reference lines */}
+              {inventoryCheckWeeks.map(week => (
+                <ReferenceLine
+                  key={week}
+                  x={week}
+                  stroke="red"
+                  strokeWidth={2}
+                  strokeDasharray="3 3"
+                  label={{
+                    value: 'Inventura',
+                    position: 'top',
+                    fill: 'red',
+                    fontSize: 10
+                  }}
+                />
+              ))}
+
+              <Line
+                type={loading ? "natural" : "monotone"}
+                dataKey="volume"
+                stroke="var(--color-primary)"
+                strokeWidth={3}
+                strokeOpacity={pulseOpacity}
+                dot={{ fill: 'var(--color-primary)', r: 4, opacity: pulseOpacity }}
+                activeDot={{ r: 6, fill: 'var(--color-primary-dark)' }}
+                animationDuration={loading ? 0 : 300}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="flex-none mt-2">
+          <span className="text-sm">Červené čáry značí provedené inventury</span>
+          {/* Current volume indicator */}
+          <div className="mt-4 pt-4 border-t border-[var(--color-text-03)]">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Aktuální objem na skladě:</span>
+              <span className="text-lg font-bold text-[var(--color-primary)]">
+                {currentVolume.toFixed(2)} m³
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
