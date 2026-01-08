@@ -35,6 +35,7 @@ function Filters(props: {
     const [isCopying, setIsCopying] = useState(false);
     const [exportProgress, setExportProgress] = useState(0);
     const [exportStatus, setExportStatus] = useState('');
+    const [showExportDialog, setShowExportDialog] = useState(false);
 
     const allFilters = new SlotFiltersClass(
         new Set(),
@@ -221,35 +222,86 @@ function Filters(props: {
                 </button>
 
                 <button
-                    onClick={handleExport}
-                    disabled={isExporting || isCopying || filteredSlots.length === 0}
+                    onClick={() => setShowExportDialog(true)}
+                    disabled={filteredSlots.length === 0}
                     className={`text-[var(--color-text-01)] p-2 rounded-lg flex items-center gap-2
-                            ${isExporting || isCopying || filteredSlots.length === 0
+                            ${filteredSlots.length === 0
                             ? 'opacity-50 cursor-not-allowed'
                             : 'hover:bg-grey cursor-pointer'}`}
                 >
                     <FontAwesomeIcon icon={faFileExport} />
-                    {isExporting
-                        ? `Export... ${exportProgress}%`
-                        : `Export CSV (${filteredSlots.length})`
-                    }
-                </button>
-
-                <button
-                    onClick={handleCopyToClipboard}
-                    disabled={isExporting || isCopying || filteredSlots.length === 0}
-                    className={`text-[var(--color-text-01)] p-2 rounded-lg flex items-center gap-2
-                            ${isExporting || isCopying || filteredSlots.length === 0
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'hover:bg-grey cursor-pointer'}`}
-                >
-                    <FontAwesomeIcon icon={faCopy} />
-                    {isCopying
-                        ? `Kopíruji... ${exportProgress}%`
-                        : `Kopírovat pro Excel`
-                    }
+                    Exportovat historii stavů ({filteredSlots.length})
                 </button>
             </div>
+
+            {/* Export Dialog */}
+            {showExportDialog && (
+                <div
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)' }}
+                    onClick={() => setShowExportDialog(false)}
+                >
+                    <div
+                        className="bg-[var(--color-bg-01)] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h3 className="text-xl font-semibold mb-4">Exportovat historii stavů</h3>
+
+                        {filteredSlots.length > 100 && (
+                            <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded-lg">
+                                <p className="text-yellow-800 text-sm">
+                                    ⚠️ Export může trvat déle při velkém množství položek (cca {filteredSlots.length / 10} sekund).
+                                </p>
+                            </div>
+                        )}
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => {
+                                    setShowExportDialog(false);
+                                    handleExport();
+                                }}
+                                disabled={isExporting || isCopying}
+                                className={`w-full text-left p-4 rounded-lg border-2 flex items-center gap-3
+                                    ${isExporting || isCopying
+                                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
+                                        : 'hover:bg-grey hover:border-blue-500 cursor-pointer border-gray-300'}`}
+                            >
+                                <FontAwesomeIcon icon={faFileExport} className="text-xl" />
+                                <div>
+                                    <div className="font-semibold">Stáhnout jako CSV</div>
+                                    <div className="text-sm text-gray-600">Uložit data do CSV souboru</div>
+                                </div>
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    setShowExportDialog(false);
+                                    handleCopyToClipboard();
+                                }}
+                                disabled={isExporting || isCopying}
+                                className={`w-full text-left p-4 rounded-lg border-2 flex items-center gap-3
+                                    ${isExporting || isCopying
+                                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
+                                        : 'hover:bg-grey hover:border-blue-500 cursor-pointer border-gray-300'}`}
+                            >
+                                <FontAwesomeIcon icon={faCopy} className="text-xl" />
+                                <div>
+                                    <div className="font-semibold">Kopírovat pro Excel</div>
+                                    <div className="text-sm text-gray-600">Zkopírovat data do schránky</div>
+                                </div>
+                            </button>
+                        </div>
+
+                        <button
+                            onClick={() => setShowExportDialog(false)}
+                            className="w-full mt-4 p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                        >
+                            Zrušit
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {(isExporting || isCopying) && (
                 <div className="mt-2">
