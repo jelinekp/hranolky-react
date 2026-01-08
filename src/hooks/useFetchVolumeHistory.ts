@@ -25,7 +25,7 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
             console.log('   WeeksToShow:', weeksToShow);
 
             setLoading(true);
-            
+
             try {
                 const collectionSegments = slotType === SlotType.Beam
                     ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
@@ -52,36 +52,30 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
                     return;
                 }
 
-                // Sort documents by ID (descending) in JavaScript
+                // Sort documents by ID (ascending) in JavaScript to show oldest to newest
                 const sortedDocs = snapshot.docs.sort((a, b) => {
-                    return b.id.localeCompare(a.id); // Descending order
+                    return a.id.localeCompare(b.id); // Ascending order (oldest to newest)
                 });
 
                 const data: VolumeDataPoint[] = sortedDocs
-                    .slice(0, weeksToShow)
-                    .reverse() // Show oldest to newest
                     .map(doc => {
-                        const weekId = doc.id; // Format: YYYY_WW
+                        const weekId = doc.id; // Format: YY_WW
                         const reportData = doc.data() as WeeklyReport;
-                        
+
                         console.log(`   Processing doc ${weekId}:`, reportData);
 
-                        // Parse week number for display
-                        const week = weekId.split('_')[1];
-                        const weekNumber = parseInt(week, 10);
-                        
-                        // Create a simple label (you can customize this)
-                        const label = `${weekNumber}`;
-                        
+                        // Keep year_week format for proper chronological ordering
+                        const weekLabel = weekId; // Use YY_WW format
+
                         // Convert dm³ to m³ (1 m³ = 1000 dm³)
                         const volumeInM3 = reportData.totalVolumeDm / 1000;
 
                         return {
-                            week: label,
+                            week: weekLabel,
                             volume: parseFloat(volumeInM3.toFixed(3))
                         };
                     });
-                
+
                 console.log('✅ Processed data:', data);
                 setVolumeData(data);
             } catch (error) {

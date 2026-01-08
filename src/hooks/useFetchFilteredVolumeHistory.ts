@@ -1,8 +1,8 @@
 // src/hooks/useFetchFilteredVolumeHistory.ts
-import {useEffect, useMemo, useState} from "react";
-import {collection, getDocs} from "firebase/firestore";
-import {db} from "../firebase";
-import {SlotType} from "hranolky-firestore-common";
+import { useEffect, useMemo, useState } from "react";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../firebase";
+import { SlotType } from "hranolky-firestore-common";
 
 interface VolumeDataPoint {
   week: string;
@@ -19,57 +19,66 @@ interface SlotWeeklyReport {
   volumeDm: number;
 }
 
-// Helper function to get current week number (ISO 8601)
-function getCurrentWeekNumber(): number {
-  const now = new Date();
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  return weekNo;
-}
+// Helper to fill GAPS between recorded weeks by carrying forward the last volume
+function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
+  if (data.length < 2) return data;
 
-// Helper function to fill missing weeks with previous week's value
-function fillMissingWeeks(data: VolumeDataPoint[]): VolumeDataPoint[] {
-  if (data.length === 0) return data;
+  const result: VolumeDataPoint[] = [];
 
-  // Extract week numbers from labels (e.g., "W27" or "27" -> 27)
-  const weeksWithData = data.map(d => ({
-    weekNumber: parseInt(d.week),
-    volume: d.volume
-  }));
+  // Helper to get a comparable value for a week label "YY_WW"
+  const getWeekValue = (label: string) => {
+    const parts = label.split('_');
+    if (parts.length < 2) return 0;
+    const y = parseInt(parts[0]);
+    const w = parseInt(parts[1]);
+    return y * 100 + w;
+  };
 
-  // Find min week from data
-  const minWeek = Math.min(...weeksWithData.map(w => w.weekNumber));
+  // Helper to get the canonical label from year and week
+  const getLabel = (y: number, w: number) =>
+    `${y.toString().padStart(2, '0')}_${w.toString().padStart(2, '0')}`;
 
-  // Max week is always the previous week (last Sunday)
-  const currentWeek = getCurrentWeekNumber();
-  const maxWeek = currentWeek - 1;
+  for (let i = 0; i < data.length - 1; i++) {
+    result.push(data[i]);
 
-  // Create a map for quick lookup
-  const weekMap = new Map(weeksWithData.map(w => [w.weekNumber, w.volume]));
+    let [y, w] = data[i].week.split('_').map(Number);
+    const targetValue = getWeekValue(data[i + 1].week);
 
-  // Fill in all weeks from min to max
-  const filledData: VolumeDataPoint[] = [];
-  let lastVolume = 0;
+    if (isNaN(y) || isNaN(w)) continue;
 
-  for (let week = minWeek; week <= maxWeek; week++) {
-    const volume = weekMap.get(week);
+    // Safety counter to prevent infinite loops (max 3 year of gaps)
+    let safety = 0;
+    while (safety < 160) {
+      safety++;
 
-    if (volume !== undefined) {
-      // Week exists in data, use it
-      lastVolume = volume;
+      // Advance to next week
+      w++;
+      if (w > 52) {
+        // Simple check for week 53 vs week 1 of next year
+        const year4Digit = 2000 + y;
+        const dec31 = new Date(Date.UTC(year4Digit, 11, 31));
+        const dayNum = dec31.getUTCDay() || 7;
+        // If Dec 31 is Thu, Fri, Sat or Sun, there's a week 53
+        const hasWeek53 = dayNum >= 4;
+
+        if (w > (hasWeek53 ? 53 : 52)) {
+        w = 1;
+        y = (y + 1) % 100;
+      }
+      }
+
+      const currentLabel = getLabel(y, w);
+      if (getWeekValue(currentLabel) >= targetValue) break;
+
+      result.push({
+        week: currentLabel,
+        volume: data[i].volume
+      });
     }
-    // else: Week is missing, use lastVolume (carries forward from previous week)
-
-    filledData.push({
-      week: `${week}`,
-      volume: lastVolume
-    });
   }
 
-  return filledData;
+  result.push(data[data.length - 1]);
+  return result;
 }
 
 export const useFetchFilteredVolumeHistory = (
@@ -99,10 +108,6 @@ export const useFetchFilteredVolumeHistory = (
       }
 
       console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
-      console.log('   SlotType:', slotType);
-      console.log('   Has Active Filters:', hasActiveFilters);
-      console.log('   Filtered Slots Count:', filteredSlotIds.length);
-
       setLoading(true);
 
       try {
@@ -146,8 +151,6 @@ export const useFetchFilteredVolumeHistory = (
         return;
       }
 
-      console.log(`   Found ${snapshot.size} aggregate reports`);
-
       // Sort documents by ID to ensure chronological order
       const sortedDocs = snapshot.docs.sort((a, b) => a.id.localeCompare(b.id));
 
@@ -156,20 +159,21 @@ export const useFetchFilteredVolumeHistory = (
           const weekId = doc.id;
           const reportData = doc.data() as WeeklyReport;
 
-          const week = weekId.split('_')[1];
-          const weekNumber = parseInt(week, 10);
+          // Keep year_week format for proper chronological ordering
+          const [year, week] = weekId.split('_');
+          const weekLabel = `${year}_${week}`;
           const volumeInM3 = reportData.totalVolumeDm / 1000;
 
           return {
-            week: weekNumber.toString(),
+            week: weekLabel,
             volume: parseFloat(volumeInM3.toFixed(3))
           };
         });
 
-      // Fill missing weeks to create continuous data
-      const filledData = fillMissingWeeks(data);
+      // Fill gaps in chronology
+      const filledData = fillHistoricalGaps(data);
 
-      // Take last N weeks after filling
+      // Take last N weeks
       const finalData = filledData.slice(-weeks);
 
       if (checkCancelled()) {
@@ -215,11 +219,6 @@ export const useFetchFilteredVolumeHistory = (
 
         try {
           const snapshot = await getDocs(primaryRef);
-          // If primary succeeded but returned no docs, try fallback
-          if (snapshot.empty) {
-            console.log(`   No docs under SlotWeeklyReport, trying SlotWeeklyReports at ${collectionName}/${slotId}...`);
-          }
-
 
           if (checkCancelled()) {
             console.log('⏹️  Per-slot fetch cancelled after slot getDocs');
@@ -227,22 +226,24 @@ export const useFetchFilteredVolumeHistory = (
           }
 
           // Convert this slot's data to VolumeDataPoint array
-          const slotData: VolumeDataPoint[] = snapshot.docs.map(doc => {
-            const weekId = doc.id; // YY_WW expected
+          const slotDataOriginal: VolumeDataPoint[] = snapshot.docs.map(doc => {
+            const weekId = doc.id; // YYYY_WW or YY_WW expected
             const reportData = doc.data() as SlotWeeklyReport;
 
-            const week = weekId.split('_')[1];
-            const weekNumber = parseInt(week, 10);
+            // Keep year_week format for proper chronological ordering
+            const [year, week] = weekId.split('_');
+            const weekLabel = `${year}_${week}`;
 
             return {
-              week: `${weekNumber}`,
+              week: weekLabel,
               volume: reportData.volumeDm / 1000 // Convert to m³
             };
-          }).sort((a, b) => parseInt(a.week) - parseInt(b.week));
-          // Fill missing weeks for THIS slot
-          const filledSlotData = fillMissingWeeks(slotData);
+          }).sort((a, b) => a.week.localeCompare(b.week)); // Sort chronologically
 
-          allSlotData.set(slotId, filledSlotData);
+          // Fill gaps for this slot locally to ensure carry-forward works correctly per slot
+          const slotData = fillHistoricalGaps(slotDataOriginal);
+
+          allSlotData.set(slotId, slotData);
         } catch (error) {
           if (!checkCancelled()) {
             console.warn(`   Failed to fetch reports for slot ${slotId}:`, error);
@@ -257,25 +258,24 @@ export const useFetchFilteredVolumeHistory = (
 
       console.log(`   Loaded data for ${allSlotData.size} slots`);
 
-      // Now aggregate across all slots per week
-      const weeklyAggregates = new Map<number, number>();
+      // Now aggregate across all slots per week (using year_week as key)
+      const weeklyAggregates = new Map<string, number>();
 
-      // For each slot's filled data, add to the weekly aggregates
+      // For each slot's data, add to the weekly aggregates
       for (const [, slotData] of allSlotData.entries()) {
         for (const dataPoint of slotData) {
-          const weekNumber = parseInt(dataPoint.week);
-          const currentVolume = weeklyAggregates.get(weekNumber) || 0;
-          weeklyAggregates.set(weekNumber, currentVolume + dataPoint.volume);
+          const currentVolume = weeklyAggregates.get(dataPoint.week) || 0;
+          weeklyAggregates.set(dataPoint.week, currentVolume + dataPoint.volume);
         }
       }
 
       console.log(`   Aggregated ${weeklyAggregates.size} weeks of data`);
 
-      // Convert to sorted array
+      // Convert to sorted array (sort by year_week string for chronological order)
       const sortedData = Array.from(weeklyAggregates.entries())
-        .sort((a, b) => a[0] - b[0]) // Sort by week number
-        .map(([weekNumber, volume]) => ({
-          week: `${weekNumber}`,
+        .sort((a, b) => a[0].localeCompare(b[0])) // Sort by year_week string
+        .map(([weekLabel, volume]) => ({
+          week: weekLabel,
           volume: parseFloat(volume.toFixed(3))
         }));
 
@@ -300,5 +300,5 @@ export const useFetchFilteredVolumeHistory = (
     };
   }, [slotType, cacheKey, hasActiveFilters, filteredSlotIds, weeksToShow]);
 
-  return {volumeData, loading};
+  return { volumeData, loading };
 };

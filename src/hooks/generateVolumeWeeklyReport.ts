@@ -3,9 +3,9 @@
    Run this once to generate all historical data.
  */
 
-import {collection, doc, getDocs, writeBatch, Timestamp} from 'firebase/firestore';
-import {db} from '../firebase';
-import {WarehouseSlotClass, SlotType} from "hranolky-firestore-common";
+import { collection, doc, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
+import { db } from '../firebase';
+import { WarehouseSlotClass, SlotType } from "hranolky-firestore-common";
 
 interface SlotAction {
     action: string;
@@ -32,7 +32,7 @@ function getWeekNumber(date: Date): { year: number; week: number } {
     d.setUTCDate(d.getUTCDate() + 4 - dayNum);
     const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
     const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-    return {year: d.getUTCFullYear(), week: weekNo};
+    return { year: d.getUTCFullYear(), week: weekNo };
 }
 
 // Helper function to get end of week (Sunday 23:59:59)

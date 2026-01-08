@@ -1,7 +1,7 @@
-import React, {useEffect, useMemo, useState} from "react";
-import {CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis} from 'recharts';
-import {useFetchFilteredVolumeHistory} from "../hooks/useFetchFilteredVolumeHistory.ts";
-import {SlotType, WarehouseSlotClass} from "hranolky-firestore-common";
+import React, { useEffect, useMemo, useState } from "react";
+import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { useFetchFilteredVolumeHistory } from "../hooks/useFetchFilteredVolumeHistory.ts";
+import { SlotType, WarehouseSlotClass } from "hranolky-firestore-common";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
@@ -15,35 +15,32 @@ interface VolumeDataPoint {
   volume: number;
 }
 
-// Helper function to get current week number (ISO 8601)
-const getCurrentWeekNumber = (): number => {
+// Helper function to get current week in YY_WW format
+const getCurrentWeekLabel = (): string => {
   const now = new Date();
+  const year = now.getFullYear() % 100; // Get last 2 digits
   const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   const dayNum = d.getUTCDay() || 7;
   d.setUTCDate(d.getUTCDate() + 4 - dayNum);
   const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+
+  // Format as YY_WW with zero-padding
+  return `${year}_${weekNum.toString().padStart(2, '0')}`;
 };
 
 // Mock data generator for initial loading animation
 const generateMockVolumeData = (): VolumeDataPoint[] => {
   const data: VolumeDataPoint[] = [];
-  const startWeek = 27; // 2025 week 27
-  const currentWeek = getCurrentWeekNumber();
 
-  for (let week = startWeek; week <= currentWeek; week++) {
-    const weekLabel = week.toString();
-
-    // Generate mock volume data with some variation (fixed seed for consistency)
+  // Generate some simple mock data with current week format
+  // This is just placeholder for loading animation
+  for (let i = 0; i < 20; i++) {
     const baseVolume = 45;
-    const weekOffset = week - startWeek;
-    const totalWeeks = currentWeek - startWeek + 1;
-    const seasonalVariation = Math.sin((weekOffset / totalWeeks) * Math.PI * 2) * 5;
-    const trend = weekOffset * 0.5; // Slight upward trend
-    const randomNoise = (Math.sin(week * 123.456) + 1) * 2.5; // Deterministic "random"
-    const volume = parseFloat((baseVolume + seasonalVariation + trend + randomNoise).toFixed(2));
+    const randomVariation = Math.sin(i * 0.5) * 10;
+    const volume = parseFloat((baseVolume + randomVariation).toFixed(2));
 
-    data.push({ week: weekLabel, volume });
+    data.push({ week: `mock_${i}`, volume });
   }
 
   return data;
@@ -74,10 +71,10 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
 
   // Debug: trace inputs to the hook
   console.log('[VolumeInTimeChart] hasActiveFilters:', hasActiveFilters,
-              '| filteredSlots:', filteredSlots.length,
-              '| shouldWaitForManualLoad:', shouldWaitForManualLoad,
-              '| manualLoadRequested:', manualLoadRequested,
-              '| shouldFetchData:', shouldFetchData);
+    '| filteredSlots:', filteredSlots.length,
+    '| shouldWaitForManualLoad:', shouldWaitForManualLoad,
+    '| manualLoadRequested:', manualLoadRequested,
+    '| shouldFetchData:', shouldFetchData);
 
   const { volumeData, loading } = useFetchFilteredVolumeHistory(
     slotType,
@@ -157,15 +154,14 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     }
 
     // Always add current volume as the last point
-    const currentWeek = getCurrentWeekNumber();
-    const currentWeekStr = currentWeek.toString();
+    const currentWeekLabel = getCurrentWeekLabel();
 
     // Check if current week already exists in data
-    const hasCurrentWeek = baseData.some(d => d.week === currentWeekStr);
+    const hasCurrentWeek = baseData.some(d => d.week === currentWeekLabel);
 
     if (!hasCurrentWeek) {
       // Add current volume as a new data point
-      return [...baseData, { week: currentWeekStr, volume: currentVolume }];
+      return [...baseData, { week: currentWeekLabel, volume: currentVolume }];
     }
 
     return baseData;
@@ -200,22 +196,96 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     };
   })();
 
-  // Calculate inventory check weeks (weeks 1, 14, 27, 40)
+  // Calculate inventory check weeks (weeks 14, 27, 40, 52)
   const inventoryCheckWeeks = useMemo(() => {
-    const checkWeeks = [1, 14, 27, 40];
+    const checkWeeks = [14, 27, 40, 52];
     // Filter to only include weeks that are present in the data
     return displayData
-      .filter(d => checkWeeks.includes(parseInt(d.week)))
+      .filter(d => {
+        // Extract week number from YYYY_WW format
+        const weekNum = parseInt(d.week.split('_')[1] || d.week);
+        return checkWeeks.includes(weekNum);
+      })
       .map(d => d.week);
   }, [displayData]);
+
+  // Custom X-axis tick component with two rows (week number + year grouping)
+  const CustomXAxisTick = ({ x, y, payload, index }: { x?: number; y?: number; payload?: { value: string }; index?: number }) => {
+    if (!payload || x === undefined || y === undefined || index === undefined) return null;
+
+    const weekStr = payload.value;
+    const parts = weekStr.split('_');
+    const year = parts[0] || '';
+    const weekNum = parts[1] || weekStr;
+
+    // Check if this is the first tick of a new year or the first tick overall
+    const prevWeek = index > 0 ? animatedData[index - 1]?.week : null;
+    const prevYear = prevWeek ? prevWeek.split('_')[0] : null;
+    const isFirstOfYear = index === 0 || year !== prevYear;
+
+    // Check if next tick is a different year (to know where year group ends)
+    const nextWeek = index < animatedData.length - 1 ? animatedData[index + 1]?.week : null;
+    const nextYear = nextWeek ? nextWeek.split('_')[0] : null;
+    const isLastOfYear = index === animatedData.length - 1 || year !== nextYear;
+    // Show week label every 2 weeks, at year boundaries, or at last item
+    const showWeekLabel = isFirstOfYear || isLastOfYear || (index % 2 === 0);
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        {/* Week number on top - black for visibility */}
+        {showWeekLabel && (
+          <text
+            x={0}
+            y={0}
+            dy={12}
+            textAnchor="middle"
+            fill="#333333"
+            fontSize={10}
+            fontWeight="500"
+          >
+            {weekNum}
+          </text>
+        )}
+
+        {/* Year label - only show at the start of each year group */}
+        {isFirstOfYear && (
+          <text
+            x={2}
+            y={0}
+            dy={32}
+            textAnchor="start"
+            fill="var(--color-text-03)"
+            fontSize={10}
+            fontWeight="bold"
+          >
+            {year.length === 2 ? `20${year}` : year}
+          </text>
+        )}
+
+        {/* Year grouping line - solid by increasing overlap */}
+        <line
+          x1={isFirstOfYear ? 0 : -50}
+          y1={20}
+          x2={isLastOfYear ? 0 : 50}
+          y2={20}
+          stroke="var(--color-text-03)"
+          strokeWidth={1.5}
+        />
+      </g>
+    );
+  };
 
   // Custom tooltip component
   // ...existing code...
   const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: VolumeDataPoint; value: number }> }) => {
     if (active && payload && payload.length) {
+      const weekStr = payload[0].payload.week;
+      const parts = weekStr.split('_');
+      const displayLabel = parts.length === 2 ? `Týden ${parts[1]}/${parts[0]}` : weekStr;
+
       return (
         <div className="bg-gray-800 text-white text-xs rounded py-2 px-3 shadow-lg">
-          <p className="font-semibold">{payload[0].payload.week}</p>
+          <p className="font-semibold">{displayLabel}</p>
           <p className="text-[var(--color-primary-light)]">{payload[0].value.toFixed(2)} m³</p>
         </div>
       );
@@ -275,16 +345,20 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
           </div>
         )}
 
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={440}>
           <LineChart
             data={animatedData}
-            margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
+            margin={{ top: 5, right: 10, left: 0, bottom: 45 }}
             key={loading ? 'loading' : 'loaded'}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
             <XAxis
               dataKey="week"
-              style={{ fontSize: '12px' }}
+              tick={<CustomXAxisTick />}
+              tickLine={false}
+              axisLine={{ stroke: 'var(--color-text-03)' }}
+              height={55}
+              interval={0}
             />
             <YAxis
               domain={yDomain}
