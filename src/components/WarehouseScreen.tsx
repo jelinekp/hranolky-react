@@ -6,6 +6,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { useFetchAllWarehouseSlots } from "../hooks/useFetchAllWarehouseSlots.ts";
 import { useFetchUserDevices } from "../hooks/useFetchUserDevices.ts";
 import ContentLayoutContainer from "./ContentLayoutContainer.tsx";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faGear } from "@fortawesome/free-solid-svg-icons";
 
 export type WarehouseScreenProps = {
   slotType: SlotType;
@@ -65,6 +67,15 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
           <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="250" className="inline" />
           {user && (
             <div className="flex items-center gap-3">
+              {['jelinekp6@gmail.com', 'jelinekv007@gmail.com'].includes(user.email || '') && (
+                <button
+                  onClick={() => navigate('/admin')}
+                  className="p-2 text-[var(--color-text-01)] hover:bg-grey rounded-lg transition-colors border-0 outline-none bg-transparent cursor-pointer"
+                  title="Administrace zařízení"
+                >
+                  <FontAwesomeIcon icon={faGear} className="text-xl" />
+                </button>
+              )}
               {user.photoURL && (
                 <img
                   src={user.photoURL}

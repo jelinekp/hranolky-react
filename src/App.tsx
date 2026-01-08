@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { useEffect } from 'react'
 import Hranolky from './screens/Hranolky'
 import Sparovky from './screens/Sparovky'
+import AdminPanel from './screens/AdminPanel'
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginScreen from './components/LoginScreen';
 
@@ -13,6 +14,7 @@ function AppRoutes() {
     const titles: Record<string, string> = {
       '/hranolky': 'Hranolky',
       '/sparovky': 'Spárovky',
+      '/admin': 'Administrace',
     };
 
     const baseTitle = 'JELÍNEK - nábytek a matrace';
@@ -45,6 +47,7 @@ function AppRoutes() {
         <Route path="/" element={<Navigate to="hranolky" replace />} />
         <Route path="hranolky" element={<Hranolky />} />
         <Route path="sparovky" element={<Sparovky />} />
+        <Route path="admin" element={<AdminPanel />} />
       </Routes>
       {/* Loading overlay */}
       {loading && (
