@@ -22,6 +22,10 @@ export const useAdminDevices = () => {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const deviceList: DeviceAdminData[] = snapshot.docs.map(doc => {
         const data = doc.data();
+
+        // Skip deprecated devices
+        if (data.deprecated) return null;
+
         const lastSeenTimestamp = data.lastSeen as Timestamp | undefined;
 
         return {
@@ -32,7 +36,7 @@ export const useAdminDevices = () => {
           isInventoryCheckPermitted: !!data.isInventoryCheckPermitted,
           lastSeen: lastSeenTimestamp ? lastSeenTimestamp.toDate() : null
         };
-      });
+      }).filter(Boolean) as DeviceAdminData[];
       setDevices(deviceList);
       setLoading(false);
     }, (error) => {
