@@ -100,7 +100,11 @@ const AdminPanel: React.FC = () => {
             </button>
             <div>
               <h1 className="text-2xl font-bold">Administrace terminálů</h1>
-              <p className="text-sm text-[var(--color-text-03)]">Správa povolených inventur a názvů zařízení</p>
+              <p className="text-sm text-[var(--color-text-03)]">
+                Správa povolených inventur a názvů zařízení. <br />
+                Pokud se změny v Android aplikaci neprojeví, spusťte ji znovu. <br />
+                Pokud zde chybí zařízení, nainstalujte na něj poslední APK.
+                </p>
             </div>
           </div>
           <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="200" />
@@ -207,7 +211,7 @@ const AdminPanel: React.FC = () => {
             ) : appConfig ? (
               <div className="space-y-4">
                 <div>
-                  <span className="text-sm text-[var(--color-text-03)]">Verze</span>
+                  <span className="text-sm text-[var(--color-text-03)]">Aktuální verze</span>
                   <p className="text-2xl font-bold text-[var(--color-primary)]">{appConfig.version}</p>
                   <span className="text-xs text-[var(--color-text-03)]">(kód: {appConfig.versionCode})</span>
                 </div>
