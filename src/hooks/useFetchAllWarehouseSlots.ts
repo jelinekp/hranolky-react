@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react"
+import { useEffect, useState } from "react"
 import {
     collection,
     query,
@@ -7,15 +7,15 @@ import {
     limit,
     Query, getDocs
 } from "firebase/firestore"
-import {db} from "../firebase"
-import {WarehouseSlotClass, SlotActionClass, SlotType} from "hranolky-firestore-common"
-import {toFirestoreCollectionName} from "hranolky-firestore-common/SlotType.ts";
+import { db } from "../firebase"
+import { WarehouseSlotClass, SlotActionClass, SlotType } from "hranolky-firestore-common"
+import { toFirestoreCollectionName } from "hranolky-firestore-common/SlotType.ts";
 
 export const useFetchAllWarehouseSlots = (slotType: SlotType, options?: { enabled?: boolean }) => {
     const enabled = options?.enabled ?? true
     const [data, setData] = useState<WarehouseSlotClass[]>([])
     const [loading, setLoading] = useState(true)
-  const warehouseSlotsCollection = toFirestoreCollectionName(slotType)
+    const warehouseSlotsCollection = toFirestoreCollectionName(slotType)
 
     useEffect(() => {
         // If fetching is disabled (e.g., waiting for auth), keep loading true and do nothing.
@@ -97,10 +97,10 @@ export async function getLastSlotAction(warehouseSlotId: string) {
         if (!querySnapshot.empty) {
             const slotAction = querySnapshot.docs[0].data()
 
-            console.log("SlotAction found:", slotAction)
+            // console.log("SlotAction found:", slotAction)
             return new SlotActionClass(slotAction)
         } else {
-            console.log("No SlotActions found.")
+            // console.log("No SlotActions found.")
             return null
         }
     } catch (error) {

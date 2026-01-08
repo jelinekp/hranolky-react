@@ -16,14 +16,14 @@ export const useFetchUserDevices = (options?: { enabled?: boolean }) => {
         }
 
         const fetchDevices = async () => {
-            console.log('🔍 Fetching user devices...');
+            // console.log('🔍 Fetching user devices...');
             setLoading(true);
 
             try {
                 const devicesRef = collection(db, 'Devices');
                 const snapshot = await getDocs(devicesRef);
 
-                console.log(`   Found ${snapshot.size} devices`);
+                // console.log(`   Found ${snapshot.size} devices`);
 
                 const deviceMap = new Map<string, string | null>();
 
@@ -33,11 +33,11 @@ export const useFetchUserDevices = (options?: { enabled?: boolean }) => {
                     const deviceName = data.deviceName ?? null;
 
                     deviceMap.set(deviceId, deviceName);
-                    console.log(`   Device: ${deviceId} → ${deviceName || '(no name)'}`);
+                    // console.log(`   Device: ${deviceId} → ${deviceName || '(no name)'}`);
                 });
 
                 setDevices(deviceMap);
-                console.log('✅ Devices loaded successfully');
+                // console.log('✅ Devices loaded successfully');
             } catch (error) {
                 console.error('❌ Error fetching devices:', error);
                 setDevices(new Map());

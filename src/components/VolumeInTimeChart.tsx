@@ -80,11 +80,13 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   const shouldFetchData = !shouldWaitForManualLoad || manualLoadRequested;
 
   // Debug: trace inputs to the hook
+  /*
   console.log('[VolumeInTimeChart] hasActiveFilters:', hasActiveFilters,
     '| filteredSlots:', filteredSlots.length,
     '| shouldWaitForManualLoad:', shouldWaitForManualLoad,
     '| manualLoadRequested:', manualLoadRequested,
     '| shouldFetchData:', shouldFetchData);
+  */
 
   const { volumeData, loading } = useFetchFilteredVolumeHistory(
     slotType,

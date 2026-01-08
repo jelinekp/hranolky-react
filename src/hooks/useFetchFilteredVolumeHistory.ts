@@ -102,12 +102,12 @@ export const useFetchFilteredVolumeHistory = (
     const fetchVolumeHistory = async () => {
       // Only skip when filters are active and no slots are selected
       if (hasActiveFilters && filteredSlotIds.length === 0) {
-        console.log('⏹️  Skipping fetch - filters active but no slots provided');
+        // console.log('⏹️  Skipping fetch - filters active but no slots provided');
         setLoading(false);
         return;
       }
 
-      console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
+      // console.log('🔍 useFetchFilteredVolumeHistory: Starting fetch...');
       setLoading(true);
 
       try {
@@ -132,11 +132,11 @@ export const useFetchFilteredVolumeHistory = (
 
     const fetchAggregateReports = async (type: SlotType, weeks: number, checkCancelled: () => boolean) => {
       if (checkCancelled()) {
-        console.log('⏹️  Aggregate fetch cancelled before starting');
+        // console.log('⏹️  Aggregate fetch cancelled before starting');
         return;
       }
 
-      console.log('   Using aggregate reports (no filters)');
+      // console.log('   Using aggregate reports (no filters)');
 
       // Updated to new nested collection paths
       const collectionSegments = type === SlotType.Beam
@@ -147,7 +147,7 @@ export const useFetchFilteredVolumeHistory = (
       const snapshot = await getDocs(reportsRef);
 
       if (checkCancelled()) {
-        console.log('⏹️  Aggregate fetch cancelled after getDocs');
+        // console.log('⏹️  Aggregate fetch cancelled after getDocs');
         return;
       }
 
@@ -177,21 +177,21 @@ export const useFetchFilteredVolumeHistory = (
       const finalData = filledData.slice(-weeks);
 
       if (checkCancelled()) {
-        console.log('⏹️  Aggregate fetch cancelled before setting state');
+        // console.log('⏹️  Aggregate fetch cancelled before setting state');
         return;
       }
 
-      console.log('✅ Aggregate data loaded:', finalData.length, 'weeks (filled)');
+      // console.log('✅ Aggregate data loaded:', finalData.length, 'weeks (filled)');
       setVolumeData(finalData);
     };
 
     const fetchPerSlotReports = async (slotType: SlotType, slotIds: string[], weeks: number, checkCancelled: () => boolean) => {
       if (checkCancelled()) {
-        console.log('⏹️  Per-slot fetch cancelled before starting');
+        // console.log('⏹️  Per-slot fetch cancelled before starting');
         return;
       }
 
-      console.log('   Using per-slot reports (filters active)');
+      // console.log('   Using per-slot reports (filters active)');
 
       // Collect all per-slot data with filled weeks
       const allSlotData: Map<string, VolumeDataPoint[]> = new Map();
@@ -199,7 +199,7 @@ export const useFetchFilteredVolumeHistory = (
       // Fetch SlotWeeklyReport for each filtered slot
       for (const slotId of slotIds) {
         if (checkCancelled()) {
-          console.log('⏹️  Per-slot fetch cancelled during slot iteration');
+          // console.log('⏹️  Per-slot fetch cancelled during slot iteration');
           return;
         }
 
@@ -221,7 +221,7 @@ export const useFetchFilteredVolumeHistory = (
           const snapshot = await getDocs(primaryRef);
 
           if (checkCancelled()) {
-            console.log('⏹️  Per-slot fetch cancelled after slot getDocs');
+            // console.log('⏹️  Per-slot fetch cancelled after slot getDocs');
             return;
           }
 
@@ -252,11 +252,11 @@ export const useFetchFilteredVolumeHistory = (
       }
 
       if (checkCancelled()) {
-        console.log('⏹️  Per-slot fetch cancelled before aggregation');
+        // console.log('⏹️  Per-slot fetch cancelled before aggregation');
         return;
       }
 
-      console.log(`   Loaded data for ${allSlotData.size} slots`);
+      // console.log(`   Loaded data for ${allSlotData.size} slots`);
 
       // Now aggregate across all slots per week (using year_week as key)
       const weeklyAggregates = new Map<string, number>();
@@ -269,7 +269,7 @@ export const useFetchFilteredVolumeHistory = (
         }
       }
 
-      console.log(`   Aggregated ${weeklyAggregates.size} weeks of data`);
+      // console.log(`   Aggregated ${weeklyAggregates.size} weeks of data`);
 
       // Convert to sorted array (sort by year_week string for chronological order)
       const sortedData = Array.from(weeklyAggregates.entries())
@@ -283,11 +283,11 @@ export const useFetchFilteredVolumeHistory = (
       const finalData = sortedData.slice(-weeks);
 
       if (checkCancelled()) {
-        console.log('⏹️  Per-slot fetch cancelled before setting state');
+        // console.log('⏹️  Per-slot fetch cancelled before setting state');
         return;
       }
 
-      console.log('✅ Per-slot data aggregated:', finalData.length, 'weeks');
+      // console.log('✅ Per-slot data aggregated:', finalData.length, 'weeks');
       setVolumeData(finalData);
     };
 
@@ -296,7 +296,7 @@ export const useFetchFilteredVolumeHistory = (
     // Cleanup function to cancel ongoing fetch when filters change
     return () => {
       isCancelled = true;
-      console.log('🛑 Fetch operation cancelled (filters changed or component unmounted)');
+      // console.log('🛑 Fetch operation cancelled (filters changed or component unmounted)');
     };
   }, [slotType, cacheKey, hasActiveFilters, filteredSlotIds, weeksToShow]);
 

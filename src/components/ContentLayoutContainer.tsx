@@ -49,9 +49,11 @@ function ContentLayoutContainer(
 
   function setSortingByAndOrder(newSortingBy: SortingBy) {
 
+    /*
     console.log("Sorting order:", sortingOrder)
     console.log("Sorting by:", sortingBy)
     console.log("New sorting by:", newSortingBy)
+    */
 
 
     if (sortingBy === newSortingBy) {
@@ -64,8 +66,8 @@ function ContentLayoutContainer(
     } else {
       setSortingOrder(SortingOrder.desc)
       setSortingBy(newSortingBy)
-      console.log("Sorting by:", sortingBy)
-      console.log("Sorting order:", sortingOrder)
+      // console.log("Sorting by:", sortingBy)
+      // console.log("Sorting order:", sortingOrder)
     }
   }
 

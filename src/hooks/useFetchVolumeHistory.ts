@@ -20,9 +20,9 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
 
     useEffect(() => {
         const fetchVolumeHistory = async () => {
-            console.log('🔍 useFetchVolumeHistory: Starting fetch...');
-            console.log('   SlotType:', slotType);
-            console.log('   WeeksToShow:', weeksToShow);
+            // console.log('🔍 useFetchVolumeHistory: Starting fetch...');
+            // console.log('   SlotType:', slotType);
+            // console.log('   WeeksToShow:', weeksToShow);
 
             setLoading(true);
 
@@ -32,18 +32,18 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
                     : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
 
                 const collectionPath = collectionSegments.join('/');
-                console.log('   Collection path:', collectionPath);
+                // console.log('   Collection path:', collectionPath);
 
                 const reportsRef = collection(db, collectionPath);
                 // Don't use orderBy to avoid requiring a Firestore index
                 // We'll sort in JavaScript instead
 
-                console.log('   Executing query...');
+                // console.log('   Executing query...');
                 const snapshot = await getDocs(reportsRef);
 
-                console.log('   Query complete!');
-                console.log('   Documents found:', snapshot.size);
-                console.log('   Document IDs:', snapshot.docs.map(doc => doc.id));
+                // console.log('   Query complete!');
+                // console.log('   Documents found:', snapshot.size);
+                // console.log('   Document IDs:', snapshot.docs.map(doc => doc.id));
 
                 if (snapshot.empty) {
                     console.warn('⚠️  No documents found in collection:', collectionPath);
@@ -62,7 +62,7 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
                         const weekId = doc.id; // Format: YY_WW
                         const reportData = doc.data() as WeeklyReport;
 
-                        console.log(`   Processing doc ${weekId}:`, reportData);
+                        // console.log(`   Processing doc ${weekId}:`, reportData);
 
                         // Keep year_week format for proper chronological ordering
                         const weekLabel = weekId; // Use YY_WW format
@@ -76,7 +76,7 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
                         };
                     });
 
-                console.log('✅ Processed data:', data);
+                // console.log('✅ Processed data:', data);
                 setVolumeData(data);
             } catch (error) {
                 console.error('❌ Error fetching volume history:', error);
