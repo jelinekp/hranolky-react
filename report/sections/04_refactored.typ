@@ -4,7 +4,7 @@ This section documents the changes made to address the identified NS theory viol
 
 == Test-Driven Approach
 
-Before refactoring, we established a comprehensive test suite as a safety net:
+Before refactoring, I established a comprehensive test suite as a safety net:
 
 #table(
   columns: (auto, auto, auto),
@@ -110,18 +110,57 @@ Extracted animation and rendering logic from VolumeInTimeChart:
 - `components/chart/ChartTooltip.tsx` - Tooltip rendering
 - `components/chart/ChartXAxisTick.tsx` - Custom X-axis with year grouping
 
+== DRY Elimination
+
+Created shared utility modules in `common/` to eliminate code duplication:
+
+=== Week Utilities (`common/utils/weekUtils.ts`)
+
+Consolidated 10 week-related functions:
+
+```typescript
+export function getWeekNumber(date: Date): WeekInfo { ... }
+export function formatWeekId(year: number, week: number): string { ... }
+export function parseWeekId(weekId: string): { year, week } | null { ... }
+export function getEndOfWeek(year: number, week: number): Date { ... }
+```
+
+=== Shared Types (`common/types/volumeTypes.ts`)
+
+Centralized interface definitions:
+
+```typescript
+export interface VolumeDataPoint { week: string; volume: number }
+export interface WeeklyReport { totalQuantity: number; totalVolumeDm: number }
+export interface SlotWeeklyReport { quantity: number; volumeDm: number }
+```
+
+=== Collection Utilities (`common/utils/firestoreCollections.ts`)
+
+Unified Firestore path generation:
+
+```typescript
+export function getSlotCollectionName(slotType: SlotType): string
+export function getWeeklyReportsPath(slotType: SlotType): string[]
+export function getSlotWeeklyReportsPath(slotType: SlotType, slotId: string): string[]
+```
+
 == Summary of Changes
 
 #table(
   columns: (auto, auto, auto, auto),
   inset: 8pt,
   align: left,
-  [*Original File*], [*Extracted To*], [*Lines Moved*], [*Theorem*],
-  [`WarehouseScreen`], [`appConfig.ts`], [~30], [DVT],
-  [`SlotsTable`], [`slotSorting.ts`], [50], [SoC],
-  [`Filters`], [`ExportDialog.tsx`], [70], [SoC],
-  [`WarehouseSlot`], [`qualityMapping.ts`], [40], [SoC],
-  [`VolumeInTimeChart`], [`useChartAnimation.ts`], [30], [SoC],
+  [*Category*], [*Module*], [*Impact*], [*Principle*],
+  [Config], [`appConfig.ts`], [Centralized admin/collections], [DVT],
+  [Sorting], [`slotSorting.ts`], [50 lines extracted], [SoC],
+  [Dialog], [`ExportDialog.tsx`], [70 lines extracted], [SoC],
+  [Mapping], [`qualityMapping.ts`], [40 lines extracted], [SoC],
+  [Chart], [`useChartAnimation.ts`], [30 lines extracted], [SoC],
+  [Weeks], [`weekUtils.ts`], [Eliminated 3× duplication], [DRY],
+  [Types], [`volumeTypes.ts`], [Eliminated 4× duplication], [DRY],
+  [Paths], [`firestoreCollections.ts`], [Eliminated 5× duplication], [DRY],
 )
 
-Total lines extracted: *~220 lines* moved into focused, testable modules.
+Total: *~280 lines* moved into focused, testable modules.
+*87 automated tests* ensure correctness.

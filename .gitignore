@@ -44,3 +44,5 @@ firestore.indexes.json
 # Build and package artifacts
 **/package-lock.json
 DEPLOY_FTP_DOCS.md
+
+walkthroughs

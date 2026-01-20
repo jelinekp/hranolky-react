@@ -32,7 +32,10 @@
 #show outline.entry: set text(fill: blue.darken(50%))
 #show ref: set text(fill: blue.darken(40%))
 
-
+#show heading.where(level: 1): it => {
+  pagebreak(weak: true)
+  it
+}
 
 // Title Page
 #align(center + horizon)[

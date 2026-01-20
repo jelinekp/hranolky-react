@@ -2,17 +2,7 @@
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { SlotType } from "hranolky-firestore-common";
-
-interface VolumeDataPoint {
-    week: string;
-    volume: number;
-}
-
-interface WeeklyReport {
-    totalQuantity: number;
-    totalVolumeDm: number;
-}
+import { SlotType, VolumeDataPoint, WeeklyReport, getWeeklyReportsPath } from "hranolky-firestore-common";
 
 export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 500) => {
     const [volumeData, setVolumeData] = useState<VolumeDataPoint[]>([]);
@@ -27,9 +17,7 @@ export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 
             setLoading(true);
 
             try {
-                const collectionSegments = slotType === SlotType.Beam
-                    ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
-                    : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
+                const collectionSegments = getWeeklyReportsPath(slotType);
 
                 const collectionPath = collectionSegments.join('/');
                 // console.log('   Collection path:', collectionPath);

@@ -20,7 +20,45 @@ The hranolky-react application is a single-page React application with the follo
 
 The application manages warehouse inventory for two product types: *Hranolky* (beams) and *Sparovky* (jointers), allowing filtering, sorting, and exporting of slot data.
 
-== Identified Violations
+== NS Theory Violations
+
+=== SoC Violations
+Components mixed multiple responsibilities (UI rendering, business logic, data fetching).
+
+=== DVT Violations
+Hardcoded configuration values scattered throughout the codebase (admin emails, collection names).
+
+== DRY Violations
+
+Beyond NS Theory violations, significant code duplication was identified:
+
+#table(
+  columns: (auto, auto, auto),
+  inset: 8pt,
+  align: left,
+  [*Duplicated Code*], [*Files Affected*], [*Impact*],
+  [`VolumeDataPoint` interface], [4 files], [Type inconsistency risk],
+  [`getWeekNumber()` function], [3 files], [Bug duplication risk],
+  [Collection path logic], [5+ files], [Maintenance burden],
+  [`WarehouseSlotClass`], [common/ & functions/], [Quality mapping divergence],
+)
+
+=== Week Calculation Duplication
+```typescript
+// Duplicated in multiple files:
+function getWeekNumber(date: Date): { year: number; week: number } {
+  const d = new Date(Date.UTC(date.getFullYear()...));
+  // ... 15 lines of week calculation logic
+}
+```
+
+=== Collection Path Duplication
+```typescript
+// Repeated pattern in 5+ files:
+const collectionSegments = slotType === SlotType.Beam
+  ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
+  : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
+```
 
 === Filters.tsx (321 lines)
 

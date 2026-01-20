@@ -2,22 +2,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../firebase";
-import { SlotType } from "hranolky-firestore-common";
-
-interface VolumeDataPoint {
-  week: string;
-  volume: number;
-}
-
-interface WeeklyReport {
-  totalQuantity: number;
-  totalVolumeDm: number;
-}
-
-interface SlotWeeklyReport {
-  quantity: number;
-  volumeDm: number;
-}
+import {
+  SlotType,
+  VolumeDataPoint,
+  WeeklyReport,
+  SlotWeeklyReport,
+  getWeeklyReportsPath,
+  getSlotCollectionName,
+  formatWeekId,
+  getWeekValue
+} from "hranolky-firestore-common";
 
 // Helper to fill GAPS between recorded weeks by carrying forward the last volume
 function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
@@ -26,17 +20,10 @@ function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
   const result: VolumeDataPoint[] = [];
 
   // Helper to get a comparable value for a week label "YY_WW"
-  const getWeekValue = (label: string) => {
-    const parts = label.split('_');
-    if (parts.length < 2) return 0;
-    const y = parseInt(parts[0]);
-    const w = parseInt(parts[1]);
-    return y * 100 + w;
-  };
+  // Now using shared getWeekValue function
 
   // Helper to get the canonical label from year and week
-  const getLabel = (y: number, w: number) =>
-    `${y.toString().padStart(2, '0')}_${w.toString().padStart(2, '0')}`;
+  // Now using shared formatWeekId function
 
   for (let i = 0; i < data.length - 1; i++) {
     result.push(data[i]);
@@ -67,7 +54,7 @@ function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
         }
       }
 
-      const currentLabel = getLabel(y, w);
+      const currentLabel = formatWeekId(y, w);
       if (getWeekValue(currentLabel) >= targetValue) break;
 
       result.push({
@@ -138,10 +125,8 @@ export const useFetchFilteredVolumeHistory = (
 
       // console.log('   Using aggregate reports (no filters)');
 
-      // Updated to new nested collection paths
-      const collectionSegments = type === SlotType.Beam
-        ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
-        : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
+      // Using shared collection path utility
+      const collectionSegments = getWeeklyReportsPath(type);
 
       const reportsRef = collection(db, collectionSegments.join('/'));
       const snapshot = await getDocs(reportsRef);
@@ -203,17 +188,8 @@ export const useFetchFilteredVolumeHistory = (
           return;
         }
 
-        // Determine collection and document ID based on slot type
-        let collectionName: string;
-
-        if (slotType === SlotType.Beam) {
-          collectionName = 'Hranolky';
-        } else if (slotType === SlotType.Jointer) {
-          collectionName = 'Sparovky';
-        } else {
-          // DUB- or other prefixes go to Hranolky without stripping
-          collectionName = 'Hranolky';
-        }
+        // Using shared collection name utility
+        const collectionName = getSlotCollectionName(slotType);
 
         const primaryRef = collection(db, collectionName, slotId, 'SlotWeeklyReport');
 
