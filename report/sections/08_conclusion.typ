@@ -1,1 +1,51 @@
 = Conclusion
+
+This project successfully applied Normalized Systems Theory principles to refactor the hranolky-react warehouse management application, improving its modularity, testability, and maintainability.
+
+== Achievements
+
+=== Quantitative Results
+
+#table(
+  columns: (auto, auto),
+  inset: 8pt,
+  align: left,
+  [*Metric*], [*Value*],
+  [Automated tests added], [72],
+  [Test files created], [8],
+  [Utility modules extracted], [6],
+  [Lines of code reorganized], [~220],
+  [Large components refactored], [5],
+)
+
+=== Qualitative Improvements
+
+- *Improved Testability:* Extracted utilities can be unit tested in isolation
+- *Better Maintainability:* Changes to sorting logic require only modifying `slotSorting.ts`
+- *Centralized Configuration:* Admin permissions managed in one location
+- *Reusable Components:* `ExportDialog` can be used in other contexts
+- *Data-Driven Design:* Quality mappings stored as data, not code
+
+== Lessons Learned
+
+1. *Test First:* Establishing tests before refactoring provides confidence that behavior is preserved.
+
+2. *Incremental Extraction:* Small, focused extractions are safer than large rewrites.
+
+3. *NS Theory Applicability:* The four theorems translate well to React development:
+  - SoC maps to component/hook separation
+  - DVT maps to configuration modules
+  - AVT maps to pure utility functions
+
+== Future Work
+
+- Complete extraction of chart subcomponents in `VolumeInTimeChart.tsx`
+- Apply NS principles to remaining screens (AdminPanel)
+- Consider state management refactoring for SoS compliance
+- Expand test coverage to include more integration scenarios
+
+== Final Remarks
+
+Normalized Systems Theory provides a principled approach to software design that addresses the root causes of maintenance complexity. By systematically identifying and eliminating combinatorial effects, we created a codebase that is better prepared for future evolution.
+
+The 72-test safety net ensures that future modifications can be made with confidence, while the extracted modules provide clear boundaries for understanding and modifying specific functionality.
