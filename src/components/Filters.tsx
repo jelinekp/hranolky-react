@@ -4,9 +4,9 @@ import { IntervalMmClass, SlotFiltersClass } from "../model/SlotFilter.ts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons/faArrowRotateLeft";
 import { faFileExport } from "@fortawesome/free-solid-svg-icons/faFileExport";
-import { faCopy } from "@fortawesome/free-solid-svg-icons/faCopy";
 import { WarehouseSlotClass, SlotType } from "hranolky-firestore-common";
 import { exportSlotsToCsv, copySlotsToClipboard } from "../hooks/exportToCsv";
+import ExportDialog from "./ExportDialog";
 
 type FilterType = 'quality' | 'thickness' | 'width' | 'lengthInterval' | 'allLength';
 
@@ -235,73 +235,15 @@ function Filters(props: {
             </div>
 
             {/* Export Dialog */}
-            {showExportDialog && (
-                <div
-                    className="fixed inset-0 flex items-center justify-center z-50"
-                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.5)', backdropFilter: 'blur(4px)' }}
-                    onClick={() => setShowExportDialog(false)}
-                >
-                    <div
-                        className="bg-[var(--color-bg-01)] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <h3 className="text-xl font-semibold mb-4">Exportovat historii stavů</h3>
-
-                        {filteredSlots.length > 100 && (
-                            <div className="mb-4 p-3 bg-yellow-100 border border-yellow-400 rounded-lg">
-                                <p className="text-yellow-800 text-sm">
-                                    ⚠️ Export může trvat déle při velkém množství položek (cca {filteredSlots.length / 10} sekund).
-                                </p>
-                            </div>
-                        )}
-
-                        <div className="space-y-3">
-                            <button
-                                onClick={() => {
-                                    setShowExportDialog(false);
-                                    handleExport();
-                                }}
-                                disabled={isExporting || isCopying}
-                                className={`w-full text-left p-4 rounded-lg border-2 flex items-center gap-3
-                                    ${isExporting || isCopying
-                                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
-                                        : 'hover:bg-grey hover:border-blue-500 cursor-pointer border-gray-300'}`}
-                            >
-                                <FontAwesomeIcon icon={faFileExport} className="text-xl" />
-                                <div>
-                                    <div className="font-semibold">Stáhnout jako CSV</div>
-                                    <div className="text-sm text-gray-600">Uložit data do CSV souboru</div>
-                                </div>
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    setShowExportDialog(false);
-                                    handleCopyToClipboard();
-                                }}
-                                disabled={isExporting || isCopying}
-                                className={`w-full text-left p-4 rounded-lg border-2 flex items-center gap-3
-                                    ${isExporting || isCopying
-                                        ? 'opacity-50 cursor-not-allowed bg-gray-100'
-                                        : 'hover:bg-grey hover:border-blue-500 cursor-pointer border-gray-300'}`}
-                            >
-                                <FontAwesomeIcon icon={faCopy} className="text-xl" />
-                                <div>
-                                    <div className="font-semibold">Kopírovat pro Excel</div>
-                                    <div className="text-sm text-gray-600">Zkopírovat data do schránky</div>
-                                </div>
-                            </button>
-                        </div>
-
-                        <button
-                            onClick={() => setShowExportDialog(false)}
-                            className="w-full mt-4 p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
-                        >
-                            Zrušit
-                        </button>
-                    </div>
-                </div>
-            )}
+            <ExportDialog
+                isOpen={showExportDialog}
+                onClose={() => setShowExportDialog(false)}
+                onExportCsv={handleExport}
+                onCopyToClipboard={handleCopyToClipboard}
+                isExporting={isExporting}
+                isCopying={isCopying}
+                itemCount={filteredSlots.length}
+            />
 
             {(isExporting || isCopying) && (
                 <div className="mt-2">

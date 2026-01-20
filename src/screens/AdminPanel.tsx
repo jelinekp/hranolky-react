@@ -5,6 +5,7 @@ import { useAdminDevices, DeviceAdminData } from '../hooks/useAdminDevices';
 import { useAppConfig } from '../hooks/useAppConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSave, faSort, faSortUp, faSortDown, faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { isAdminUser } from '../config/appConfig';
 
 type SortConfig = {
   key: keyof DeviceAdminData;
@@ -20,7 +21,7 @@ const AdminPanel: React.FC = () => {
   const [editingDevice, setEditingDevice] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<DeviceAdminData>>({});
 
-  const isAdmin = user && ['jelinekp6@gmail.com', 'jelinekv007@gmail.com'].includes(user.email || '');
+  const isAdmin = isAdminUser(user?.email);
 
   if (!isAdmin) {
     return (
@@ -103,7 +104,7 @@ const AdminPanel: React.FC = () => {
               <p className="text-sm text-[var(--color-text-03)]">
                 Pokud se změny v Android aplikaci neprojeví, spusťte ji znovu. <br />
                 Pokud zde chybí zařízení, nainstalujte na něj poslední APK.
-                </p>
+              </p>
             </div>
           </div>
           <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="200" />

@@ -8,6 +8,7 @@ import { useFetchUserDevices } from "../hooks/useFetchUserDevices.ts";
 import ContentLayoutContainer from "./ContentLayoutContainer.tsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faGear } from "@fortawesome/free-solid-svg-icons";
+import { isAdminUser } from "../config/appConfig";
 
 export type WarehouseScreenProps = {
   slotType: SlotType;
@@ -74,7 +75,7 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
                   className="w-10 h-10 rounded-full border-2 border-white/20"
                 />
               )}
-              {['jelinekp6@gmail.com', 'jelinekv007@gmail.com'].includes(user.email || '') && (
+              {isAdminUser(user.email) && (
                 <button
                   onClick={() => navigate('/admin')}
                   className="p-2 text-[var(--color-text-01)] hover:bg-grey rounded-lg transition-colors border-0 outline-none bg-transparent cursor-pointer"

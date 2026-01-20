@@ -1,6 +1,7 @@
-import {Timestamp} from "firebase/firestore";
-import {SlotAction} from "./SlotAction";
-import {SlotType} from "./SlotType";
+import { Timestamp } from "firebase/firestore";
+import { SlotAction } from "./SlotAction";
+import { SlotType } from "./SlotType";
+import { getFullQualityName } from "./utils/qualityMapping";
 
 
 export interface WarehouseSlot {
@@ -40,46 +41,7 @@ export class WarehouseSlotClass implements WarehouseSlot {
         this.length = data.length || null;
     }
 
-    private getFullQualityName(parsedQuality: string | null): string {
-        switch (parsedQuality) {
-            case null:
-                return "";
-            case "DUB-A|A":
-                return "DUB A/A";
-            case "DUB-A|B":
-                return "DUB A/B";
-            case "DUB-B|B":
-                return "DUB B/B";
-            case "DUB-ABP":
-                return "DUB A/B-P";
-            case "DUB-RST":
-                return "DUB RUSTIK";
-            case "DUB-CNK":
-                return "DUB CINK";
-            case "DUB-RSC":
-                return "DUB RUSTIK CINK";
-            case "ZIR-ZIR":
-                return "ZIRBE";
-            case "ZIR-BMS":
-                return "ZIRBE MS";
-            case "ZIR-CNK":
-                return "ZIRBE CINK";
-            case "ZBD-BDC":
-                return "ZIRBE+BUK/DUB/BUK CINK/DUB CINK";
-            case "ZBD-CNK":
-                return "ZIRBE CINK+BUK/DUB/BUK CINK/DUB CINK";
-            case "BUK-BUK":
-                return "BUK";
-            case "BUK-CNK":
-                return "BUK CINK";
-            case "JSN-JSN":
-                return "JASAN";
-            case "KŠT-KŠT":
-                return "KAŠTAN";
-            default:
-                return parsedQuality;
-        }
-    }
+
 
     /**
      * Parses properties from the productId string to populate the object's attributes.
@@ -102,7 +64,7 @@ export class WarehouseSlotClass implements WarehouseSlot {
 
         const parts = processedProductId.split("-");
         const quality = parts[0] + "-" + parts[1];
-        const fullQualityName = this.getFullQualityName(quality);
+        const fullQualityName = getFullQualityName(quality);
 
         if (parts.length < 5) {
             console.log(`Could not parse ID "${processedProductId}". Found only ${parts.length} parts.`);
@@ -167,21 +129,21 @@ export class WarehouseSlotClass implements WarehouseSlot {
         return ((this.quantity * this.length * this.thickness * this.width) / 1_000_000);
     }
 
-  getLastActionString(): string {
-    switch (this.lastSlotAction) {
-      case "prijem":
-        return "Příjem";
-      case "vydej":
-        return "Výdej";
-      case "inventura":
-        return "Inventura";
-      default:
-        return "-";
+    getLastActionString(): string {
+        switch (this.lastSlotAction) {
+            case "prijem":
+                return "Příjem";
+            case "vydej":
+                return "Výdej";
+            case "inventura":
+                return "Inventura";
+            default:
+                return "-";
+        }
     }
-  }
 
 
-  hasAllProperties(): boolean {
+    hasAllProperties(): boolean {
         return this.quality !== null && this.width !== null && this.thickness !== null && this.length !== null;
     }
 }
