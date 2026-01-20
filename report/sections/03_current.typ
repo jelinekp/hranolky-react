@@ -28,9 +28,9 @@ Components mixed multiple responsibilities (UI rendering, business logic, data f
 === DVT Violations
 Hardcoded configuration values scattered throughout the codebase (admin emails, collection names).
 
-== DRY Violations
+== Evolvability Violations
 
-Beyond NS Theory violations, significant code duplication was identified:
+When taking account of NS evolvability violations, significant DRY principle violations hindering the codebase's ability to evolve were identified:
 
 #table(
   columns: (auto, auto, auto),
