@@ -30,7 +30,7 @@ const AdminPanel: React.FC = () => {
           <p>Tato část je určena pouze pro administrátory.</p>
           <button
             onClick={() => navigate('/hranolky')}
-            className="mt-6 px-6 py-2 bg-[var(--color-primary)] text-white rounded-lg"
+            className="inline-block mt-4 px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-[var(--color-primary)] transition-colors"
           >
             Zpět na sklad
           </button>
@@ -90,7 +90,7 @@ const AdminPanel: React.FC = () => {
       <div className="w-full max-w-[1400px]">
         {/* Header */}
         <div className="flex justify-between items-center mb-8 bg-[var(--color-bg-01)] p-6 rounded-3xl shadow-lg">
-          <div className="flex items-center gap-16">
+          <div className="flex items-center gap-8">
             <button
               onClick={() => navigate('/hranolky')}
               className="p-3 hover:bg-grey rounded-full transition-colors text-[var(--color-text-01)]"
@@ -101,7 +101,6 @@ const AdminPanel: React.FC = () => {
             <div>
               <h1 className="text-2xl font-bold">Administrace terminálů</h1>
               <p className="text-sm text-[var(--color-text-03)]">
-                Správa povolených inventur a názvů zařízení. <br />
                 Pokud se změny v Android aplikaci neprojeví, spusťte ji znovu. <br />
                 Pokud zde chybí zařízení, nainstalujte na něj poslední APK.
                 </p>
