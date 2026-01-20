@@ -6,7 +6,7 @@ import { mockHranolkySlots } from '../mocks/mockSlots'
 import { SlotType } from 'hranolky-firestore-common'
 
 // Mock the volume history hook
-vi.mock('../../hooks/useFetchFilteredVolumeHistory', () => ({
+vi.mock('../../hooks/data/useFetchFilteredVolumeHistory', () => ({
   useFetchFilteredVolumeHistory: vi.fn().mockReturnValue({
     volumeData: [
       { week: '25_27', volume: 45.5 },
@@ -17,7 +17,7 @@ vi.mock('../../hooks/useFetchFilteredVolumeHistory', () => ({
 }))
 
 // Mock the slot actions hook  
-vi.mock('../../hooks/useFetchSlotActions', () => ({
+vi.mock('../../hooks/data/useFetchSlotActions', () => ({
   useFetchSlotActions: vi.fn().mockReturnValue({
     slotActions: [],
     loading: false

@@ -1,7 +1,7 @@
 // src/hooks/useFetchSlotActions.ts
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query, limit } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import {SlotActionClass, SlotType} from "hranolky-firestore-common";
 import {toFirestoreCollectionName} from "hranolky-firestore-common/SlotType.ts";
 

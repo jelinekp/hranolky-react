@@ -1,7 +1,7 @@
 // src/hooks/useFetchVolumeHistory.ts
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import { SlotType, VolumeDataPoint, WeeklyReport, getWeeklyReportsPath } from "hranolky-firestore-common";
 
 export const useFetchVolumeHistory = (slotType: SlotType, weeksToShow: number = 500) => {

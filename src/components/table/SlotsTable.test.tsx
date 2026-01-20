@@ -2,13 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import SlotsTable from './SlotsTable'
-import { SlotFiltersClass } from '../model/SlotFilter'
-import { SortingBy, SortingOrder } from '../model/Sorting'
-import { mockHranolkySlots, mockEmptySlots } from '../test/mocks/mockSlots'
+import { SlotFiltersClass } from '../../model/SlotFilter'
+import { SortingBy, SortingOrder } from '../../model/Sorting'
+import { mockHranolkySlots, mockEmptySlots } from '../../test/mocks/mockSlots'
 import { SlotType } from 'hranolky-firestore-common'
 
 // Mock the useFetchSlotActions hook
-vi.mock('../hooks/useFetchSlotActions', () => ({
+vi.mock('../../hooks/data/useFetchSlotActions', () => ({
   useFetchSlotActions: vi.fn().mockReturnValue({
     slotActions: [],
     loading: false

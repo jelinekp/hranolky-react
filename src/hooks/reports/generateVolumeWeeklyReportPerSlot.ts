@@ -5,7 +5,7 @@
  */
 
 import { collection, doc, getDocs, writeBatch, Timestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db } from '../../firebase';
 import { WarehouseSlotClass } from "hranolky-firestore-common";
 
 interface SlotAction {

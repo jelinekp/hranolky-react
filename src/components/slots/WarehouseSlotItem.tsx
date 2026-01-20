@@ -1,8 +1,8 @@
 // src/components/WarehouseSlotItem.tsx
 import React from "react";
-import {WarehouseSlotClass} from "hranolky-firestore-common";
-import {formatCsDate} from "./FormatDate";
-import {SortingBy} from "../model/Sorting.ts";
+import { WarehouseSlotClass } from "hranolky-firestore-common";
+import { formatCsDate } from "../FormatDate";
+import { SortingBy } from "../../model/Sorting.ts";
 
 interface WarehouseSlotItemProps {
   slot: WarehouseSlotClass;
@@ -11,7 +11,7 @@ interface WarehouseSlotItemProps {
   onToggle: () => void;
 }
 
-const WarehouseSlotItem: React.FC<WarehouseSlotItemProps> = ({slot, sortingBy, isExpanded, onToggle}) => {
+const WarehouseSlotItem: React.FC<WarehouseSlotItemProps> = ({ slot, sortingBy, isExpanded, onToggle }) => {
 
   const getBackgroundClass = () => {
     if (isExpanded) {
@@ -20,15 +20,15 @@ const WarehouseSlotItem: React.FC<WarehouseSlotItemProps> = ({slot, sortingBy, i
     return 'odd:bg-[var(--md-rgb-color-surface)] even:bg-[var(--md-rgb-color-surface-variant)]';
   };
 
-const lastSlotActionColor = slot.lastSlotAction === "prijem"
-  ? 'text-red-600'
-  : slot.lastSlotAction === "vydej"
-    ? 'text-green-700'
-    : 'text-blue-700';
+  const lastSlotActionColor = slot.lastSlotAction === "prijem"
+    ? 'text-red-600'
+    : slot.lastSlotAction === "vydej"
+      ? 'text-green-700'
+      : 'text-blue-700';
 
-const lastSlotQuantityChangeColor = (slot.lastSlotQuantityChange ?? 0) >= 0 ? 'text-red-600' : 'text-green-700';
+  const lastSlotQuantityChangeColor = (slot.lastSlotQuantityChange ?? 0) >= 0 ? 'text-red-600' : 'text-green-700';
 
-return (
+  return (
     <tr
       className={`${getBackgroundClass()} cursor-pointer hover:bg-[var(--md-rgb-color-surface-container)] transition-colors duration-150`}
       onClick={onToggle}

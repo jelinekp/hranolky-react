@@ -2,10 +2,10 @@ import { useState, useMemo } from "react";
 import { WarehouseSlotClass } from "hranolky-firestore-common";
 import { SlotFiltersClass } from "../model/SlotFilter.ts";
 import { SlotType } from "hranolky-firestore-common/SlotType.ts";
-import Filters from "./Filters.tsx";
-import TableSkeleton from "./TableSkeleton.tsx";
+import Filters from "./export/Filters.tsx";
+import TableSkeleton from "./table/TableSkeleton.tsx";
 import Information from "./Informations.tsx";
-import SlotsTable from "./SlotsTable.tsx";
+import SlotsTable from "./table/SlotsTable.tsx";
 import VolumeInTimeChart from "./VolumeInTimeChart.tsx";
 import { SortingBy, SortingOrder } from "../model/Sorting.ts";
 

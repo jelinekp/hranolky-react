@@ -1,7 +1,7 @@
 // src/hooks/signInAnonymously.ts
 
 import { useEffect, useState } from 'react';
-import { auth } from '../firebase';
+import { auth } from '../../firebase';
 import { onAuthStateChanged, signInAnonymously, type User } from 'firebase/auth';
 
 export function useAnonymousAuth() {

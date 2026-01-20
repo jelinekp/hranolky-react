@@ -1,6 +1,6 @@
 import SortableTableHeader from "./SortableTableHeader.tsx";
 import TableSpannedHeader from "./TableSpannedHeader.tsx";
-import {SortingBy, SortingOrder} from "../model/Sorting.ts";
+import {SortingBy, SortingOrder} from "../../model/Sorting.ts";
 
 function TableSkeleton() {
     const skeletonRows = Array.from({ length: 18 }, (_, i) => (

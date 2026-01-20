@@ -1,7 +1,7 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpAZ, faArrowUpZA, faArrowUp91, faArrowUp19, faArrowUpWideShort } from "@fortawesome/free-solid-svg-icons";
-import {SortingBy, SortingOrder} from "../model/Sorting.ts";
+import { SortingBy, SortingOrder } from "../../model/Sorting.ts";
 
 interface SortableTableHeaderProps {
     label: string

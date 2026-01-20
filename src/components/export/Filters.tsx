@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { ChipGroup, ChipItem, type Selection } from 'actify'
-import { IntervalMmClass, SlotFiltersClass } from "../model/SlotFilter.ts";
+import { IntervalMmClass, SlotFiltersClass } from "../../model/SlotFilter.ts";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons/faArrowRotateLeft";
 import { faFileExport } from "@fortawesome/free-solid-svg-icons/faFileExport";
 import { WarehouseSlotClass, SlotType } from "hranolky-firestore-common";
-import { exportSlotsToCsv, copySlotsToClipboard } from "../hooks/exportToCsv";
+import { exportSlotsToCsv, copySlotsToClipboard } from "../../hooks/reports/exportToCsv";
 import ExportDialog from "./ExportDialog";
 
 type FilterType = 'quality' | 'thickness' | 'width' | 'lengthInterval' | 'allLength';

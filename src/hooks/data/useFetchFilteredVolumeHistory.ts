@@ -1,7 +1,7 @@
 // src/hooks/useFetchFilteredVolumeHistory.ts
 import { useEffect, useMemo, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 import {
   SlotType,
   VolumeDataPoint,

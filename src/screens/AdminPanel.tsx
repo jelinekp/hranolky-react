@@ -1,8 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdminDevices, DeviceAdminData } from '../hooks/useAdminDevices';
-import { useAppConfig } from '../hooks/useAppConfig';
+import { useAdminDevices, DeviceAdminData } from '../hooks/data/useAdminDevices';
+import { useAppConfig } from '../hooks/data/useAppConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSave, faSort, faSortUp, faSortDown, faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
 import { isAdminUser } from '../config/appConfig';

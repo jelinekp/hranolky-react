@@ -4,7 +4,7 @@
  * Run with: npx tsx src/scripts/runWeeklyReportGeneration.ts
  */
 
-import { generateAllWeeklyReports } from '../hooks/generateVolumeWeeklyReport';
+import { generateAllWeeklyReports } from '../hooks/reports/generateVolumeWeeklyReport';
 
 console.log('========================================');
 console.log('Weekly Report Generation Script');

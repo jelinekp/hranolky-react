@@ -4,7 +4,7 @@
  * Run with: npx tsx src/scripts/runSlotWeeklyReportGeneration.ts
  */
 
-import { generateAllSlotWeeklyReports } from '../hooks/generateVolumeWeeklyReportPerSlot';
+import { generateAllSlotWeeklyReports } from '../hooks/reports/generateVolumeWeeklyReportPerSlot';
 
 console.log('========================================');
 console.log('Per-Slot Weekly Report Generation Script');

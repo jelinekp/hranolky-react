@@ -1,7 +1,7 @@
 // src/hooks/useFetchUserDevices.ts
 import { useEffect, useState } from "react";
 import { collection, getDocs } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 
 export const useFetchUserDevices = (options?: { enabled?: boolean }) => {
     const enabled = options?.enabled ?? true;

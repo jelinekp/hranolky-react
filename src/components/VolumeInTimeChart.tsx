@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { useFetchFilteredVolumeHistory } from "../hooks/useFetchFilteredVolumeHistory.ts";
+import { useFetchFilteredVolumeHistory } from "../hooks/data/useFetchFilteredVolumeHistory.ts";
 import { SlotType, WarehouseSlotClass } from "hranolky-firestore-common";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";

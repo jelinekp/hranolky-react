@@ -1,5 +1,5 @@
 import { createContext, useContext, ReactNode } from 'react';
-import useGoogleAuth from '../hooks/useGoogleAuth';
+import useGoogleAuth from '../hooks/auth/useGoogleAuth';
 import type { User } from 'firebase/auth';
 
 type AuthValue = {

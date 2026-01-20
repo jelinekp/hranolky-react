@@ -1,7 +1,7 @@
 // src/hooks/useGoogleAuth.ts
 
 import { useEffect, useState, useCallback } from 'react';
-import { auth } from '../firebase';
+import { auth } from '../../firebase';
 import {
   onAuthStateChanged,
   signInWithPopup,

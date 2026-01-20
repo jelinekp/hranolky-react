@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { collection, query, onSnapshot, doc, updateDoc, Timestamp } from "firebase/firestore";
-import { db } from "../firebase";
+import { db } from "../../firebase";
 
 export interface DeviceAdminData {
   id: string;

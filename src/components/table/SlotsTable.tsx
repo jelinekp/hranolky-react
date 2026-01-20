@@ -1,13 +1,13 @@
 import { SlotType, WarehouseSlotClass } from "hranolky-firestore-common";
-import { SlotFiltersClass } from "../model/SlotFilter.ts";
+import { SlotFiltersClass } from "../../model/SlotFilter.ts";
 import { useState } from "react";
-import { useFetchSlotActions } from "../hooks/useFetchSlotActions.ts";
+import { useFetchSlotActions } from "../../hooks/data/useFetchSlotActions.ts";
 import TableSpannedHeader from "./TableSpannedHeader.tsx";
 import SortableTableHeader from "./SortableTableHeader.tsx";
-import WarehouseSlotItem from "./WarehouseSlotItem.tsx";
-import SlotActionsRow from "./SlotActionsRow.tsx";
-import { SortingBy, SortingOrder } from "../model/Sorting.ts";
-import { sortSlots } from "../utils/slotSorting.ts";
+import WarehouseSlotItem from "../slots/WarehouseSlotItem.tsx";
+import SlotActionsRow from "../slots/SlotActionsRow.tsx";
+import { SortingBy, SortingOrder } from "../../model/Sorting.ts";
+import { sortSlots } from "../../utils/slotSorting.ts";
 
 function SlotsTable({ warehouseSlots, activeFilters, sortingBy, sortingOrder, setSortingByAndOrder, devices, slotType }: {
   warehouseSlots: WarehouseSlotClass[],

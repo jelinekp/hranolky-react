@@ -7,7 +7,7 @@ import {
     limit,
     Query, getDocs
 } from "firebase/firestore"
-import { db } from "../firebase"
+import { db } from "../../firebase"
 import { WarehouseSlotClass, SlotActionClass, SlotType } from "hranolky-firestore-common"
 import { toFirestoreCollectionName } from "hranolky-firestore-common/SlotType.ts";
 
