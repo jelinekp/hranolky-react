@@ -164,8 +164,11 @@ export function getSlotWeeklyReportsPath(slotType: SlotType, slotId: string): st
   [Modal], [`ExpandedChartModal.tsx`], [Fullscreen chart logic], [SoC],
   [Admin], [`AccessDenied.tsx`], [Reusable access control], [SoC],
   [Admin], [`DeviceRow.tsx`], [Table row component], [SoC],
+  [Filtering], [`useSlotFiltering.ts`], [100 lines extracted], [SoS],
+  [Loading], [`useChartLoadingState.ts`], [50 lines extracted], [SoS],
 )
 
-Total: *~350 lines* moved into 12 focused, testable modules.
-*98 automated tests* ensure correctness.
+Total: *~500 lines* moved into 14 focused, testable modules.
+*112 automated tests* ensure correctness.
+
 

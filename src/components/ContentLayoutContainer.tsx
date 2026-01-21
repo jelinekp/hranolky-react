@@ -1,6 +1,5 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { WarehouseSlotClass } from "hranolky-firestore-common";
-import { SlotFiltersClass } from "../model/SlotFilter.ts";
 import { SlotType } from "hranolky-firestore-common/SlotType.ts";
 import Filters from "./export/Filters.tsx";
 import TableSkeleton from "./table/TableSkeleton.tsx";
@@ -8,6 +7,7 @@ import Information from "./Informations.tsx";
 import SlotsTable from "./table/SlotsTable.tsx";
 import VolumeInTimeChart from "./VolumeInTimeChart.tsx";
 import { SortingBy, SortingOrder } from "../model/Sorting.ts";
+import { useSlotFiltering } from "../hooks/useSlotFiltering.ts";
 
 function ContentLayoutContainer(
   props: {
@@ -20,32 +20,16 @@ function ContentLayoutContainer(
 
   const [sortingBy, setSortingBy] = useState<SortingBy>(SortingBy.none)
   const [sortingOrder, setSortingOrder] = useState<SortingOrder>(SortingOrder.desc)
-  const [activeFilters, setActiveFilters] = useState<SlotFiltersClass>(SlotFiltersClass.EMPTY)
-  const distinctQualityFilters = new Set(props.warehouseSlots.map(slot => slot.quality ?? "").filter(quality => quality !== ""));
-  const distinctThicknessFilters = new Set(props.warehouseSlots.map(slot => slot.thickness ?? 0).filter(thickness => thickness !== 0));
-  const distinctWidthFilters = new Set(props.warehouseSlots.map(slot => slot.width ?? 0).filter(width => width !== 0));
-  const distinctLengthFilters = new Set(props.warehouseSlots.map(slot => slot.length ?? 0).filter(length => length !== 0));
 
-  // Compute filtered slots and volume sum once
-  const { filteredSlots, volumeSum } = useMemo(() => {
-    const filtered = props.warehouseSlots.filter((slot) => {
-      if (activeFilters.isEmpty()) {
-        return true;
-      }
-
-      const matchesQuality = activeFilters.qualityFilters.size === 0 || activeFilters.qualityFilters.has(slot.quality ?? "");
-      const matchesThickness = activeFilters.thicknessFilters.size === 0 || activeFilters.thicknessFilters.has(slot.thickness ?? 0);
-      const matchesWidth = activeFilters.widthFilters.size === 0 || activeFilters.widthFilters.has(slot.width ?? 0);
-      const matchesLength = activeFilters.lengthIntervalFilters.size === 0 || Array.from(activeFilters.lengthIntervalFilters).some(interval => interval.contains(slot.length ?? 0));
-      const matchesAllLength = activeFilters.allLengthFilters.size === 0 || activeFilters.allLengthFilters.has(slot.length ?? 0);
-
-      return matchesQuality && matchesThickness && matchesWidth && matchesLength && matchesAllLength;
-    });
-
-    const volume = filtered.reduce((sum, slot) => sum + (slot.getVolume() ?? 0), 0);
-
-    return { filteredSlots: filtered, volumeSum: volume };
-  }, [props.warehouseSlots, activeFilters]);
+  // Use extracted filtering hook (SoS principle)
+  const {
+    activeFilters,
+    setActiveFilters,
+    filteredSlots,
+    volumeSum,
+    distinctValues,
+    hasActiveFilters
+  } = useSlotFiltering(props.warehouseSlots);
 
   function setSortingByAndOrder(newSortingBy: SortingBy) {
 
@@ -91,16 +75,16 @@ function ContentLayoutContainer(
       </div>
       <div className={"flex-[1] min-w-[200px] basis-full lg:basis-0 flex flex-col gap-6 order-1 lg:order-2"}>
         <Filters activeFilters={activeFilters} setActiveFilters={setActiveFilters}
-          distinctQualityFilters={distinctQualityFilters}
-          distinctThicknessFilters={distinctThicknessFilters}
-          distinctWidthFilters={distinctWidthFilters} distinctLengthFilters={distinctLengthFilters}
+          distinctQualityFilters={distinctValues.qualities}
+          distinctThicknessFilters={distinctValues.thicknesses}
+          distinctWidthFilters={distinctValues.widths} distinctLengthFilters={distinctValues.lengths}
           filteredSlots={filteredSlots}
           slotType={props.slotType} />
         <VolumeInTimeChart
           currentVolume={volumeSum}
           slotType={props.slotType}
           filteredSlots={filteredSlots}
-          hasActiveFilters={!activeFilters.isEmpty()}
+          hasActiveFilters={hasActiveFilters}
         />
         <Information />
       </div>
