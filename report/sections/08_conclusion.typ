@@ -11,10 +11,10 @@ This project successfully applied Normalized Systems Theory principles to refact
   inset: 8pt,
   align: left,
   [*Metric*], [*Value*],
-  [Automated tests added], [72],
-  [Test files created], [8],
-  [Utility modules extracted], [6],
-  [Lines of code reorganized], [~220],
+  [Automated tests total], [146],
+  [Test files created], [19],
+  [Extracted modules], [20],
+  [Lines of code reorganized], [~700],
   [Large components refactored], [5],
 )
 
@@ -43,7 +43,7 @@ The following items from the original analysis have been completed:
 
 - ✓ Chart subcomponent extraction (`ChartOverlay.tsx`, `ExpandedChartModal.tsx`)
 - ✓ AdminPanel refactoring (`AccessDenied.tsx`, `DeviceRow.tsx`)
-- ✓ Test coverage expansion (98 tests total)
+- ✓ Test coverage expansion (146 tests total)
 
 Remaining opportunities:
 - State management refactoring for SoS compliance

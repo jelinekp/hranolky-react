@@ -122,7 +122,7 @@ DVT requires that configuration and data structures can evolve without causing r
 
 ```typescript
 // Original: In WarehouseScreen.tsx
-{['jelinekp6@gmail.com', 'jelinekv007@gmail.com']
+{['abc@xyz.com', 'def@xyz.com']
   .includes(user.email || '') && (
     <button onClick={() => navigate('/admin')}>Admin</button>
 )}

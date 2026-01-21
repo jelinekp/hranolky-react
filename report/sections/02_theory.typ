@@ -53,7 +53,7 @@ The DVT theorem requires that data structures and configuration values can evolv
 *Violation example:*
 ```typescript
 // Hardcoded admin emails scattered in multiple components
-{['jelinekp6@gmail.com', 'jelinekv007@gmail.com']
+{['abc@xyz.com', 'def@xyz.com']
   .includes(user.email) && <AdminButton />}
 ```
 

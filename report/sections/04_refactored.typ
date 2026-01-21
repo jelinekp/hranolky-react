@@ -11,14 +11,17 @@ Before refactoring, I established a comprehensive test suite as a safety net. Ac
   inset: 8pt,
   align: left,
   [*Test Category*], [*Files*], [*Tests*],
-  [Unit Tests], [`SlotFilter.test.ts`, `slotSorting.test.ts`, `qualityMapping.test.ts`, `weekUtils.test.ts`], [45],
+  [Unit Tests],
+  [`slotSorting.test.ts`, `slotFilterUtils.test.ts`, `weekUtils.test.ts`, `qualityMapping.test.ts`, `exportToCsv.test.ts`],
+  [62],
+
   [Component Tests],
   [`SlotsTable.test.tsx`, `ExportDialog.test.tsx`, `VolumeInTimeChart.test.tsx`, `AccessDenied.test.tsx`, `ChartOverlay.test.tsx`],
-  [40],
+  [55],
 
-  [Hook Tests], [`useSlotFiltering.test.ts`, `useChartLoadingState.test.ts`], [14],
-  [Integration Tests], [`FilteringFlow.test.tsx`], [5],
-  [*Total*], [13 files], [*112 tests*],
+  [Hook Tests], [`useSlotFiltering.test.ts`, `useChartLoadingState.test.ts`], [19],
+  [Integration Tests], [`FilteringFlow.test.tsx`, `AdminFlow.test.tsx`, `ExportFlow.test.tsx`], [10],
+  [*Total*], [19 files], [*146 tests*],
 )
 
 == Data Version Transparency (DVT) Resolution
@@ -30,8 +33,8 @@ DVT requires that configuration values are isolated so they can evolve without r
 ```typescript
 // After: Centralized configuration
 export const ADMIN_EMAILS = [
-  'jelinekp6@gmail.com',
-  'jelinekv007@gmail.com',
+  'abc@xyz.com',
+  'def@xyz.com',
 ] as const
 
 export function isAdminUser(email: string | null): boolean {
@@ -289,7 +292,7 @@ Mock fixtures provide consistent test data without Firestore writes.
 
 *Total: ~700 lines* moved into 20 focused, testable modules.
 
-*146 automated tests* ensure correctness (unit + integration).
+*146 automated tests* ensure correctness (unit + integration + E2E).
 
 *Lines of code per violation addressed:*
 - SoC: 11 modules, ~400 lines extracted

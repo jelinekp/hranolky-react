@@ -16,22 +16,22 @@ Using NS Theory's four core theorems—Separation of Concerns (SoC), Data Versio
 == Key Results
 
 #table(
-  columns: (auto, auto, auto),
+  columns: (auto, auto, auto, auto),
   inset: 8pt,
   align: left,
-  [*Phase*], [*Extracted Module*], [*Lines Saved*],
-  [Config (DVT)], [`appConfig.ts`], [~30 lines of hardcoded values],
-  [Sorting (SoC)], [`slotSorting.ts`], [50 lines from `SlotsTable.tsx`],
-  [Export (SoC)], [`ExportDialog.tsx`], [70 lines from `Filters.tsx`],
-  [Quality (SoC)], [`qualityMapping.ts`], [40 lines from `WarehouseSlotClass`],
-  [Chart (SoC)], [`useChartAnimation.ts`], [~30 lines from `VolumeInTimeChart`],
+  [*Category*], [*Modules*], [*Impact*], [*Principle*],
+  [Separation of Concerns], [9 modules], [~400 lines extracted], [SoC],
+  [Separation of States], [5 hooks/comp], [State & fault isolation], [SoS],
+  [Data Transparency], [Config module], [Centralized constants], [DVT],
+  [DRY & Evolvability], [5 modules], [Eliminated 250 lines dup], [DRY/AVT],
 )
 
 A comprehensive test suite was established as the foundation:
-- *72 automated tests* across 8 test files
+- *146 automated tests* across 19 test files
 - Mock fixtures for Firebase, authentication, and slot data
-- Integration tests for complete user workflows
+- Integration tests for filtering flows and admin access
+- Playwright E2E tests for complete user workflows
 
 == Conclusion
 
-The refactoring successfully improved the codebase's modularity and testability while maintaining full backward compatibility. All existing functionality remains intact, verified through manual testing and the new automated test suite.
+The refactoring successfully improved the codebase's modularity and testability while maintaining full backward compatibility. All existing functionality remains intact, verified through the comprehensive 146-test safety net.
