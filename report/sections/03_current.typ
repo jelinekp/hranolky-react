@@ -209,7 +209,39 @@ const collectionSegments = slotType === SlotType.Beam
   : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
 ```
 
-*NS Impact:* Adding a new slot type requires finding and modifying all occurrences.
+=== Loading Overlay Duplication (DRY)
+
+```typescript
+// App.tsx - Same loading overlay duplicated:
+{loading && (
+  <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 ...">
+    <div className="w-12 h-12 border-4 ... rounded-full animate-spin" />
+    <span>Přihlašování...</span>  // or "Načítání..."
+  </div>
+)}
+```
+
+*NS Impact:* Loading overlay styling changes require editing two places. Risk of visual inconsistencies.
+
+== Action Version Transparency (AVT) Violations
+
+AVT requires that operations (actions) can evolve independently. Mutable class patterns violate this principle by combining state and operations.
+
+=== SlotFiltersClass - Mutable Class Pattern
+
+```typescript
+// Original: Class with mutable state + operations mixed
+export class SlotFiltersClass implements SlotFilters {
+  typeFilters: Set<SlotType>
+  qualityFilters: Set<string>
+  // ...
+  
+  isEmpty(): boolean { ... }
+  hasQualityFilters(): boolean { ... }
+}
+```
+
+*NS Impact:* Testing filter logic requires instantiating the class. Operations cannot be composed or reused independently.
 
 == Metrics Summary
 
@@ -220,11 +252,14 @@ const collectionSegments = slotType === SlotType.Beam
   [*File*], [*Lines*], [*Violations*],
   [`Filters.tsx`], [321], [SoC: UI + Dialog + Export],
   [`SlotsTable.tsx`], [179], [SoC: Presentation + Sorting],
-  [`VolumeInTimeChart.tsx`], [482], [SoC: Animation + Data + UI + Modal],
+  [`VolumeInTimeChart.tsx`], [482], [SoC: Animation + Data + UI + Modal; DVT: Magic numbers],
   [`ContentLayoutContainer.tsx`], [111], [SoS: Mixed filter/sort state],
   [`WarehouseSlotClass`], [187], [SoC: Data + Display],
   [`WarehouseScreen.tsx`], [117], [DVT: Hardcoded config; SoS: Mixed loading],
   [`AdminPanel.tsx`], [240], [SoC: Access + Table + Edit state],
+  [`App.tsx`], [76], [DRY: Duplicated loading overlay],
+  [`SlotFilter.ts`], [115], [AVT: Mutable class pattern],
 )
 
-The identified violations represent approximately *1,600 lines* of code that would benefit from NS Theory-guided refactoring.
+The identified violations represent approximately *1,800 lines* of code that would benefit from NS Theory-guided refactoring.
+

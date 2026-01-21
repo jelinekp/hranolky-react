@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
 import { useChartLoadingState } from "../hooks/useChartLoadingState.ts";
 import { useExpandedModal } from "../hooks/useExpandedModal.ts";
+import { INVENTORY_CHECK_WEEKS } from "../config/appConfig.ts";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
@@ -175,15 +176,14 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     };
   })();
 
-  // Calculate inventory check weeks (weeks 14, 27, 40, 51)
+  // Calculate inventory check weeks from config
   const inventoryCheckWeeks = useMemo(() => {
-    const checkWeeks = [14, 27, 40, 51];
     // Filter to only include weeks that are present in the data
     return displayData
       .filter(d => {
         // Extract week number from YYYY_WW format
         const weekNum = parseInt(d.week.split('_')[1] || d.week);
-        return checkWeeks.includes(weekNum);
+        return INVENTORY_CHECK_WEEKS.includes(weekNum as typeof INVENTORY_CHECK_WEEKS[number]);
       })
       .map(d => d.week);
   }, [displayData]);

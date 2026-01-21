@@ -5,6 +5,7 @@ import Sparovky from './screens/Sparovky'
 import AdminPanel from './screens/AdminPanel'
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginScreen from './components/LoginScreen';
+import LoadingOverlay from './components/LoadingOverlay';
 
 function AppRoutes() {
   const location = useLocation();
@@ -27,16 +28,7 @@ function AppRoutes() {
     return (
       <>
         <LoginScreen />
-        {/* Loading overlay */}
-        {loading && (
-          <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="flex flex-col items-center gap-4">
-              {/* Spinning circular progress indicator */}
-              <div className="w-12 h-12 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
-              <span className="text-[var(--color-text-01)] text-base">Přihlašování...</span>
-            </div>
-          </div>
-        )}
+        <LoadingOverlay isVisible={loading} message="Přihlašování..." />
       </>
     );
   }
@@ -49,16 +41,7 @@ function AppRoutes() {
         <Route path="sparovky" element={<Sparovky />} />
         <Route path="admin" element={<AdminPanel />} />
       </Routes>
-      {/* Loading overlay */}
-      {loading && (
-        <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-4">
-            {/* Spinning circular progress indicator */}
-            <div className="w-12 h-12 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
-            <span className="text-[var(--color-text-01)] text-base">Načítání...</span>
-          </div>
-        </div>
-      )}
+      <LoadingOverlay isVisible={loading} message="Načítání..." />
     </>
   );
 }
@@ -72,4 +55,5 @@ export default function App() {
     </BrowserRouter>
   );
 }
+
 

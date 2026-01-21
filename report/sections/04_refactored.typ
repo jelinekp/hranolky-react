@@ -241,18 +241,22 @@ export function getSlotWeeklyReportsPath(slotType: SlotType, slotId: string): st
   [Filtering], [`useSlotFiltering.ts`], [100 lines extracted], [SoS],
   [Loading], [`useChartLoadingState.ts`], [50 lines extracted], [SoS],
   [Modal], [`useExpandedModal.ts`], [35 lines extracted], [SoS],
+  [UI], [`LoadingOverlay.tsx`], [Eliminated dual overlay], [DRY],
+  [Filtering], [`slotFilterUtils.ts`], [Pure filter operations], [AVT],
 )
 
 == Quantitative Results
 
-*Total: ~550 lines* moved into 15 focused, testable modules.
+*Total: ~600 lines* moved into 17 focused, testable modules.
 
-*125 automated tests* ensure correctness and enable confident future modifications.
+*135 automated tests* ensure correctness and enable confident future modifications.
 
 *Lines of code per violation addressed:*
 - SoC: 9 modules, ~350 lines extracted
-- SoS: 2 hooks, ~150 lines extracted
-- DVT: 1 config module, ~50 lines
-- DRY: 3 utility modules, eliminating ~200 lines of duplication
+- SoS: 3 hooks, ~185 lines extracted
+- DVT: Config module with inventory weeks constant
+- DRY: 4 utility modules, eliminating ~250 lines of duplication
+- AVT: Pure filter utilities enable composable operations
 
 The refactored codebase now exhibits linear scalability of maintenance effort as predicted by NS Theory.
+
