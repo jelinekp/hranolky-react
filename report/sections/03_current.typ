@@ -1,6 +1,6 @@
 = Current System Analysis
 
-This section analyzes the original codebase structure and identifies specific NS theory violations.
+This section analyzes the original codebase structure and identifies specific violations of Normalized Systems (NS) Theory. The analysis serves as the foundation for the refactoring work documented in the next section.
 
 == System Architecture
 
@@ -20,53 +20,18 @@ The hranolky-react application is a single-page React application with the follo
 
 The application manages warehouse inventory for two product types: *Hranolky* (beams) and *Sparovky* (jointers), allowing filtering, sorting, and exporting of slot data.
 
-== NS Theory Violations
+== Separation of Concerns (SoC) Violations
 
-=== SoC Violations
-Components mixed multiple responsibilities (UI rendering, business logic, data fetching).
-
-=== DVT Violations
-Hardcoded configuration values scattered throughout the codebase (admin emails, collection names).
-
-== Evolvability Violations
-
-When taking account of NS evolvability violations, significant DRY principle violations hindering the codebase's ability to evolve were identified:
-
-#table(
-  columns: (auto, auto, auto),
-  inset: 8pt,
-  align: left,
-  [*Duplicated Code*], [*Files Affected*], [*Impact*],
-  [`VolumeDataPoint` interface], [4 files], [Type inconsistency risk],
-  [`getWeekNumber()` function], [3 files], [Bug duplication risk],
-  [Collection path logic], [5+ files], [Maintenance burden],
-  [`WarehouseSlotClass`], [common/ & functions/], [Quality mapping divergence],
-)
-
-=== Week Calculation Duplication
-```typescript
-// Duplicated in multiple files:
-function getWeekNumber(date: Date): { year: number; week: number } {
-  const d = new Date(Date.UTC(date.getFullYear()...));
-  // ... 15 lines of week calculation logic
-}
-```
-
-=== Collection Path Duplication
-```typescript
-// Repeated pattern in 5+ files:
-const collectionSegments = slotType === SlotType.Beam
-  ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
-  : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
-```
+According to NS Theory, each software element should address exactly one concern. When a component mixes multiple responsibilities, changes to one area require modifications to unrelated code, creating combinatorial effects that hinder evolvability.
 
 === Filters.tsx (321 lines)
 
-This component exhibited the most severe SoC violation, combining:
-- Filter chip UI rendering
-- Export dialog modal
-- Export progress tracking
-- CSV generation coordination
+This component exhibited the most severe SoC violation, combining four distinct concerns:
+
+1. *Filter chip UI rendering* - Managing chip selection states
+2. *Export dialog modal* - Complete modal with buttons and styling
+3. *Export progress tracking* - State management for progress bar
+4. *CSV generation coordination* - Orchestrating the export process
 
 ```typescript
 // Original: Export dialog embedded in filter component
@@ -81,9 +46,11 @@ This component exhibited the most severe SoC violation, combining:
 )}
 ```
 
+*NS Impact:* Any change to the export dialog (e.g., adding a new export format) requires modifying the entire Filters component, risking unintended side effects on filter functionality.
+
 === SlotsTable.tsx (179 lines)
 
-Mixed presentation with complex sorting logic:
+This component mixed presentation logic with complex business logic:
 
 ```typescript
 // Original: 50+ lines of inline sorting
@@ -96,6 +63,29 @@ Mixed presentation with complex sorting logic:
   // ... more sorting cases
 }).flatMap(slot => <TableRow />)}
 ```
+
+*NS Impact:* Sorting algorithm changes require modifying presentation code, and the sorting logic cannot be unit tested in isolation.
+
+=== VolumeInTimeChart.tsx (482 lines)
+
+The chart component combined multiple concerns in a single file:
+
+1. *Animation state* - `pulseOpacity`, `goofyOffsets` for loading effects
+2. *Loading coordination* - `manualLoadRequested`, `shouldFetchData` logic
+3. *Expanded modal state* - ESC key handling, backdrop, body scroll lock
+4. *Overlay rendering* - "No matches" and "Manual load required" overlays
+5. *Data transformation* - Y-axis calculation, inventory week detection
+
+```typescript
+// Original: 6 useState hooks mixing different concerns
+const [pulseOpacity, setPulseOpacity] = useState(1);        // Animation
+const [displayData, setDisplayData] = useState(...);        // Data
+const [goofyOffsets, setGoofyOffsets] = useState([]);       // Animation
+const [manualLoadRequested, setManualLoadRequested] = useState(false); // UI
+const [isExpanded, setIsExpanded] = useState(false);        // Modal
+```
+
+*NS Impact:* The component is difficult to test, understand, and modify. Animation changes risk breaking data logic.
 
 === WarehouseSlotClass (187 lines)
 
@@ -112,17 +102,114 @@ private getFullQualityName(quality: string): string {
 }
 ```
 
-=== WarehouseScreen.tsx (116 lines)
+*NS Impact:* Adding new quality types requires modifying the core data model, which should remain stable.
 
-Hardcoded configuration values (DVT violation):
+=== AdminPanel.tsx (240 lines)
+
+The admin panel combined multiple responsibilities:
+
+1. *Access control UI* - Access denied screen with navigation
+2. *Device table rows* - Inline rendering of 50+ lines per row
+3. *Edit state management* - Tracking which device is being edited
+
+*NS Impact:* Changes to the access denied message require touching the entire admin component.
+
+== Data Version Transparency (DVT) Violations
+
+DVT requires that configuration and data structures can evolve without causing ripple effects across the codebase. Hardcoded values scattered throughout components violate this principle.
+
+=== Hardcoded Admin Emails
 
 ```typescript
-// Original: Hardcoded admin emails
+// Original: In WarehouseScreen.tsx
 {['jelinekp6@gmail.com', 'jelinekv007@gmail.com']
   .includes(user.email || '') && (
     <button onClick={() => navigate('/admin')}>Admin</button>
 )}
 ```
+
+*NS Impact:* Adding a new admin requires finding and modifying multiple files.
+
+=== Hardcoded Collection Names
+
+```typescript
+// Repeated pattern in 5+ files:
+const collectionName = slotType === SlotType.Beam ? 'Hranolky' : 'Sparovky';
+```
+
+*NS Impact:* Adding a new slot type requires changes across many files.
+
+== Separation of States (SoS) Violations
+
+SoS requires that state changes are isolated to prevent unintended side effects. When unrelated states are managed together, changes to one state can inadvertently affect others.
+
+=== ContentLayoutContainer.tsx (111 lines)
+
+Mixed filter state with sorting state and inline filtering logic:
+
+```typescript
+// Original: Multiple unrelated states combined
+const [sortingBy, setSortingBy] = useState(SortingBy.none);     // Sorting
+const [sortingOrder, setSortingOrder] = useState(SortingOrder.desc); // Sorting
+const [activeFilters, setActiveFilters] = useState(SlotFiltersClass.EMPTY); // Filtering
+
+// Plus: Inline filter logic (20 lines)
+const filteredSlots = warehouseSlots.filter((slot) => {
+  const matchesQuality = activeFilters.qualityFilters.size === 0 || ...;
+  // ... more filter conditions
+});
+```
+
+*NS Impact:* Filter logic cannot be tested independently. Adding new filter types requires modifying the container component.
+
+=== WarehouseScreen.tsx (117 lines)
+
+Combined multiple loading states inline:
+
+```typescript
+// Original: Three loading states combined
+const loading = authLoading || slotsLoading || devicesLoading;
+```
+
+*NS Impact:* No separation between "authentication in progress" and "data loading" states for UI feedback.
+
+== Evolvability Violations (DRY)
+
+Significant DRY principle violations hinder the codebase's ability to evolve:
+
+#table(
+  columns: (auto, auto, auto),
+  inset: 8pt,
+  align: left,
+  [*Duplicated Code*], [*Files Affected*], [*Impact*],
+  [`VolumeDataPoint` interface], [4 files], [Type inconsistency risk],
+  [`getWeekNumber()` function], [3 files], [Bug duplication risk],
+  [Collection path logic], [5+ files], [Maintenance burden],
+  [`WarehouseSlotClass`], [common/ & functions/], [Quality mapping divergence],
+)
+
+=== Week Calculation Duplication
+
+```typescript
+// Duplicated in multiple files:
+function getWeekNumber(date: Date): { year: number; week: number } {
+  const d = new Date(Date.UTC(date.getFullYear()...));
+  // ... 15 lines of week calculation logic
+}
+```
+
+*NS Impact:* A bug fix in one location must be manually propagated to all copies.
+
+=== Collection Path Duplication
+
+```typescript
+// Repeated pattern in 5+ files:
+const collectionSegments = slotType === SlotType.Beam
+  ? ['WeeklyReports', 'Hranolky', 'WeeklyData']
+  : ['WeeklyReports', 'Sparovky', 'WeeklyData'];
+```
+
+*NS Impact:* Adding a new slot type requires finding and modifying all occurrences.
 
 == Metrics Summary
 
@@ -133,7 +220,11 @@ Hardcoded configuration values (DVT violation):
   [*File*], [*Lines*], [*Violations*],
   [`Filters.tsx`], [321], [SoC: UI + Dialog + Export],
   [`SlotsTable.tsx`], [179], [SoC: Presentation + Sorting],
-  [`VolumeInTimeChart.tsx`], [482], [SoC: Animation + Data + UI],
+  [`VolumeInTimeChart.tsx`], [482], [SoC: Animation + Data + UI + Modal],
+  [`ContentLayoutContainer.tsx`], [111], [SoS: Mixed filter/sort state],
   [`WarehouseSlotClass`], [187], [SoC: Data + Display],
-  [`WarehouseScreen.tsx`], [116], [DVT: Hardcoded config],
+  [`WarehouseScreen.tsx`], [117], [DVT: Hardcoded config; SoS: Mixed loading],
+  [`AdminPanel.tsx`], [240], [SoC: Access + Table + Edit state],
 )
+
+The identified violations represent approximately *1,600 lines* of code that would benefit from NS Theory-guided refactoring.
