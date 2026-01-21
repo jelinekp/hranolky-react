@@ -110,7 +110,7 @@ Extracted animation and rendering logic from VolumeInTimeChart:
 - `components/chart/ChartTooltip.tsx` - Tooltip rendering
 - `components/chart/ChartXAxisTick.tsx` - Custom X-axis with year grouping
 
-== DRY Elimination
+== DRY Elimination for better evolvability
 
 Created shared utility modules in `common/` to eliminate code duplication:
 
@@ -160,7 +160,12 @@ export function getSlotWeeklyReportsPath(slotType: SlotType, slotId: string): st
   [Weeks], [`weekUtils.ts`], [Eliminated 3× duplication], [DRY],
   [Types], [`volumeTypes.ts`], [Eliminated 4× duplication], [DRY],
   [Paths], [`firestoreCollections.ts`], [Eliminated 5× duplication], [DRY],
+  [Overlay], [`ChartOverlay.tsx`], [Reusable chart overlays], [SoC],
+  [Modal], [`ExpandedChartModal.tsx`], [Fullscreen chart logic], [SoC],
+  [Admin], [`AccessDenied.tsx`], [Reusable access control], [SoC],
+  [Admin], [`DeviceRow.tsx`], [Table row component], [SoC],
 )
 
-Total: *~280 lines* moved into focused, testable modules.
-*87 automated tests* ensure correctness.
+Total: *~350 lines* moved into 12 focused, testable modules.
+*98 automated tests* ensure correctness.
+

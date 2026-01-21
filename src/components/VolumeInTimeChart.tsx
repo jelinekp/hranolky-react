@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useFetchFilteredVolumeHistory } from "../hooks/data/useFetchFilteredVolumeHistory.ts";
-import { SlotType, WarehouseSlotClass } from "hranolky-firestore-common";
+import { SlotType, WarehouseSlotClass, VolumeDataPoint, getCurrentWeekLabel } from "hranolky-firestore-common";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
 
@@ -12,34 +12,8 @@ export interface VolumeInTimeChartProps {
   hasActiveFilters: boolean;
 }
 
-interface VolumeDataPoint {
-  week: string;
-  volume: number;
-}
-
-// Helper function to get current week in YY_WW format
-const getCurrentWeekLabel = (): string => {
-  const now = new Date();
-  // Use UTC to avoid timezone issues in week calculation
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  // Set to nearest Thursday: current date + 4 - day number
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  let weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  let year = d.getUTCFullYear();
-
-  // Apply the rule: a year always has exactly 52 weeks
-  if (weekNum > 52) {
-    weekNum = 1;
-    year++;
-  }
-
-  const year2 = (year % 100).toString().padStart(2, '0');
-  const week2 = weekNum.toString().padStart(2, '0');
-
-  return `${year2}_${week2}`;
-};
+// VolumeDataPoint type now imported from hranolky-firestore-common
+// getCurrentWeekLabel now imported from hranolky-firestore-common
 
 // Mock data generator for initial loading animation
 const generateMockVolumeData = (): VolumeDataPoint[] => {
