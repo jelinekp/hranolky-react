@@ -1,9 +1,11 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { useFetchFilteredVolumeHistory } from "../hooks/data/useFetchFilteredVolumeHistory.ts";
 import { SlotType, WarehouseSlotClass, VolumeDataPoint, getCurrentWeekLabel } from "hranolky-firestore-common";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
+import { useChartLoadingState } from "../hooks/useChartLoadingState.ts";
+import { useExpandedModal } from "../hooks/useExpandedModal.ts";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
@@ -43,28 +45,15 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   const [pulseOpacity, setPulseOpacity] = useState(1);
   const [displayData, setDisplayData] = useState<VolumeDataPoint[]>(() => generateMockVolumeData());
   const [goofyOffsets, setGoofyOffsets] = useState<number[]>([]);
-  const [manualLoadRequested, setManualLoadRequested] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
-  // ESC key handler to close expanded view
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isExpanded) {
-      setIsExpanded(false);
-    }
-  }, [isExpanded]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden'; // Prevent background scroll
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [isExpanded, handleKeyDown]);
+  // Use extracted hooks for SoS compliance
+  const { isExpanded, setIsExpanded, toggleExpanded } = useExpandedModal();
+  const {
+    manualLoadRequested,
+    setManualLoadRequested,
+    shouldWaitForManualLoad,
+    shouldFetchData
+  } = useChartLoadingState(hasActiveFilters, filteredSlots.length);
 
   // Extract slot IDs from filtered slots
   const filteredSlotIds = useMemo(() =>
@@ -72,34 +61,12 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     [filteredSlots]
   );
 
-  // Determine if we should wait for manual load
-  const shouldWaitForManualLoad = hasActiveFilters && filteredSlots.length > 10;
-  const shouldFetchData = !shouldWaitForManualLoad || manualLoadRequested;
-
-  // Debug: trace inputs to the hook
-  /*
-  console.log('[VolumeInTimeChart] hasActiveFilters:', hasActiveFilters,
-    '| filteredSlots:', filteredSlots.length,
-    '| shouldWaitForManualLoad:', shouldWaitForManualLoad,
-    '| manualLoadRequested:', manualLoadRequested,
-    '| shouldFetchData:', shouldFetchData);
-  */
-
   const { volumeData, loading } = useFetchFilteredVolumeHistory(
     slotType,
-    shouldFetchData ? filteredSlotIds : [], // Pass empty array to prevent fetch
+    shouldFetchData ? filteredSlotIds : [],
     shouldFetchData && hasActiveFilters,
     500
   );
-
-  // Reset manual load request when filters change
-  useEffect(() => {
-    if (hasActiveFilters && filteredSlots.length > 10) {
-      setManualLoadRequested(false);
-    } else {
-      setManualLoadRequested(true); // Auto-load when conditions don't require manual load
-    }
-  }, [hasActiveFilters, filteredSlots.length]);
 
   // Goofy pulsing animation effect when loading - each point bounces differently!
   useEffect(() => {
@@ -327,7 +294,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
               </span>
             )}
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={toggleExpanded}
               className="p-2 rounded-lg hover:bg-gray-200 transition-colors border-0 outline-none bg-transparent cursor-pointer focus:outline-none active:outline-none"
               title={isExpanded ? 'Sbalit graf (Esc)' : 'Rozbalit graf'}
             >
@@ -446,7 +413,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 };

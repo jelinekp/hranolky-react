@@ -240,13 +240,14 @@ export function getSlotWeeklyReportsPath(slotType: SlotType, slotId: string): st
   [Admin], [`DeviceRow.tsx`], [Table row component], [SoC],
   [Filtering], [`useSlotFiltering.ts`], [100 lines extracted], [SoS],
   [Loading], [`useChartLoadingState.ts`], [50 lines extracted], [SoS],
+  [Modal], [`useExpandedModal.ts`], [35 lines extracted], [SoS],
 )
 
 == Quantitative Results
 
-*Total: ~500 lines* moved into 14 focused, testable modules.
+*Total: ~550 lines* moved into 15 focused, testable modules.
 
-*112 automated tests* ensure correctness and enable confident future modifications.
+*125 automated tests* ensure correctness and enable confident future modifications.
 
 *Lines of code per violation addressed:*
 - SoC: 9 modules, ~350 lines extracted
