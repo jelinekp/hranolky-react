@@ -1,11 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
-import Hranolky from './screens/Hranolky'
-import Sparovky from './screens/Sparovky'
-import AdminPanel from './screens/AdminPanel'
+import { useEffect, Suspense, lazy } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginScreen from './components/LoginScreen';
 import LoadingOverlay from './components/LoadingOverlay';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load routes for code splitting (SoC - module boundaries)
+const Hranolky = lazy(() => import('./screens/Hranolky'));
+const Sparovky = lazy(() => import('./screens/Sparovky'));
+const AdminPanel = lazy(() => import('./screens/AdminPanel'));
 
 function AppRoutes() {
   const location = useLocation();
@@ -34,15 +37,17 @@ function AppRoutes() {
   }
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Navigate to="hranolky" replace />} />
-        <Route path="hranolky" element={<Hranolky />} />
-        <Route path="sparovky" element={<Sparovky />} />
-        <Route path="admin" element={<AdminPanel />} />
-      </Routes>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingOverlay isVisible={true} message="Načítání stránky..." />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="hranolky" replace />} />
+          <Route path="hranolky" element={<Hranolky />} />
+          <Route path="sparovky" element={<Sparovky />} />
+          <Route path="admin" element={<AdminPanel />} />
+        </Routes>
+      </Suspense>
       <LoadingOverlay isVisible={loading} message="Načítání..." />
-    </>
+    </ErrorBoundary>
   );
 }
 
@@ -55,5 +60,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-
-

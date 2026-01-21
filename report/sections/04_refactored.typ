@@ -243,20 +243,61 @@ export function getSlotWeeklyReportsPath(slotType: SlotType, slotId: string): st
   [Modal], [`useExpandedModal.ts`], [35 lines extracted], [SoS],
   [UI], [`LoadingOverlay.tsx`], [Eliminated dual overlay], [DRY],
   [Filtering], [`slotFilterUtils.ts`], [Pure filter operations], [AVT],
+  [Errors], [`ErrorBoundary.tsx`], [Fault isolation wrapper], [SoS],
+  [Chart], [`chartAxisUtils.ts`], [Pure axis calculations], [SoC],
+  [Chart], [`useChartDataTransform.ts`], [Animation state hook], [SoS],
 )
+
+== Code Splitting (SoC)
+
+Following the Separation of Concerns principle at the module level, route components are now lazy-loaded:
+
+```typescript
+// App.tsx - Lazy loading for code splitting
+const Hranolky = lazy(() => import('./screens/Hranolky'));
+const Sparovky = lazy(() => import('./screens/Sparovky'));
+const AdminPanel = lazy(() => import('./screens/AdminPanel'));
+```
+
+*SoC Benefit:* Each route loads only when needed, reducing initial bundle size and enforcing clear module boundaries.
+
+== Error Boundary (SoS - Fault Isolation)
+
+Following the Separation of States principle for fault isolation, errors in one component don't crash the entire application:
+
+```typescript
+// ErrorBoundary.tsx - Catches JavaScript errors anywhere in child tree
+<ErrorBoundary>
+  <Suspense fallback={<LoadingOverlay />}>
+    <Routes>...</Routes>
+  </Suspense>
+</ErrorBoundary>
+```
+
+*SoS Benefit:* Runtime errors are contained. Users see a friendly error message with retry option instead of a white screen.
+
+== E2E Test Infrastructure
+
+Playwright end-to-end tests with mocked Google OAuth:
+
+- `warehouse.spec.ts` - Tests login screen, navigation
+- `admin.spec.ts` - Tests admin panel access
+
+Mock fixtures provide consistent test data without Firestore writes.
 
 == Quantitative Results
 
-*Total: ~600 lines* moved into 17 focused, testable modules.
+*Total: ~700 lines* moved into 20 focused, testable modules.
 
-*135 automated tests* ensure correctness and enable confident future modifications.
+*146 automated tests* ensure correctness (unit + integration).
 
 *Lines of code per violation addressed:*
-- SoC: 9 modules, ~350 lines extracted
-- SoS: 3 hooks, ~185 lines extracted
+- SoC: 11 modules, ~400 lines extracted
+- SoS: 5 hooks/components for state and fault isolation
 - DVT: Config module with inventory weeks constant
 - DRY: 4 utility modules, eliminating ~250 lines of duplication
 - AVT: Pure filter utilities enable composable operations
 
 The refactored codebase now exhibits linear scalability of maintenance effort as predicted by NS Theory.
+
 
