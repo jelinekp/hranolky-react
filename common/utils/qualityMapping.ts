@@ -6,11 +6,13 @@
  * to display name translations, separating display logic from data modeling.
  */
 
+import { QualityMappings } from '../types/settingsTypes'
+
 /**
- * Mapping of raw quality codes to human-readable display names
- * Data structure allows easy addition of new quality types without code changes
+ * Default mapping of raw quality codes to human-readable display names
+ * Used as fallback when custom mappings are not provided
  */
-export const QUALITY_MAPPINGS: Record<string, string> = {
+export const DEFAULT_QUALITY_MAPPINGS: QualityMappings = {
   // DUB (Oak) variants
   'DUB-A|A': 'DUB A/A',
   'DUB-A|B': 'DUB A/B',
@@ -36,40 +38,52 @@ export const QUALITY_MAPPINGS: Record<string, string> = {
   // Other wood types
   'JSN-JSN': 'JASAN',
   'KŠT-KŠT': 'KAŠTAN',
-} as const
+}
+
+/** @deprecated Use DEFAULT_QUALITY_MAPPINGS instead */
+export const QUALITY_MAPPINGS = DEFAULT_QUALITY_MAPPINGS
 
 /**
  * Get human-readable quality name from raw quality code.
  * Returns the original code if no mapping exists.
  * 
  * @param parsedQuality - Raw quality code from product ID
+ * @param customMappings - Optional custom mappings from Firestore settings
  * @returns Human-readable quality name
  */
-export function getFullQualityName(parsedQuality: string | null): string {
+export function getFullQualityName(
+  parsedQuality: string | null,
+  customMappings?: QualityMappings
+): string {
   if (parsedQuality === null) {
     return ''
   }
 
-  return QUALITY_MAPPINGS[parsedQuality] ?? parsedQuality
+  const mappings = customMappings ?? DEFAULT_QUALITY_MAPPINGS
+  return mappings[parsedQuality] ?? parsedQuality
 }
 
 /**
  * Get all available quality codes
  */
-export function getQualityCodes(): string[] {
-  return Object.keys(QUALITY_MAPPINGS)
+export function getQualityCodes(customMappings?: QualityMappings): string[] {
+  const mappings = customMappings ?? DEFAULT_QUALITY_MAPPINGS
+  return Object.keys(mappings)
 }
 
 /**
  * Get all available quality display names
  */
-export function getQualityDisplayNames(): string[] {
-  return Object.values(QUALITY_MAPPINGS)
+export function getQualityDisplayNames(customMappings?: QualityMappings): string[] {
+  const mappings = customMappings ?? DEFAULT_QUALITY_MAPPINGS
+  return Object.values(mappings)
 }
 
 /**
  * Check if a quality code has a known mapping
  */
-export function hasQualityMapping(qualityCode: string): boolean {
-  return qualityCode in QUALITY_MAPPINGS
+export function hasQualityMapping(qualityCode: string, customMappings?: QualityMappings): boolean {
+  const mappings = customMappings ?? DEFAULT_QUALITY_MAPPINGS
+  return qualityCode in mappings
 }
+

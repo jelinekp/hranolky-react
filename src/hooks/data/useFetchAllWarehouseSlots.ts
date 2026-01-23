@@ -8,21 +8,29 @@ import {
     Query, getDocs
 } from "firebase/firestore"
 import { db } from "../../firebase"
-import { WarehouseSlotClass, SlotActionClass, SlotType } from "hranolky-firestore-common"
+import { WarehouseSlotClass, SlotActionClass, SlotType, ParseSettings } from "hranolky-firestore-common"
 import { toFirestoreCollectionName } from "hranolky-firestore-common/SlotType.ts";
+import { useAppSettings } from "./useAppSettings";
 
 export const useFetchAllWarehouseSlots = (slotType: SlotType, options?: { enabled?: boolean }) => {
     const enabled = options?.enabled ?? true
     const [data, setData] = useState<WarehouseSlotClass[]>([])
     const [loading, setLoading] = useState(true)
     const warehouseSlotsCollection = toFirestoreCollectionName(slotType)
+    const { settings, loading: settingsLoading } = useAppSettings()
 
     useEffect(() => {
-        // If fetching is disabled (e.g., waiting for auth), keep loading true and do nothing.
-        if (!enabled) {
+        // If fetching is disabled (e.g., waiting for auth) or settings still loading, keep loading true and do nothing.
+        if (!enabled || settingsLoading) {
             setData([])
             setLoading(true)
             return
+        }
+
+        // Create parse settings from app settings
+        const parseSettings: ParseSettings = {
+            dimensionAdjustments: settings.dimensionAdjustments,
+            qualityMappings: settings.qualityMappings,
         }
 
         let innerUnsubscribes: (() => void)[] = []
@@ -40,7 +48,7 @@ export const useFetchAllWarehouseSlots = (slotType: SlotType, options?: { enable
 
             snapshot.docs.forEach((doc) => {
                 const id = doc.id
-                const slot = new WarehouseSlotClass(id, doc.data()).parsePropertiesFromProductId()
+                const slot = new WarehouseSlotClass(id, doc.data()).parsePropertiesFromProductId(parseSettings)
                 warehouseSlotsMap[id] = slot
             });
 
@@ -77,7 +85,7 @@ export const useFetchAllWarehouseSlots = (slotType: SlotType, options?: { enable
             unsubscribeWarehouseSlots()
             innerUnsubscribes.forEach((u) => u())
         }
-    }, [warehouseSlotsCollection, slotType, enabled])
+    }, [warehouseSlotsCollection, slotType, enabled, settings, settingsLoading])
 
     return { warehouseSlots: data, loading }
 };

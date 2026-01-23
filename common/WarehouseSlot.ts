@@ -2,7 +2,15 @@ import { Timestamp } from "firebase/firestore";
 import { SlotAction } from "./SlotAction";
 import { SlotType } from "./SlotType";
 import { getFullQualityName } from "./utils/qualityMapping";
+import { ParseSettings, DimensionAdjustments } from "./types/settingsTypes";
 
+/**
+ * Default dimension adjustments used when settings are not provided
+ */
+export const DEFAULT_DIMENSION_ADJUSTMENTS: DimensionAdjustments = {
+    "27.0": 27.4,
+    "42.0": 42.4,
+};
 
 export interface WarehouseSlot {
     productId: string;
@@ -46,10 +54,13 @@ export class WarehouseSlotClass implements WarehouseSlot {
     /**
      * Parses properties from the productId string to populate the object's attributes.
      * This logic is a direct translation of the provided Kotlin code.
+     * @param settings - Optional settings containing dimension adjustments and quality mappings
      * @returns {WarehouseSlotClass} A new WarehouseSlotClass instance with the parsed properties.
      */
-    parsePropertiesFromProductId() {
+    parsePropertiesFromProductId(settings?: ParseSettings) {
         const initialProductId = this.productId;
+        const dimensionAdjustments = settings?.dimensionAdjustments ?? DEFAULT_DIMENSION_ADJUSTMENTS;
+        const qualityMappings = settings?.qualityMappings;
 
         let type = "";
         let processedProductId = initialProductId;
@@ -64,7 +75,7 @@ export class WarehouseSlotClass implements WarehouseSlot {
 
         const parts = processedProductId.split("-");
         const quality = parts[0] + "-" + parts[1];
-        const fullQualityName = getFullQualityName(quality);
+        const fullQualityName = getFullQualityName(quality, qualityMappings);
 
         if (parts.length < 5) {
             console.log(`Could not parse ID "${processedProductId}". Found only ${parts.length} parts.`);
@@ -72,23 +83,12 @@ export class WarehouseSlotClass implements WarehouseSlot {
         }
 
         const rawThickness = parseFloat(parts[2]);
-        let thickness;
-        switch (rawThickness) {
-            case 20.0:
-                thickness = 20.0;
-                break;
-            case 27.0:
-                thickness = 27.4;
-                break;
-            case 42.0:
-                thickness = 42.4;
-                break;
-            default:
-                thickness = rawThickness;
-        }
+        const thicknessKey = rawThickness.toFixed(1);
+        const thickness = dimensionAdjustments[thicknessKey] ?? rawThickness;
 
         const rawWidth = parseFloat(parts[3]);
-        const width = rawWidth === 42.0 ? 42.4 : rawWidth;
+        const widthKey = rawWidth.toFixed(1);
+        const width = dimensionAdjustments[widthKey] ?? rawWidth;
 
         const length = parseInt(parts[4], 10);
 
