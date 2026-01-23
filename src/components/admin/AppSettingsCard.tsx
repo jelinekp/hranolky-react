@@ -102,7 +102,7 @@ const AppSettingsCard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-xl">
+      <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-xl max-w-[900px]">
         <h2 className="text-xl font-bold mb-6">Nastavení aplikace</h2>
         <div className="flex flex-col items-center py-10 gap-4">
           <div className="w-8 h-8 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
@@ -112,7 +112,7 @@ const AppSettingsCard: React.FC = () => {
   }
 
   return (
-    <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-xl">
+    <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-xl max-w-[900px]">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-bold">Nastavení aplikace</h2>
         <div className="flex items-center gap-4">
