@@ -71,16 +71,16 @@ function promptPassword() {
   return new Promise((resolve) => {
     rl.question('🔐 Enter FTP password: ', (password) => {
       rl.close();
-      
+
       // Ask if user wants to save password
       const rl2 = readline.createInterface({
         input: process.stdin,
         output: process.stdout
       });
-      
+
       rl2.question('💾 Save password for future deployments? (y/n): ', (answer) => {
         rl2.close();
-        
+
         if (answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes') {
           try {
             fs.writeFileSync(PASSWORD_FILE, password, { mode: 0o600 });
@@ -89,11 +89,74 @@ function promptPassword() {
             console.warn('⚠️  Could not save password:', error.message);
           }
         }
-        
+
         resolve(password);
       });
     });
   });
+}
+
+/**
+ * Check if build is recent (max 1 minute old)
+ * Returns true if build is recent, false otherwise
+ */
+function isBuildRecent() {
+  const indexPath = path.join(LOCAL_DIST, 'index.html');
+
+  if (!fs.existsSync(indexPath)) {
+    return false;
+  }
+
+  const stats = fs.statSync(indexPath);
+  const buildTime = stats.mtime.getTime();
+  const now = Date.now();
+  const ageInSeconds = (now - buildTime) / 1000;
+
+  return ageInSeconds <= 60; // 1 minute = 60 seconds
+}
+
+/**
+ * Prompt user if they want to build before deploying
+ */
+function promptBuild() {
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  return new Promise((resolve) => {
+    rl.question('⚠️  No recent build found (max 1 minute old). Run npm run build first? (y/n): ', (answer) => {
+      rl.close();
+      resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
+    });
+  });
+}
+
+/**
+ * Check build age and prompt user if needed
+ */
+async function checkBuildAge() {
+  if (!isBuildRecent()) {
+    const shouldBuild = await promptBuild();
+
+    if (shouldBuild) {
+      console.log('\n🔨 Building project...\n');
+
+      // Use dynamic import to run the build
+      const { execSync } = await import('child_process');
+      try {
+        execSync('npm run build', { stdio: 'inherit', cwd: __dirname });
+        console.log('\n✅ Build complete!\n');
+      } catch (error) {
+        console.error('\n❌ Build failed:', error.message);
+        process.exit(1);
+      }
+    } else {
+      console.log('\n⚠️  Proceeding with deployment without building...\n');
+    }
+  } else {
+    console.log('✅ Recent build found (less than 1 minute old)\n');
+  }
 }
 
 /**
@@ -117,7 +180,7 @@ function getFilesToUpload() {
   const assetsDir = path.join(LOCAL_DIST, 'assets');
   if (fs.existsSync(assetsDir)) {
     const assetFiles = fs.readdirSync(assetsDir);
-    
+
     assetFiles.forEach(file => {
       if (file.endsWith('.js') || file.endsWith('.css')) {
         files.push({
@@ -143,6 +206,9 @@ async function deploy() {
     // Get password
     const password = await getPassword();
 
+    // Check build age and prompt if needed
+    await checkBuildAge();
+
     // Get files to upload
     const files = getFilesToUpload();
     console.log(`📦 Found ${files.length} files to upload:\n`);
@@ -152,7 +218,7 @@ async function deploy() {
     // Connect to FTP
     const client = new ftp.Client();
     client.ftp.verbose = false; // Set to true for debugging
-    
+
     console.log('🔌 Connecting to FTP server...');
     await client.access({
       ...FTP_CONFIG,
@@ -163,7 +229,7 @@ async function deploy() {
     // Ensure remote directories exist
     console.log(`📁 Ensuring remote directory exists: ${REMOTE_DIR}`);
     await client.ensureDir(REMOTE_DIR);
-    
+
     console.log(`📁 Ensuring remote directory exists: ${REMOTE_DIR}/assets`);
     await client.ensureDir(path.posix.join(REMOTE_DIR, 'assets'));
     console.log('');
@@ -174,7 +240,7 @@ async function deploy() {
       const fileName = path.basename(file.local);
       const fileSize = fs.statSync(file.local).size;
       const fileSizeKB = (fileSize / 1024).toFixed(2);
-      
+
       console.log(`   Uploading ${fileName} (${fileSizeKB} KB)...`);
       await client.uploadFrom(file.local, file.remote);
       console.log(`   ✅ ${fileName} uploaded`);
@@ -186,7 +252,7 @@ async function deploy() {
     client.close();
   } catch (error) {
     console.error('\n❌ Deployment failed:', error.message);
-    
+
     if (error.code === 530) {
       console.error('   Authentication failed. Please check your password.');
       // Delete saved password if authentication failed
@@ -195,7 +261,7 @@ async function deploy() {
         console.log('   🗑️  Removed saved password file');
       }
     }
-    
+
     process.exit(1);
   }
 }
