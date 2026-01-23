@@ -49,6 +49,22 @@ const AppSettingsCard: React.FC = () => {
     setHasChanges(true);
   };
 
+  const handleQualityKeyChange = (value: string) => {
+    // Remove any existing dashes and slashes first
+    let cleanValue = value.replace(/[-/\\]/g, '').toUpperCase();
+
+    // Limit to 6 characters (3 before dash + 3 after dash = ABC-XYZ)
+    cleanValue = cleanValue.slice(0, 6);
+
+    // If we have 3 or more characters, insert dash at position 3
+    if (cleanValue.length >= 3) {
+      const formatted = cleanValue.slice(0, 3) + '-' + cleanValue.slice(3);
+      setNewQualityKey(formatted);
+    } else {
+      setNewQualityKey(cleanValue);
+    }
+  };
+
   const handleAddQuality = () => {
     if (newQualityKey && newQualityValue) {
       setQualityMappings(prev => ({ ...prev, [newQualityKey]: newQualityValue }));
@@ -179,7 +195,7 @@ const AppSettingsCard: React.FC = () => {
             placeholder="Korekce"
             value={newDimensionValue}
             onChange={(e) => setNewDimensionValue(e.target.value)}
-            className="w-24 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-primary)] text-sm"
+            className="w-24 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-primary)]"
           />
           <button
             onClick={handleAddDimension}
@@ -233,7 +249,7 @@ const AppSettingsCard: React.FC = () => {
             type="text"
             placeholder="Kód (např. DUB-XYZ)"
             value={newQualityKey}
-            onChange={(e) => setNewQualityKey(e.target.value)}
+            onChange={(e) => handleQualityKeyChange(e.target.value)}
             className="w-40 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-primary)] text-sm min-w-[160px]"
           />
           <span className="text-gray-400">→</span>
@@ -242,7 +258,7 @@ const AppSettingsCard: React.FC = () => {
             placeholder="Název (např. DUB NOVÝ)"
             value={newQualityValue}
             onChange={(e) => setNewQualityValue(e.target.value)}
-            className="flex-1 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-primary)] text-sm"
+            className="flex-1 px-3 py-1 border border-gray-300 rounded focus:outline-none focus:border-[var(--color-primary)]"
           />
           <button
             onClick={handleAddQuality}
