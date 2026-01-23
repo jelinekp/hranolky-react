@@ -20,6 +20,11 @@ The hranolky-react application is a single-page React application with the follo
 
 The application manages warehouse inventory for two product types: *Hranolky* (beams) and *Sparovky* (jointers), allowing filtering, sorting, and exporting of slot data.
 
+#figure(
+  image("../media/web_app.png", width: 100%),
+  caption: [Screenshot of the hranolky-react application main screen],
+) <fig:web_app>
+
 == Separation of Concerns (SoC) Violations
 
 According to NS Theory, each software element should address exactly one concern. When a component mixes multiple responsibilities, changes to one area require modifications to unrelated code, creating combinatorial effects that hinder evolvability.
@@ -235,7 +240,7 @@ export class SlotFiltersClass implements SlotFilters {
   typeFilters: Set<SlotType>
   qualityFilters: Set<string>
   // ...
-  
+
   isEmpty(): boolean { ... }
   hasQualityFilters(): boolean { ... }
 }
