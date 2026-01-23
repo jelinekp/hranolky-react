@@ -181,7 +181,7 @@ async function deploy() {
     }
 
     console.log('\n🎉 Deployment complete!\n');
-    console.log(`📍 Your app should be available at: http://jelinekp.wz.cz/app/\n`);
+    console.log(`📍 Your app should be available at: http://jelinekp.cz/app/\n`);
 
     client.close();
   } catch (error) {
