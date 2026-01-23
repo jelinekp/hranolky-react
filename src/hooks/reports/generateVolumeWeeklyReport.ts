@@ -133,15 +133,7 @@ function generateReportsInMemory(
         let totalQuantity = 0;
         let totalVolumeDm = 0;
 
-        for (const [slotId, slotData] of allData.entries()) {
-            // Filter by slot type
-            const isJointer = slotId.startsWith('S-');
-            const isBeam = slotId.startsWith('H-') || !slotId.startsWith('S-');
-
-            if ((slotType === SlotType.Jointer && !isJointer) || (slotType === SlotType.Beam && !isBeam)) {
-                continue;
-            }
-
+        for (const slotData of allData.values()) {
             // Get quantity at end of week
             const quantity = getSlotQuantityAtTime(slotData, endOfWeek);
 
