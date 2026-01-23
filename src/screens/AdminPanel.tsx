@@ -8,6 +8,7 @@ import { faArrowLeft, faSort, faSortUp, faSortDown } from '@fortawesome/free-sol
 import { isAdminUser } from '../config/appConfig';
 import AccessDenied from '../components/admin/AccessDenied';
 import DeviceRow from '../components/admin/DeviceRow';
+import AppSettingsCard from '../components/admin/AppSettingsCard';
 
 type SortConfig = {
   key: keyof DeviceAdminData;
@@ -184,6 +185,11 @@ const AdminPanel: React.FC = () => {
               <p className="text-[var(--color-text-03)]">Konfigurace nenalezena</p>
             )}
           </div>
+        </div>
+
+        {/* App Settings Card */}
+        <div className="mt-6">
+          <AppSettingsCard />
         </div>
       </div>
     </div>
