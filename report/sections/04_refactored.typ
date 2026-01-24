@@ -300,16 +300,16 @@ Mock fixtures provide consistent test data without Firestore writes.
 === Git Statistics (master vs sea-refactor)
 
 #table(
-  columns: (auto, auto),
+  columns: (auto, auto, auto, auto),
   inset: 8pt,
   align: left,
-  [*Metric*], [*Value*],
-  [Commits], [23],
-  [Files Changed], [120],
-  [Insertions], [6,911],
-  [Deletions], [1,013],
+  [*Category*], [*Files*], [*Insertions*], [*Deletions*],
+  [Tests], [26], [2,381], [0],
+  [App Logic (.ts/tsx)], [66], [3,169], [682],
+  [Other (Config/Docs)], [28], [1,361], [331],
+  [*Total*], [*120*], [*6,911*], [*1,013*],
 )
-_Note: High insertion count reflects the addition of 196 tests, infrastructure files, and strict type definitions._
+_Note: "Other" includes documentation, configuration files, and assets. The significant insertions in App Logic reflect the introduction of new modules and strong typing._
 
 *Lines of code per violation addressed:*
 - SoC: 11 modules, ~400 lines extracted
