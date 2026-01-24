@@ -23,7 +23,10 @@ The original architecture featured a *flat component structure* with mixed conce
 )
 
 #figure(
-  image("../diagrams/architecture_before.png", width: 80%),
+  pad(
+    x: -1cm,
+    image("../diagrams/svg/architecture_before.svg", width: calc.abs(110%)),
+  ),
   caption: [Directory structure before refactoring (master branch) — 35 source files with significant coupling],
 )
 
@@ -53,7 +56,10 @@ The refactored architecture follows NS Theory principles with *modular, single-r
 )
 
 #figure(
-  image("../diagrams/architecture_after.png", width: 100%),
+  pad(
+    x: -1cm,
+    image("../diagrams/svg/architecture_after.svg", width: calc.abs(110%)),
+  ),
   caption: [Directory structure after refactoring (sea-refactor branch) — 53 source files with clear boundaries],
 )
 

@@ -11,8 +11,8 @@ This project successfully applied Normalized Systems Theory principles to refact
   inset: 8pt,
   align: left,
   [*Metric*], [*Value*],
-  [Automated tests total], [146],
-  [Test files created], [19],
+  [Automated tests total], [196],
+  [Test files created], [26],
   [Extracted modules], [20],
   [Lines of code reorganized], [~700],
   [Large components refactored], [5],
@@ -42,8 +42,8 @@ This project successfully applied Normalized Systems Theory principles to refact
 The following items from the original analysis have been completed:
 
 - ✓ Chart subcomponent extraction (`ChartOverlay.tsx`, `ExpandedChartModal.tsx`)
-- ✓ AdminPanel refactoring (`AccessDenied.tsx`, `DeviceRow.tsx`)
-- ✓ Test coverage expansion (146 tests total)
+- ✓ AdminPanel refactoring (`AccessDenied.tsx`, `DeviceRow.tsx`, `AppSettingsCard.tsx`)
+- ✓ Test coverage expansion (196 tests total)
 
 Remaining opportunities:
 - State management refactoring for SoS compliance
@@ -53,7 +53,7 @@ Remaining opportunities:
 
 Normalized Systems Theory provides a principled approach to software design that addresses the root causes of maintenance complexity. By systematically identifying and eliminating combinatorial effects, I have created a codebase that is better prepared for future evolution.
 
-The 146-test safety net ensures that future modifications can be made with confidence, while the 20 extracted modules provide clear boundaries for understanding and modifying specific functionality.
+The 196-test safety net ensures that future modifications can be made with confidence, while the 20 extracted modules provide clear boundaries for understanding and modifying specific functionality.
 
 The addition of error boundaries demonstrates how SoS principle extends beyond state management to fault isolation—preventing runtime errors from propagating throughout the application. Code splitting further enforces SoC at the module loading level.
 

@@ -12,16 +12,19 @@ Before refactoring, I established a comprehensive test suite as a safety net. Ac
   align: left,
   [*Test Category*], [*Files*], [*Tests*],
   [Unit Tests],
-  [`slotSorting.test.ts`, `slotFilterUtils.test.ts`, `weekUtils.test.ts`, `qualityMapping.test.ts`, `exportToCsv.test.ts`],
-  [62],
+  [`slotSorting.test.ts`, `slotFilterUtils.test.ts`, `weekUtils.test.ts`, `qualityMapping.test.ts`, `exportToCsv.test.ts`, `chartAxisUtils.test.ts`, `WarehouseSlot.test.ts`, `appSettings.test.ts`, `SlotFilter.test.ts`],
+  [101],
 
   [Component Tests],
-  [`SlotsTable.test.tsx`, `ExportDialog.test.tsx`, `VolumeInTimeChart.test.tsx`, `AccessDenied.test.tsx`, `ChartOverlay.test.tsx`],
-  [55],
+  [`SlotsTable.test.tsx`, `ExportDialog.test.tsx`, `VolumeInTimeChart.test.tsx`, `AccessDenied.test.tsx`, `ChartOverlay.test.tsx`, `ErrorBoundary.test.tsx`, `LoadingOverlay.test.tsx`, `AppSettingsCard.test.tsx`],
+  [52],
 
-  [Hook Tests], [`useSlotFiltering.test.ts`, `useChartLoadingState.test.ts`], [19],
-  [Integration Tests], [`FilteringFlow.test.tsx`, `AdminFlow.test.tsx`, `ExportFlow.test.tsx`], [10],
-  [*Total*], [19 files], [*146 tests*],
+  [Hook Tests], [`useSlotFiltering.test.ts`, `useChartLoadingState.test.ts`, `useAppSettings.test.ts`], [20],
+  [Integration & E2E],
+  [`FilteringFlow.test.tsx`, `AdminFlow.test.tsx`, `ExportFlow.test.tsx`, `warehouse.spec.ts`, `admin.spec.ts`],
+  [23],
+
+  [*Total*], [26 files], [*196 tests*],
 )
 
 == Data Version Transparency (DVT) Resolution
@@ -292,7 +295,21 @@ Mock fixtures provide consistent test data without Firestore writes.
 
 *Total: ~700 lines* moved into 20 focused, testable modules.
 
-*146 automated tests* ensure correctness (unit + integration + E2E).
+*196 automated tests* ensure correctness (unit + integration + E2E).
+
+=== Git Statistics (master vs sea-refactor)
+
+#table(
+  columns: (auto, auto),
+  inset: 8pt,
+  align: left,
+  [*Metric*], [*Value*],
+  [Commits], [23],
+  [Files Changed], [120],
+  [Insertions], [6,911],
+  [Deletions], [1,013],
+)
+_Note: High insertion count reflects the addition of 196 tests, infrastructure files, and strict type definitions._
 
 *Lines of code per violation addressed:*
 - SoC: 11 modules, ~400 lines extracted

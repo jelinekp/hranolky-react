@@ -1,1 +1,6 @@
 main.pdf
+
+diagrams/svg/
+diagrams/png/
+
+plantuml.jar
