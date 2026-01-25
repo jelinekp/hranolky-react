@@ -202,15 +202,16 @@ const AdminPanel: React.FC = () => {
           </div>
         </div>
 
+        {/* User Management */}
+        <div className="mt-6">
+          <UserManagement />
+        </div>
+        
         {/* App Settings Card */}
         <div className="mt-6">
           <AppSettingsCard />
         </div>
 
-        {/* User Management */}
-        <div className="mt-6">
-          <UserManagement />
-        </div>
       </div>
     </div>
   );
