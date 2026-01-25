@@ -44,6 +44,17 @@ export function useGoogleAuth() {
     setLoading(true);
     setError(null);
     try {
+      // Check if we should force account selection (e.g., after logout)
+      const forceSelect = sessionStorage.getItem('forceSelectAccount') === 'true';
+      if (forceSelect) {
+        googleProvider.setCustomParameters({
+          prompt: 'select_account'
+        });
+        sessionStorage.removeItem('forceSelectAccount');
+      } else {
+        googleProvider.setCustomParameters({});
+      }
+
       await signInWithPopup(auth, googleProvider);
     } catch (e) {
       setError(e as Error);
@@ -55,6 +66,8 @@ export function useGoogleAuth() {
     setLoading(true);
     setError(null);
     try {
+      // Flag that the next sign-in should prompt for account selection
+      sessionStorage.setItem('forceSelectAccount', 'true');
       await firebaseSignOut(auth);
     } catch (e) {
       setError(e as Error);

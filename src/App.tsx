@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginScreen from './components/LoginScreen';
 import LoadingOverlay from './components/LoadingOverlay';
 import ErrorBoundary from './components/ErrorBoundary';
+import AccessDenied from './components/admin/AccessDenied';
 
 // Lazy load routes for code splitting (SoC - module boundaries)
 const Hranolky = lazy(() => import('./screens/Hranolky'));
@@ -12,7 +13,7 @@ const AdminPanel = lazy(() => import('./screens/AdminPanel'));
 
 function AppRoutes() {
   const location = useLocation();
-  const { isAuthenticated, loading, isAllowed } = useAuth();
+  const { isAuthenticated, loading, isAllowed, signOut } = useAuth();
 
   useEffect(() => {
     const titles: Record<string, string> = {
@@ -36,36 +37,22 @@ function AppRoutes() {
     );
   }
 
+  // Show generic loading while permissions are being determined for an authenticated user
+  if (loading) {
+    return <LoadingOverlay isVisible={true} message="Zjišťování oprávnění..." />;
+  }
+
   // Show access denied if not allowed
   if (!isAllowed) {
     return (
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        padding: '2rem',
-        textAlign: 'center',
-        flexDirection: 'column',
-        gap: '1rem'
-      }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>Přístup odepřen</h2>
-        <p>Nemáte práva pro zobrazení, kontaktujte Pavla Jelínka na <a href="mailto:pavel.jelinek@jelinek.eu" style={{ textDecoration: 'underline' }}>pavel.jelinek@jelinek.eu</a></p>
-        <button
-          onClick={() => window.location.reload()}
-          style={{
-            marginTop: '1rem',
-            padding: '0.5rem 1rem',
-            backgroundColor: '#555',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-          }}
-        >
-          Zkusit znovu
-        </button>
-      </div>
+      <AccessDenied
+        title="Přístup odepřen"
+        message="Nemáte práva pro zobrazení. Pro získání přístupu kontaktujte Pavla Jelínka na pavel.jelinek@jelinek.eu"
+        backLabel="Zkusit znovu"
+        backPath={location.pathname}
+        secondaryAction={signOut}
+        secondaryLabel="Odhlásit se"
+      />
     );
   }
 

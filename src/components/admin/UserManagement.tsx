@@ -64,22 +64,28 @@ const UserManagement: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => { e.preventDefault(); handleAddString('Admins', newAdmin, setNewAdmin); }}
+          >
             <input
               type="email"
+              name="new-admin-email"
+              id="new-admin-email"
+              autoComplete="off"
               placeholder="Email admina"
               className="flex-1 px-3 py-2 border rounded-lg text-sm"
               value={newAdmin}
               onChange={e => setNewAdmin(e.target.value)}
             />
             <button
-              onClick={() => handleAddString('Admins', newAdmin, setNewAdmin)}
+              type="submit"
               disabled={!newAdmin || !!processing}
               className="bg-gray-200 hover:bg-[var(--color-primary)] hover:text-white px-3 py-2 rounded-lg transition-colors"
             >
               {processing === 'add-Admins' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faPlus} />}
             </button>
-          </div>
+          </form>
         </div>
 
         {/* Allowed Users Column */}
@@ -105,22 +111,28 @@ const UserManagement: React.FC = () => {
             ))}
           </div>
 
-          <div className="flex gap-2">
+          <form
+            className="flex gap-2"
+            onSubmit={(e) => { e.preventDefault(); handleAddString('AllowedUsers', newUser, setNewUser); }}
+          >
             <input
               type="email"
+              name="new-allowed-user-email"
+              id="new-allowed-user-email"
+              autoComplete="off"
               placeholder="Email uživatele"
               className="flex-1 px-3 py-2 border rounded-lg text-sm"
               value={newUser}
               onChange={e => setNewUser(e.target.value)}
             />
             <button
-              onClick={() => handleAddString('AllowedUsers', newUser, setNewUser)}
+              type="submit"
               disabled={!newUser || !!processing}
               className="bg-gray-200 hover:bg-[var(--color-primary)] hover:text-white px-3 py-2 rounded-lg transition-colors"
             >
               {processing === 'add-AllowedUsers' ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faPlus} />}
             </button>
-          </div>
+          </form>
         </div>
       </div>
     </div>
