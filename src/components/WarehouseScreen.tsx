@@ -82,7 +82,7 @@ const WarehouseScreen: React.FC<WarehouseScreenProps> = ({
                   title="Administrace zařízení"
                 >
                   <FontAwesomeIcon icon={faGear} className="text-l pr-1" />
-                  Správa terminálů
+                  Nastavení
                 </button>
               )}
               <button

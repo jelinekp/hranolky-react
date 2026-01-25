@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlus, faTrash, faUserShield, faUserCheck, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { useUserManagement, UserType } from '../../hooks/data/useUserManagement';
-import { useAuth } from '../../contexts/AuthContext';
 
 const UserManagement: React.FC = () => {
   const { admins, allowedUsers, loading, addUser, removeUser } = useUserManagement();
-  const { user } = useAuth();
 
   const [newAdmin, setNewAdmin] = useState('');
   const [newUser, setNewUser] = useState('');
@@ -41,10 +39,6 @@ const UserManagement: React.FC = () => {
   return (
     <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-xl max-w-[900px] mt-6">
       <h2 className="text-xl font-bold mb-6">Správa uživatelů</h2>
-
-      <div className="mb-4 text-sm text-gray-500">
-        Přihlášen jako: <span className="font-mono text-black">{user?.email}</span>
-      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Admins Column */}
