@@ -16,6 +16,8 @@ export const ADMIN_EMAILS: readonly string[] = [
   'jelinekp6@gmail.com',
   'jelinekv007@gmail.com',
   'r2202.komenda@gmail.com',
+  'jelinekd@gmail.com',
+  'david.jelinek@jelinek.eu',
 ] as const
 
 /**
