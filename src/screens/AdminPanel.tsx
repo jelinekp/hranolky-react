@@ -5,10 +5,10 @@ import { useAdminDevices, DeviceAdminData } from '../hooks/data/useAdminDevices'
 import { useAppConfig } from '../hooks/data/useAppConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faArrowLeft, faSort, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
-import { isAdminUser } from '../config/appConfig';
 import AccessDenied from '../components/admin/AccessDenied';
 import DeviceRow from '../components/admin/DeviceRow';
 import AppSettingsCard from '../components/admin/AppSettingsCard';
+import UserManagement from '../components/admin/UserManagement';
 
 type SortConfig = {
   key: keyof DeviceAdminData;
@@ -17,14 +17,12 @@ type SortConfig = {
 
 const AdminPanel: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { isAdmin } = useAuth();
   const { devices, loading, updateDevice } = useAdminDevices();
   const { appConfig, loading: appConfigLoading } = useAppConfig();
   const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'deviceName', direction: 'asc' });
   const [editingDevice, setEditingDevice] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<DeviceAdminData>>({});
-
-  const isAdmin = isAdminUser(user?.email);
 
   if (!isAdmin) {
     return <AccessDenied />;
@@ -190,6 +188,11 @@ const AdminPanel: React.FC = () => {
         {/* App Settings Card */}
         <div className="mt-6">
           <AppSettingsCard />
+        </div>
+
+        {/* User Management */}
+        <div className="mt-6">
+          <UserManagement />
         </div>
       </div>
     </div>
