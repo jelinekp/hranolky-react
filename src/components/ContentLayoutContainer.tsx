@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { WarehouseSlotClass } from "hranolky-firestore-common";
 import { SlotType } from "hranolky-firestore-common/SlotType.ts";
 import Filters from "./export/Filters.tsx";
@@ -17,9 +17,28 @@ function ContentLayoutContainer(
     devices: Map<string, string | null>
   }
 ) {
+  // Persistence keys
+  const SORT_BY_KEY = `sortingBy_${props.slotType}`;
+  const SORT_ORDER_KEY = `sortingOrder_${props.slotType}`;
 
-  const [sortingBy, setSortingBy] = useState<SortingBy>(SortingBy.none)
-  const [sortingOrder, setSortingOrder] = useState<SortingOrder>(SortingOrder.desc)
+  const [sortingBy, setSortingBy] = useState<SortingBy>(() => {
+    const saved = localStorage.getItem(SORT_BY_KEY);
+    return saved !== null ? Number(saved) : SortingBy.none;
+  });
+
+  const [sortingOrder, setSortingOrder] = useState<SortingOrder>(() => {
+    const saved = localStorage.getItem(SORT_ORDER_KEY);
+    return saved !== null ? Number(saved) : SortingOrder.desc;
+  });
+
+  // Track changes and save to localStorage
+  useEffect(() => {
+    localStorage.setItem(SORT_BY_KEY, sortingBy.toString());
+  }, [sortingBy, SORT_BY_KEY]);
+
+  useEffect(() => {
+    localStorage.setItem(SORT_ORDER_KEY, sortingOrder.toString());
+  }, [sortingOrder, SORT_ORDER_KEY]);
 
   // Use extracted filtering hook (SoS principle)
   const {

@@ -20,7 +20,24 @@ const AdminPanel: React.FC = () => {
   const { isAdmin } = useAuth();
   const { devices, loading, updateDevice } = useAdminDevices();
   const { appConfig, loading: appConfigLoading } = useAppConfig();
-  const [sortConfig, setSortConfig] = useState<SortConfig>({ key: 'deviceName', direction: 'asc' });
+
+  const [sortConfig, setSortConfig] = useState<SortConfig>(() => {
+    const saved = localStorage.getItem('adminDevicesSort');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to parse saved sort config', e);
+      }
+    }
+    return { key: 'deviceName', direction: 'asc' };
+  });
+
+  // Persist sort settings
+  React.useEffect(() => {
+    localStorage.setItem('adminDevicesSort', JSON.stringify(sortConfig));
+  }, [sortConfig]);
+
   const [editingDevice, setEditingDevice] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<DeviceAdminData>>({});
 
