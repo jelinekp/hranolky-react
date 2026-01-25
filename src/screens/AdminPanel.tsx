@@ -1,10 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { useAdminDevices, DeviceAdminData } from '../hooks/useAdminDevices';
-import { useAppConfig } from '../hooks/useAppConfig';
+import { useAdminDevices, DeviceAdminData } from '../hooks/data/useAdminDevices';
+import { useAppConfig } from '../hooks/data/useAppConfig';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faSave, faSort, faSortUp, faSortDown, faCheckCircle, faTimesCircle } from '@fortawesome/free-solid-svg-icons';
+import { faArrowLeft, faSort, faSortUp, faSortDown } from '@fortawesome/free-solid-svg-icons';
+import { isAdminUser } from '../config/appConfig';
+import AccessDenied from '../components/admin/AccessDenied';
+import DeviceRow from '../components/admin/DeviceRow';
+import AppSettingsCard from '../components/admin/AppSettingsCard';
 
 type SortConfig = {
   key: keyof DeviceAdminData;
@@ -20,23 +24,10 @@ const AdminPanel: React.FC = () => {
   const [editingDevice, setEditingDevice] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<DeviceAdminData>>({});
 
-  const isAdmin = user && ['jelinekp6@gmail.com', 'jelinekv007@gmail.com'].includes(user.email || '');
+  const isAdmin = isAdminUser(user?.email);
 
   if (!isAdmin) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="bg-[var(--color-bg-01)] p-8 rounded-3xl shadow-xl text-center">
-          <h2 className="text-2xl font-bold text-red-500 mb-4">Přístup odepřen</h2>
-          <p>Tato část je určena pouze pro administrátory.</p>
-          <button
-            onClick={() => navigate('/hranolky')}
-            className="inline-block mt-4 px-6 py-3 bg-white text-black font-semibold rounded-xl hover:bg-[var(--color-primary)] transition-colors"
-          >
-            Zpět na sklad
-          </button>
-        </div>
-      </div>
-    );
+    return <AccessDenied />;
   }
 
   const handleSort = (key: keyof DeviceAdminData) => {
@@ -103,7 +94,7 @@ const AdminPanel: React.FC = () => {
               <p className="text-sm text-[var(--color-text-03)]">
                 Pokud se změny v Android aplikaci neprojeví, spusťte ji znovu. <br />
                 Pokud zde chybí zařízení, nainstalujte na něj poslední APK.
-                </p>
+              </p>
             </div>
           </div>
           <img src="src/assets/logo_jelinek.svg" alt="Logo Jelínek" width="200" />
@@ -148,50 +139,15 @@ const AdminPanel: React.FC = () => {
                       const currentPermitted = isEdited && editValues.isInventoryCheckPermitted !== undefined ? editValues.isInventoryCheckPermitted : device.isInventoryCheckPermitted;
 
                       return (
-                        <tr key={device.id} className="border-b border-grey hover:bg-[var(--color-bg-05)] transition-colors group">
-                          <td className="py-4 px-2 font-mono text-sm text-[var(--color-text-03)]" title={device.id}>
-                            {device.shortId}
-                          </td>
-                          <td className="py-4 px-2">
-                            <input
-                              type="text"
-                              value={currentName}
-                              onChange={(e) => handleEditChange(device.id, 'deviceName', e.target.value)}
-                              className="bg-transparent border-b border-[var(--color-primary)] hover:border-grey focus:border-black focus:outline-none py-1 px-2 w-full transition-all rounded"
-                              placeholder="Pojmenujte zařízení..."
-                            />
-                          </td>
-                          <td className="py-4 px-2">
-                            <span className="px-2 py-1 bg-[var(--color-bg-05)] rounded text-xs font-semibold">
-                              {device.appVersion}
-                            </span>
-                          </td>
-                          <td className="py-4 px-2 text-sm text-[var(--color-text-03)]">
-                            {device.lastSeen ? device.lastSeen.toLocaleString('cs-CZ') : 'Nikdy'}
-                          </td>
-                          <td className="py-4 px-2 text-center">
-                            <button
-                              onClick={() => handleEditChange(device.id, 'isInventoryCheckPermitted', !currentPermitted)}
-                              className={`text-2xl transition-transform active:scale-90 ${currentPermitted ? 'text-green-500' : 'text-gray-300'}`}
-                              title={currentPermitted ? 'Povolen' : 'Nepovolen'}
-                            >
-                              <FontAwesomeIcon icon={currentPermitted ? faCheckCircle : faTimesCircle} />
-                            </button>
-                          </td>
-                          <td className="py-4 px-2 text-right">
-                            <button
-                              onClick={() => handleSave(device.id)}
-                              disabled={!isEdited}
-                              className={`p-2 rounded-lg transition-all ${isEdited
-                                ? 'bg-[var(--color-primary)] text-black shadow-md hover:bg-[var(--color-primary-dark)] scale-110'
-                                : 'hidden'
-                                }`}
-                              title="Uložit změny"
-                            >Uložit změny
-                              <FontAwesomeIcon icon={faSave} className='pl-1' />
-                            </button>
-                          </td>
-                        </tr>
+                        <DeviceRow
+                          key={device.id}
+                          device={device}
+                          isEdited={isEdited}
+                          currentName={currentName}
+                          currentPermitted={currentPermitted}
+                          onEditChange={handleEditChange}
+                          onSave={handleSave}
+                        />
                       );
                     })}
                   </tbody>
@@ -229,6 +185,11 @@ const AdminPanel: React.FC = () => {
               <p className="text-[var(--color-text-03)]">Konfigurace nenalezena</p>
             )}
           </div>
+        </div>
+
+        {/* App Settings Card */}
+        <div className="mt-6">
+          <AppSettingsCard />
         </div>
       </div>
     </div>

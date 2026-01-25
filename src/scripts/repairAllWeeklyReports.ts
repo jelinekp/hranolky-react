@@ -6,8 +6,8 @@
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
-import { generateAllWeeklyReports } from '../hooks/generateVolumeWeeklyReport';
-import { generateAllSlotWeeklyReports } from '../hooks/generateVolumeWeeklyReportPerSlot';
+import { generateAllWeeklyReports } from '../hooks/reports/generateVolumeWeeklyReport';
+import { generateAllSlotWeeklyReports } from '../hooks/reports/generateVolumeWeeklyReportPerSlot';
 
 const email = process.env.FIREBASE_EMAIL;
 const password = process.env.FIREBASE_PASSWORD;

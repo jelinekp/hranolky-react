@@ -1,0 +1,75 @@
+// src/hooks/useGoogleAuth.ts
+
+import { useEffect, useState, useCallback } from 'react';
+import { auth } from '../../firebase';
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+  GoogleAuthProvider,
+  browserLocalPersistence,
+  setPersistence,
+  type User,
+} from 'firebase/auth';
+
+const googleProvider = new GoogleAuthProvider();
+
+export function useGoogleAuth() {
+  const [user, setUser] = useState<User | null>(auth.currentUser);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    // Set persistence to LOCAL (survives browser restart)
+    setPersistence(auth, browserLocalPersistence).catch((e) => {
+      console.error('Failed to set auth persistence:', e);
+    });
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (!isMounted) return;
+
+      setUser(currentUser);
+      setLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
+
+  const signIn = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (e) {
+      setError(e as Error);
+      setLoading(false);
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await firebaseSignOut(auth);
+    } catch (e) {
+      setError(e as Error);
+      setLoading(false);
+    }
+  }, []);
+
+  return {
+    user,
+    loading,
+    error,
+    signIn,
+    signOut,
+    isAuthenticated: !!user,
+  };
+}
+
+export default useGoogleAuth;

@@ -1,9 +1,12 @@
-import React, { useEffect, useMemo, useState, useCallback } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { useFetchFilteredVolumeHistory } from "../hooks/useFetchFilteredVolumeHistory.ts";
-import { SlotType, WarehouseSlotClass } from "hranolky-firestore-common";
+import { useFetchFilteredVolumeHistory } from "../hooks/data/useFetchFilteredVolumeHistory.ts";
+import { SlotType, WarehouseSlotClass, VolumeDataPoint, getCurrentWeekLabel } from "hranolky-firestore-common";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faExpand, faCompress } from "@fortawesome/free-solid-svg-icons";
+import { useChartLoadingState } from "../hooks/useChartLoadingState.ts";
+import { useExpandedModal } from "../hooks/useExpandedModal.ts";
+import { INVENTORY_CHECK_WEEKS } from "../config/appConfig.ts";
 
 export interface VolumeInTimeChartProps {
   currentVolume: number;
@@ -12,34 +15,8 @@ export interface VolumeInTimeChartProps {
   hasActiveFilters: boolean;
 }
 
-interface VolumeDataPoint {
-  week: string;
-  volume: number;
-}
-
-// Helper function to get current week in YY_WW format
-const getCurrentWeekLabel = (): string => {
-  const now = new Date();
-  // Use UTC to avoid timezone issues in week calculation
-  const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  // Set to nearest Thursday: current date + 4 - day number
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  let weekNum = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-  let year = d.getUTCFullYear();
-
-  // Apply the rule: a year always has exactly 52 weeks
-  if (weekNum > 52) {
-    weekNum = 1;
-    year++;
-  }
-
-  const year2 = (year % 100).toString().padStart(2, '0');
-  const week2 = weekNum.toString().padStart(2, '0');
-
-  return `${year2}_${week2}`;
-};
+// VolumeDataPoint type now imported from hranolky-firestore-common
+// getCurrentWeekLabel now imported from hranolky-firestore-common
 
 // Mock data generator for initial loading animation
 const generateMockVolumeData = (): VolumeDataPoint[] => {
@@ -69,28 +46,15 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   const [pulseOpacity, setPulseOpacity] = useState(1);
   const [displayData, setDisplayData] = useState<VolumeDataPoint[]>(() => generateMockVolumeData());
   const [goofyOffsets, setGoofyOffsets] = useState<number[]>([]);
-  const [manualLoadRequested, setManualLoadRequested] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
 
-  // ESC key handler to close expanded view
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && isExpanded) {
-      setIsExpanded(false);
-    }
-  }, [isExpanded]);
-
-  useEffect(() => {
-    if (isExpanded) {
-      document.addEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'hidden'; // Prevent background scroll
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = '';
-    };
-  }, [isExpanded, handleKeyDown]);
+  // Use extracted hooks for SoS compliance
+  const { isExpanded, setIsExpanded, toggleExpanded } = useExpandedModal();
+  const {
+    manualLoadRequested,
+    setManualLoadRequested,
+    shouldWaitForManualLoad,
+    shouldFetchData
+  } = useChartLoadingState(hasActiveFilters, filteredSlots.length);
 
   // Extract slot IDs from filtered slots
   const filteredSlotIds = useMemo(() =>
@@ -98,34 +62,12 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     [filteredSlots]
   );
 
-  // Determine if we should wait for manual load
-  const shouldWaitForManualLoad = hasActiveFilters && filteredSlots.length > 10;
-  const shouldFetchData = !shouldWaitForManualLoad || manualLoadRequested;
-
-  // Debug: trace inputs to the hook
-  /*
-  console.log('[VolumeInTimeChart] hasActiveFilters:', hasActiveFilters,
-    '| filteredSlots:', filteredSlots.length,
-    '| shouldWaitForManualLoad:', shouldWaitForManualLoad,
-    '| manualLoadRequested:', manualLoadRequested,
-    '| shouldFetchData:', shouldFetchData);
-  */
-
   const { volumeData, loading } = useFetchFilteredVolumeHistory(
     slotType,
-    shouldFetchData ? filteredSlotIds : [], // Pass empty array to prevent fetch
+    shouldFetchData ? filteredSlotIds : [],
     shouldFetchData && hasActiveFilters,
     500
   );
-
-  // Reset manual load request when filters change
-  useEffect(() => {
-    if (hasActiveFilters && filteredSlots.length > 10) {
-      setManualLoadRequested(false);
-    } else {
-      setManualLoadRequested(true); // Auto-load when conditions don't require manual load
-    }
-  }, [hasActiveFilters, filteredSlots.length]);
 
   // Goofy pulsing animation effect when loading - each point bounces differently!
   useEffect(() => {
@@ -234,15 +176,14 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
     };
   })();
 
-  // Calculate inventory check weeks (weeks 14, 27, 40, 51)
+  // Calculate inventory check weeks from config
   const inventoryCheckWeeks = useMemo(() => {
-    const checkWeeks = [14, 27, 40, 51];
     // Filter to only include weeks that are present in the data
     return displayData
       .filter(d => {
         // Extract week number from YYYY_WW format
         const weekNum = parseInt(d.week.split('_')[1] || d.week);
-        return checkWeeks.includes(weekNum);
+        return INVENTORY_CHECK_WEEKS.includes(weekNum as typeof INVENTORY_CHECK_WEEKS[number]);
       })
       .map(d => d.week);
   }, [displayData]);
@@ -353,7 +294,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
               </span>
             )}
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={toggleExpanded}
               className="p-2 rounded-lg hover:bg-gray-200 transition-colors border-0 outline-none bg-transparent cursor-pointer focus:outline-none active:outline-none"
               title={isExpanded ? 'Sbalit graf (Esc)' : 'Rozbalit graf'}
             >
@@ -472,7 +413,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
             </div>
           </div>
         </div>
-      </div>
+      </div >
     </>
   );
 };

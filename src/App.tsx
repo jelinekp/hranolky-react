@@ -1,10 +1,14 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { useEffect } from 'react'
-import Hranolky from './screens/Hranolky'
-import Sparovky from './screens/Sparovky'
-import AdminPanel from './screens/AdminPanel'
+import { useEffect, Suspense, lazy } from 'react'
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import LoginScreen from './components/LoginScreen';
+import LoadingOverlay from './components/LoadingOverlay';
+import ErrorBoundary from './components/ErrorBoundary';
+
+// Lazy load routes for code splitting (SoC - module boundaries)
+const Hranolky = lazy(() => import('./screens/Hranolky'));
+const Sparovky = lazy(() => import('./screens/Sparovky'));
+const AdminPanel = lazy(() => import('./screens/AdminPanel'));
 
 function AppRoutes() {
   const location = useLocation();
@@ -27,39 +31,23 @@ function AppRoutes() {
     return (
       <>
         <LoginScreen />
-        {/* Loading overlay */}
-        {loading && (
-          <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="flex flex-col items-center gap-4">
-              {/* Spinning circular progress indicator */}
-              <div className="w-12 h-12 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
-              <span className="text-[var(--color-text-01)] text-base">Přihlašování...</span>
-            </div>
-          </div>
-        )}
+        <LoadingOverlay isVisible={loading} message="Přihlašování..." />
       </>
     );
   }
 
   return (
-    <>
-      <Routes>
-        <Route path="/" element={<Navigate to="hranolky" replace />} />
-        <Route path="hranolky" element={<Hranolky />} />
-        <Route path="sparovky" element={<Sparovky />} />
-        <Route path="admin" element={<AdminPanel />} />
-      </Routes>
-      {/* Loading overlay */}
-      {loading && (
-        <div className="fixed inset-0 bg-[var(--color-bg-05)]/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="flex flex-col items-center gap-4">
-            {/* Spinning circular progress indicator */}
-            <div className="w-12 h-12 border-4 border-[var(--color-primary-light)] border-t-[var(--color-primary)] rounded-full animate-spin" />
-            <span className="text-[var(--color-text-01)] text-base">Načítání...</span>
-          </div>
-        </div>
-      )}
-    </>
+    <ErrorBoundary>
+      <Suspense fallback={<LoadingOverlay isVisible={true} message="Načítání stránky..." />}>
+        <Routes>
+          <Route path="/" element={<Navigate to="hranolky" replace />} />
+          <Route path="hranolky" element={<Hranolky />} />
+          <Route path="sparovky" element={<Sparovky />} />
+          <Route path="admin" element={<AdminPanel />} />
+        </Routes>
+      </Suspense>
+      <LoadingOverlay isVisible={loading} message="Načítání..." />
+    </ErrorBoundary>
   );
 }
 
@@ -72,4 +60,3 @@ export default function App() {
     </BrowserRouter>
   );
 }
-

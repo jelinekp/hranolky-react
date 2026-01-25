@@ -9,7 +9,7 @@
 
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '../firebase';
-import { generateAllSlotWeeklyReports } from '../hooks/generateVolumeWeeklyReportPerSlot';
+import { generateAllSlotWeeklyReports } from '../hooks/reports/generateVolumeWeeklyReportPerSlot';
 
 const email = process.env.FIREBASE_EMAIL;
 const password = process.env.FIREBASE_PASSWORD;
