@@ -51,6 +51,7 @@ export function useChartDataTransform(
   // Update display data when real data loads
   useEffect(() => {
     if (!loading && volumeData.length > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayData(volumeData);
     } else if (loading && volumeData.length > 0) {
       setDisplayData(volumeData);
@@ -72,6 +73,7 @@ export function useChartDataTransform(
 
       return () => clearInterval(interval);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPulseOpacity(1);
       setGoofyOffsets([]);
     }
@@ -85,7 +87,8 @@ export function useChartDataTransform(
       baseData = displayData.map((point, index) => ({
         week: point.week,
         volume: Math.max(0, point.volume + (goofyOffsets[index] || 0)),
-        _animKey: Math.random()
+        // Use offset value as key — it changes every animation frame
+        _animKey: (goofyOffsets[index] || 0) * 10000 + index
       }));
     }
 

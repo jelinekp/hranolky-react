@@ -41,10 +41,6 @@ const AdminPanel: React.FC = () => {
   const [editingDevice, setEditingDevice] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Partial<DeviceAdminData>>({});
 
-  if (!isAdmin) {
-    return <AccessDenied />;
-  }
-
   const handleSort = (key: keyof DeviceAdminData) => {
     setSortConfig(prev => ({
       key,
@@ -68,7 +64,11 @@ const AdminPanel: React.FC = () => {
     return result;
   }, [devices, sortConfig]);
 
-  const handleEditChange = (deviceId: string, field: keyof DeviceAdminData, value: any) => {
+  if (!isAdmin) {
+    return <AccessDenied />;
+  }
+
+  const handleEditChange = (deviceId: string, field: keyof DeviceAdminData, value: string | boolean) => {
     setEditingDevice(deviceId);
     setEditValues(prev => ({
       ...prev,
@@ -206,7 +206,7 @@ const AdminPanel: React.FC = () => {
         <div className="mt-6">
           <UserManagement />
         </div>
-        
+
         {/* App Settings Card */}
         <div className="mt-6">
           <AppSettingsCard />

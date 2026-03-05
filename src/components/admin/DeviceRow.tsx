@@ -15,7 +15,7 @@ interface DeviceRowProps {
   isEdited: boolean;
   currentName: string;
   currentPermitted: boolean;
-  onEditChange: (deviceId: string, field: keyof DeviceAdminData, value: any) => void;
+  onEditChange: (deviceId: string, field: keyof DeviceAdminData, value: string | boolean) => void;
   onSave: (deviceId: string) => void;
 }
 

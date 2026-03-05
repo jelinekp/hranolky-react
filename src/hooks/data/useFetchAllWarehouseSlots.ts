@@ -22,6 +22,7 @@ export const useFetchAllWarehouseSlots = (slotType: SlotType, options?: { enable
     useEffect(() => {
         // If fetching is disabled (e.g., waiting for auth) or settings still loading, keep loading true and do nothing.
         if (!enabled || settingsLoading) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setData([])
             setLoading(true)
             return

@@ -1,14 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import { useUserManagement } from './useUserManagement';
-import { onSnapshot, setDoc, deleteDoc, collection } from 'firebase/firestore';
+import { onSnapshot, setDoc, deleteDoc } from 'firebase/firestore';
 
 // Mock Firebase
 vi.mock('../../firebase', () => ({
   db: { databaseName: 'test-db' }
 }));
 
-const mockCallbacks: Record<string, any> = {};
+const mockCallbacks: Record<string, (snap: { docs: Array<{ id: string }> }) => void> = {};
 
 vi.mock('firebase/firestore', () => ({
   collection: vi.fn((_db, name) => ({ name })),
@@ -53,7 +53,7 @@ describe('useUserManagement', () => {
   });
 
   it('should add user correctly', async () => {
-    (setDoc as any).mockResolvedValueOnce({});
+    vi.mocked(setDoc).mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => useUserManagement());
 
     let success;
@@ -69,7 +69,7 @@ describe('useUserManagement', () => {
   });
 
   it('should remove user correctly', async () => {
-    (deleteDoc as any).mockResolvedValueOnce({});
+    vi.mocked(deleteDoc).mockResolvedValueOnce(undefined);
     const { result } = renderHook(() => useUserManagement());
 
     let success;

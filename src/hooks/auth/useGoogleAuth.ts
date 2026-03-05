@@ -58,11 +58,12 @@ export function useGoogleAuth() {
       await signInWithPopup(auth, googleProvider);
       // Success will be handled by onAuthStateChanged, but let's be safe
       setLoading(false);
-    } catch (e: any) {
-      console.error('Sign-in error:', e.code, e.message);
+    } catch (e: unknown) {
+      const err = e as { code?: string; message?: string };
+      console.error('Sign-in error:', err.code, err.message);
 
       // If user closed the popup, don't show it as a persistent error
-      if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-by-user') {
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-by-user') {
         setError(null);
         // Put the flag back so next time it still prompts (since we removed it in try block)
         sessionStorage.setItem('forceSelectAccount', 'true');

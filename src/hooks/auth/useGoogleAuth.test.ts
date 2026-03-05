@@ -8,25 +8,31 @@ vi.mock('../../firebase', () => ({
   auth: { currentUser: null }
 }));
 
+const { mockSetCustomParameters } = vi.hoisted(() => ({
+  mockSetCustomParameters: vi.fn()
+}));
+
 vi.mock('firebase/auth', () => ({
   onAuthStateChanged: vi.fn(() => vi.fn()),
   signInWithPopup: vi.fn(),
   signOut: vi.fn(),
   GoogleAuthProvider: vi.fn().mockImplementation(() => ({
-    setCustomParameters: vi.fn()
+    setCustomParameters: mockSetCustomParameters
   })),
   browserLocalPersistence: 'local',
   setPersistence: vi.fn().mockResolvedValue({})
 }));
 
 describe('useGoogleAuth', () => {
-  let mockProviderInstance: any;
-
   beforeEach(() => {
     vi.clearAllMocks();
     sessionStorage.clear();
-    mockProviderInstance = new GoogleAuthProvider();
-    (GoogleAuthProvider as any).mockImplementation(() => mockProviderInstance);
+    vi.mocked(GoogleAuthProvider).mockImplementation(() => ({
+      setCustomParameters: mockSetCustomParameters,
+      addScope: vi.fn(),
+      providerId: 'google.com',
+      customParameters: {}
+    }) as unknown as GoogleAuthProvider);
   });
 
   it('should sign out and set forceSelectAccount flag', async () => {
@@ -48,7 +54,7 @@ describe('useGoogleAuth', () => {
       await result.current.signIn();
     });
 
-    expect(mockProviderInstance.setCustomParameters).toHaveBeenCalledWith({
+    expect(mockSetCustomParameters).toHaveBeenCalledWith({
       prompt: 'select_account'
     });
     expect(sessionStorage.getItem('forceSelectAccount')).toBeNull();
@@ -61,12 +67,12 @@ describe('useGoogleAuth', () => {
       await result.current.signIn();
     });
 
-    expect(mockProviderInstance.setCustomParameters).toHaveBeenCalledWith({});
+    expect(mockSetCustomParameters).toHaveBeenCalledWith({});
   });
 
   it('should reset flag if popup is closed', async () => {
     sessionStorage.setItem('forceSelectAccount', 'true');
-    (signInWithPopup as any).mockRejectedValueOnce({
+    vi.mocked(signInWithPopup).mockRejectedValueOnce({
       code: 'auth/popup-closed-by-user'
     });
 

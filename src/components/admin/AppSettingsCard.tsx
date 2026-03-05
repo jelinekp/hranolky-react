@@ -24,10 +24,10 @@ const AppSettingsCard: React.FC = () => {
   // Track settings version to detect external changes
   const prevVersionRef = useRef<number | null>(null);
 
-  // Sync local state when settings load or change externally
   useLayoutEffect(() => {
     if (!loading && prevVersionRef.current !== settings.version) {
       prevVersionRef.current = settings.version;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setQualityMappings({ ...settings.qualityMappings });
       setDimensionAdjustments({ ...settings.dimensionAdjustments });
       setInventoryCheckPeriodDays(settings.inventoryCheckPeriodDays);

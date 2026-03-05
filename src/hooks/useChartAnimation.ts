@@ -59,6 +59,7 @@ export function useChartAnimation(
 
       return () => clearInterval(interval)
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPulseOpacity(1)
       setGoofyOffsets([])
     }

@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query, limit } from "firebase/firestore";
 import { db } from "../../firebase";
-import {SlotActionClass, SlotType} from "hranolky-firestore-common";
-import {toFirestoreCollectionName} from "hranolky-firestore-common/SlotType.ts";
+import { SlotActionClass, SlotType } from "hranolky-firestore-common";
+import { toFirestoreCollectionName } from "hranolky-firestore-common/SlotType.ts";
 
 export const useFetchSlotActions = (slotId: string | null, slotType: SlotType) => {
     const [slotActions, setSlotActions] = useState<SlotActionClass[]>([]);
@@ -11,6 +11,7 @@ export const useFetchSlotActions = (slotId: string | null, slotType: SlotType) =
 
     useEffect(() => {
         if (!slotId) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setSlotActions([]);
             return;
         }

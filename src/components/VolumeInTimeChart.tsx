@@ -35,6 +35,93 @@ const generateMockVolumeData = (): VolumeDataPoint[] => {
   return data;
 };
 
+// Custom tooltip component (defined outside render to avoid creating components during render)
+const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: VolumeDataPoint; value: number }> }) => {
+  if (active && payload && payload.length) {
+    const weekStr = payload[0].payload.week;
+    const parts = weekStr.split('_');
+    const displayLabel = parts.length === 2 ? `Týden ${parts[1]}/${parts[0]}` : weekStr;
+
+    return (
+      <div className="bg-gray-800 text-white text-xs rounded py-2 px-3 shadow-lg">
+        <p className="font-semibold">{displayLabel}</p>
+        <p className="text-[var(--color-primary-light)]">{payload[0].value.toFixed(2)} m³</p>
+      </div>
+    );
+  }
+  return null;
+};
+
+// Custom X-axis tick component with two rows (week number + year grouping)
+// Defined outside render; receives chartData as a prop to access neighboring weeks
+const CustomXAxisTick = ({ x, y, payload, index, chartData }: {
+  x?: number; y?: number; payload?: { value: string }; index?: number;
+  chartData: VolumeDataPoint[];
+}) => {
+  if (!payload || x === undefined || y === undefined || index === undefined) return null;
+
+  const weekStr = payload.value;
+  const parts = weekStr.split('_');
+  const year = parts[0] || '';
+  const weekNum = parts[1] || weekStr;
+
+  // Check if this is the first tick of a new year or the first tick overall
+  const prevWeek = index > 0 ? chartData[index - 1]?.week : null;
+  const prevYear = prevWeek ? prevWeek.split('_')[0] : null;
+  const isFirstOfYear = index === 0 || year !== prevYear;
+
+  // Check if next tick is a different year (to know where year group ends)
+  const nextWeek = index < chartData.length - 1 ? chartData[index + 1]?.week : null;
+  const nextYear = nextWeek ? nextWeek.split('_')[0] : null;
+  const isLastOfYear = index === chartData.length - 1 || year !== nextYear;
+  // Show week label every 2 weeks, at year boundaries, or at last item
+  const showWeekLabel = isFirstOfYear || isLastOfYear || (index % 2 === 0);
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      {/* Week number on top - black for visibility */}
+      {showWeekLabel && (
+        <text
+          x={0}
+          y={0}
+          dy={12}
+          textAnchor="middle"
+          fill="#333333"
+          fontSize={10}
+          fontWeight="500"
+        >
+          {weekNum}
+        </text>
+      )}
+
+      {/* Year label - only show at the start of each year group */}
+      {isFirstOfYear && (
+        <text
+          x={2}
+          y={0}
+          dy={32}
+          textAnchor="start"
+          fill="var(--color-text-03)"
+          fontSize={10}
+          fontWeight="bold"
+        >
+          {year.length === 2 ? `20${year}` : year}
+        </text>
+      )}
+
+      {/* Year grouping line - solid by increasing overlap */}
+      <line
+        x1={isFirstOfYear ? 0 : -50}
+        y1={20}
+        x2={isLastOfYear ? 0 : 50}
+        y2={20}
+        stroke="var(--color-text-03)"
+        strokeWidth={1.5}
+      />
+    </g>
+  );
+};
+
 const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   currentVolume,
   slotType = SlotType.Beam,
@@ -91,6 +178,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
 
       return () => clearInterval(interval);
     } else {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setPulseOpacity(1);
       setGoofyOffsets([]);
     }
@@ -100,6 +188,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
   useEffect(() => {
     if (!loading && volumeData.length > 0) {
       // Use real data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setDisplayData(volumeData);
     } else if (loading && displayData.length > 0 && volumeData.length === 0) {
       // Keep showing last data while loading new data
@@ -108,7 +197,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
       // If we have previous real data, use that for the pulse animation
       setDisplayData(volumeData);
     }
-  }, [loading, volumeData]);
+  }, [loading, volumeData, displayData.length]);
 
   // Apply goofy bouncing offsets to data during loading
   // Don't memoize this - we want it to recalculate every render during animation!
@@ -124,8 +213,8 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
         return {
           week: point.week,
           volume: Math.max(0, point.volume + offset),
-          // Add a random key to force object difference detection
-          _animKey: Math.random()
+          // Use offset value as unique key — it changes every animation frame
+          _animKey: offset * 10000 + index
         };
       });
     }
@@ -188,89 +277,11 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
       .map(d => d.week);
   }, [displayData]);
 
-  // Custom X-axis tick component with two rows (week number + year grouping)
-  const CustomXAxisTick = ({ x, y, payload, index }: { x?: number; y?: number; payload?: { value: string }; index?: number }) => {
-    if (!payload || x === undefined || y === undefined || index === undefined) return null;
-
-    const weekStr = payload.value;
-    const parts = weekStr.split('_');
-    const year = parts[0] || '';
-    const weekNum = parts[1] || weekStr;
-
-    // Check if this is the first tick of a new year or the first tick overall
-    const prevWeek = index > 0 ? animatedData[index - 1]?.week : null;
-    const prevYear = prevWeek ? prevWeek.split('_')[0] : null;
-    const isFirstOfYear = index === 0 || year !== prevYear;
-
-    // Check if next tick is a different year (to know where year group ends)
-    const nextWeek = index < animatedData.length - 1 ? animatedData[index + 1]?.week : null;
-    const nextYear = nextWeek ? nextWeek.split('_')[0] : null;
-    const isLastOfYear = index === animatedData.length - 1 || year !== nextYear;
-    // Show week label every 2 weeks, at year boundaries, or at last item
-    const showWeekLabel = isFirstOfYear || isLastOfYear || (index % 2 === 0);
-
-    return (
-      <g transform={`translate(${x},${y})`}>
-        {/* Week number on top - black for visibility */}
-        {showWeekLabel && (
-          <text
-            x={0}
-            y={0}
-            dy={12}
-            textAnchor="middle"
-            fill="#333333"
-            fontSize={10}
-            fontWeight="500"
-          >
-            {weekNum}
-          </text>
-        )}
-
-        {/* Year label - only show at the start of each year group */}
-        {isFirstOfYear && (
-          <text
-            x={2}
-            y={0}
-            dy={32}
-            textAnchor="start"
-            fill="var(--color-text-03)"
-            fontSize={10}
-            fontWeight="bold"
-          >
-            {year.length === 2 ? `20${year}` : year}
-          </text>
-        )}
-
-        {/* Year grouping line - solid by increasing overlap */}
-        <line
-          x1={isFirstOfYear ? 0 : -50}
-          y1={20}
-          x2={isLastOfYear ? 0 : 50}
-          y2={20}
-          stroke="var(--color-text-03)"
-          strokeWidth={1.5}
-        />
-      </g>
-    );
-  };
-
-  // Custom tooltip component
-  // ...existing code...
-  const CustomTooltip = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: VolumeDataPoint; value: number }> }) => {
-    if (active && payload && payload.length) {
-      const weekStr = payload[0].payload.week;
-      const parts = weekStr.split('_');
-      const displayLabel = parts.length === 2 ? `Týden ${parts[1]}/${parts[0]}` : weekStr;
-
-      return (
-        <div className="bg-gray-800 text-white text-xs rounded py-2 px-3 shadow-lg">
-          <p className="font-semibold">{displayLabel}</p>
-          <p className="text-[var(--color-primary-light)]">{payload[0].value.toFixed(2)} m³</p>
-        </div>
-      );
-    }
-    return null;
-  };
+  // Memoize the tick component to pass animatedData without recreating it
+  const renderXAxisTick = useMemo(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (props: any) => <CustomXAxisTick {...props} chartData={animatedData} />;
+  }, [animatedData]);
 
   return (
     <>
@@ -356,7 +367,7 @@ const VolumeInTimeChart: React.FC<VolumeInTimeChartProps> = ({
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-text-03)" opacity={0.3} />
               <XAxis
                 dataKey="week"
-                tick={<CustomXAxisTick />}
+                tick={renderXAxisTick}
                 tickLine={false}
                 axisLine={{ stroke: 'var(--color-text-03)' }}
                 height={55}

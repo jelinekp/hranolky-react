@@ -33,6 +33,7 @@ export const useChartLoadingState = (
   // Reset manual load request when filter state changes
   useEffect(() => {
     if (shouldWaitForManualLoad) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setManualLoadRequested(false);
     } else {
       setManualLoadRequested(true);

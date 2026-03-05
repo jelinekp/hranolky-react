@@ -19,14 +19,15 @@ describe('UserManagement Component', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    (useUserManagement as any).mockReturnValue({
+    vi.mocked(useUserManagement).mockReturnValue({
       admins: ['admin1@test.com'],
       allowedUsers: ['user1@test.com'],
       loading: false,
+      error: null,
       addUser: mockAddUser,
       removeUser: mockRemoveUser
     });
-    (useAuth as any).mockReturnValue({ user: { email: 'current@test.com' } });
+    vi.mocked(useAuth).mockReturnValue({ user: { email: 'current@test.com' } } as ReturnType<typeof useAuth>);
   });
 
   it('renders existing users', () => {
@@ -41,10 +42,7 @@ describe('UserManagement Component', () => {
     const adminInput = screen.getByPlaceholderText('Email admina');
     fireEvent.change(adminInput, { target: { value: 'new-admin@test.com' } });
 
-    const addButton = screen.getAllByRole('button').find(b => b.querySelector('svg[data-icon="plus"]'));
-    // Since plus icon might be harder to find by role, let's use the first form submit
-    const forms = screen.getAllByRole('form', { hidden: true }); // We added role="form" implicitly or via onSubmit
-    // Actually our implementation doesn't have role="form" explicitly, but we can find the button
+    // Find the submit button for the admin form
 
     const submitButtons = screen.getAllByRole('button');
     // The first plus button is for admins
@@ -56,10 +54,11 @@ describe('UserManagement Component', () => {
   });
 
   it('shows loading state', () => {
-    (useUserManagement as any).mockReturnValue({
+    vi.mocked(useUserManagement).mockReturnValue({
       admins: [],
       allowedUsers: [],
       loading: true,
+      error: null,
       addUser: vi.fn(),
       removeUser: vi.fn()
     });
