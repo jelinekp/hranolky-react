@@ -10,21 +10,38 @@ import {
   getWeeklyReportsPath,
   getSlotCollectionName,
   formatWeekId,
-  getWeekValue
+  getWeekValue,
+  getCurrentWeekLabel
 } from "hranolky-firestore-common";
 
-// Helper to fill GAPS between recorded weeks by carrying forward the last volume
-function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
-  if (data.length < 2) return data;
+// Helper to advance a 2-digit year + week by one week, handling year rollover
+function advanceWeek(y: number, w: number): { y: number; w: number } {
+  w++;
+  if (w > 52) {
+    const year4Digit = 2000 + y;
+    const dec31 = new Date(Date.UTC(year4Digit, 11, 31));
+    const dayNum = dec31.getUTCDay() || 7;
+    // If Dec 31 is Thu, Fri, Sat or Sun, there's a week 53
+    const hasWeek53 = dayNum >= 4;
+
+    if (w > (hasWeek53 ? 53 : 52)) {
+      w = 1;
+      y = (y + 1) % 100;
+    }
+  }
+  return { y, w };
+}
+
+// Helper to fill GAPS between recorded weeks by carrying forward the last volume.
+// If extendToWeek is provided (e.g. current week label), the last data point's
+// volume is also carried forward up to that week, ensuring complete coverage.
+function fillHistoricalGaps(data: VolumeDataPoint[], extendToWeek?: string): VolumeDataPoint[] {
+  if (data.length === 0) return data;
+  if (data.length === 1 && !extendToWeek) return data;
 
   const result: VolumeDataPoint[] = [];
 
-  // Helper to get a comparable value for a week label "YY_WW"
-  // Now using shared getWeekValue function
-
-  // Helper to get the canonical label from year and week
-  // Now using shared formatWeekId function
-
+  // Fill gaps between consecutive data points
   for (let i = 0; i < data.length - 1; i++) {
     result.push(data[i]);
 
@@ -33,26 +50,12 @@ function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
 
     if (isNaN(y) || isNaN(w)) continue;
 
-    // Safety counter to prevent infinite loops (max 3 year of gaps)
+    // Safety counter to prevent infinite loops (max 3 years of gaps)
     let safety = 0;
     while (safety < 160) {
       safety++;
 
-      // Advance to next week
-      w++;
-      if (w > 52) {
-        // Simple check for week 53 vs week 1 of next year
-        const year4Digit = 2000 + y;
-        const dec31 = new Date(Date.UTC(year4Digit, 11, 31));
-        const dayNum = dec31.getUTCDay() || 7;
-        // If Dec 31 is Thu, Fri, Sat or Sun, there's a week 53
-        const hasWeek53 = dayNum >= 4;
-
-        if (w > (hasWeek53 ? 53 : 52)) {
-          w = 1;
-          y = (y + 1) % 100;
-        }
-      }
+      ({ y, w } = advanceWeek(y, w));
 
       const currentLabel = formatWeekId(y, w);
       if (getWeekValue(currentLabel) >= targetValue) break;
@@ -64,7 +67,33 @@ function fillHistoricalGaps(data: VolumeDataPoint[]): VolumeDataPoint[] {
     }
   }
 
-  result.push(data[data.length - 1]);
+  // Add the last actual data point
+  const lastPoint = data[data.length - 1];
+  result.push(lastPoint);
+
+  // Extend the last data point forward to extendToWeek (e.g. current week)
+  if (extendToWeek) {
+    const extendToValue = getWeekValue(extendToWeek);
+    let [y, w] = lastPoint.week.split('_').map(Number);
+
+    if (!isNaN(y) && !isNaN(w)) {
+      let safety = 0;
+      while (safety < 160) {
+        safety++;
+
+        ({ y, w } = advanceWeek(y, w));
+
+        const currentLabel = formatWeekId(y, w);
+        if (getWeekValue(currentLabel) > extendToValue) break;
+
+        result.push({
+          week: currentLabel,
+          volume: lastPoint.volume
+        });
+      }
+    }
+  }
+
   return result;
 }
 
@@ -216,8 +245,10 @@ export const useFetchFilteredVolumeHistory = (
             };
           }).sort((a, b) => a.week.localeCompare(b.week)); // Sort chronologically
 
-          // Fill gaps for this slot locally to ensure carry-forward works correctly per slot
-          const slotData = fillHistoricalGaps(slotDataOriginal);
+          // Fill gaps for this slot locally and extend to current week to ensure
+          // carry-forward works correctly per slot across year boundaries
+          const currentWeek = getCurrentWeekLabel();
+          const slotData = fillHistoricalGaps(slotDataOriginal, currentWeek);
 
           allSlotData.set(slotId, slotData);
         } catch (error) {
