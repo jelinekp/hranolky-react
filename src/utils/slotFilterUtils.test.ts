@@ -57,6 +57,21 @@ describe('slotFilterUtils', () => {
       const result = extractDistinctValues(slots);
       expect(result.qualities.size).toBe(2);
     });
+
+    it('returns values in ascending order', () => {
+      const slots = [
+        createMockSlot('1', { quality: 'ZIRBE', thickness: 85, width: 295, length: 2400 }),
+        createMockSlot('2', { quality: 'BUK', thickness: 20, width: 100, length: 1200 }),
+        createMockSlot('3', { quality: 'DUB A/A', thickness: 42.4, width: 190, length: 1800 })
+      ];
+
+      const result = extractDistinctValues(slots);
+
+      expect(Array.from(result.qualities)).toEqual(['BUK', 'DUB A/A', 'ZIRBE']);
+      expect(Array.from(result.thicknesses)).toEqual([20, 42.4, 85]);
+      expect(Array.from(result.widths)).toEqual([100, 190, 295]);
+      expect(Array.from(result.lengths)).toEqual([1200, 1800, 2400]);
+    });
   });
 
   describe('toggleFilter', () => {

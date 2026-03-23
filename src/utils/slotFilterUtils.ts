@@ -8,6 +8,10 @@
 import { WarehouseSlotClass } from 'hranolky-firestore-common';
 import { SlotFiltersClass, IntervalMmClass } from '../model/SlotFilter';
 
+function createSortedSet<T>(values: T[], compareFn: (a: T, b: T) => number): Set<T> {
+  return new Set(values.sort(compareFn));
+}
+
 /**
  * Check if a slot matches the given filters
  */
@@ -58,10 +62,22 @@ export function calculateTotalVolume(slots: WarehouseSlotClass[]): number {
  */
 export function extractDistinctValues(slots: WarehouseSlotClass[]) {
   return {
-    qualities: new Set(slots.map(s => s.quality ?? "").filter(q => q !== "")),
-    thicknesses: new Set(slots.map(s => s.thickness ?? 0).filter(t => t !== 0)),
-    widths: new Set(slots.map(s => s.width ?? 0).filter(w => w !== 0)),
-    lengths: new Set(slots.map(s => s.length ?? 0).filter(l => l !== 0))
+    qualities: createSortedSet(
+      Array.from(new Set(slots.map(s => s.quality ?? "").filter(q => q !== ""))),
+      (a, b) => a.localeCompare(b)
+    ),
+    thicknesses: createSortedSet(
+      Array.from(new Set(slots.map(s => s.thickness ?? 0).filter(t => t !== 0))),
+      (a, b) => a - b
+    ),
+    widths: createSortedSet(
+      Array.from(new Set(slots.map(s => s.width ?? 0).filter(w => w !== 0))),
+      (a, b) => a - b
+    ),
+    lengths: createSortedSet(
+      Array.from(new Set(slots.map(s => s.length ?? 0).filter(l => l !== 0))),
+      (a, b) => a - b
+    )
   };
 }
 

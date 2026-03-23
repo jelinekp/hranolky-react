@@ -25,15 +25,31 @@ export interface SlotFilteringResult {
   hasActiveFilters: boolean;
 }
 
+function createSortedSet<T>(values: T[], compareFn: (a: T, b: T) => number): Set<T> {
+  return new Set(values.sort(compareFn));
+}
+
 /**
  * Extract distinct filter values from slots
  */
 function getDistinctFilterValues(slots: WarehouseSlotClass[]): DistinctFilterValues {
   return {
-    qualities: new Set(slots.map(slot => slot.quality ?? "").filter(q => q !== "")),
-    thicknesses: new Set(slots.map(slot => slot.thickness ?? 0).filter(t => t !== 0)),
-    widths: new Set(slots.map(slot => slot.width ?? 0).filter(w => w !== 0)),
-    lengths: new Set(slots.map(slot => slot.length ?? 0).filter(l => l !== 0))
+    qualities: createSortedSet(
+      Array.from(new Set(slots.map(slot => slot.quality ?? "").filter(q => q !== ""))),
+      (a, b) => a.localeCompare(b)
+    ),
+    thicknesses: createSortedSet(
+      Array.from(new Set(slots.map(slot => slot.thickness ?? 0).filter(t => t !== 0))),
+      (a, b) => a - b
+    ),
+    widths: createSortedSet(
+      Array.from(new Set(slots.map(slot => slot.width ?? 0).filter(w => w !== 0))),
+      (a, b) => a - b
+    ),
+    lengths: createSortedSet(
+      Array.from(new Set(slots.map(slot => slot.length ?? 0).filter(l => l !== 0))),
+      (a, b) => a - b
+    )
   };
 }
 
