@@ -6,7 +6,7 @@
  * Usage:
  *   node deploy-ftp.js
  *   node deploy-ftp.js --password YOUR_PASSWORD
- *   npm run deploy
+ *   pnpm run deploy
  */
 
 import ftp from 'basic-ftp';
@@ -125,7 +125,7 @@ function promptBuild() {
   });
 
   return new Promise((resolve) => {
-    rl.question('⚠️  No recent build found (max 1 minute old). Run npm run build first? (y/n): ', (answer) => {
+    rl.question('⚠️  No recent build found (max 1 minute old). Run pnpm run build first? (y/n): ', (answer) => {
       rl.close();
       resolve(answer.toLowerCase() === 'y' || answer.toLowerCase() === 'yes');
     });
@@ -145,7 +145,7 @@ async function checkBuildAge() {
       // Use dynamic import to run the build
       const { execSync } = await import('child_process');
       try {
-        execSync('npm run build', { stdio: 'inherit', cwd: __dirname });
+        execSync('pnpm run build', { stdio: 'inherit', cwd: __dirname });
         console.log('\n✅ Build complete!\n');
       } catch (error) {
         console.error('\n❌ Build failed:', error.message);
@@ -173,7 +173,7 @@ function getFilesToUpload() {
       remote: path.posix.join(REMOTE_DIR, 'index.html')
     });
   } else {
-    throw new Error('index.html not found in dist directory. Did you run `npm run build`?');
+    throw new Error('index.html not found in dist directory. Did you run `pnpm run build`?');
   }
 
   // Add assets files (JS and CSS)
