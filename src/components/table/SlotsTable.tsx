@@ -20,7 +20,7 @@ function SlotsTable({ warehouseSlots, activeFilters, sortingBy, sortingOrder, se
 }) {
   const [expandedSlotId, setExpandedSlotId] = useState<string | null>(null);
   const [closingSlotId, setClosingSlotId] = useState<string | null>(null);
-  const { slotActions, loading: actionsLoading } = useFetchSlotActions(expandedSlotId, slotType);
+  const { slotActions, loading: actionsLoading, hasMore, loadAll } = useFetchSlotActions(expandedSlotId, slotType);
 
   const handleSlotToggle = (slotId: string) => {
     if (expandedSlotId === slotId) {
@@ -103,6 +103,8 @@ function SlotsTable({ warehouseSlots, activeFilters, sortingBy, sortingOrder, se
                       key={`${slot.productId}-actions`}
                       actions={slotActions}
                       loading={actionsLoading}
+                      hasMore={hasMore}
+                      onLoadMore={loadAll}
                       isClosing={isClosing}
                       devices={devices}
                     />

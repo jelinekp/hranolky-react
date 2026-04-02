@@ -6,11 +6,20 @@ import {formatCsDate} from "../FormatDate";
 interface SlotActionsRowProps {
     actions: SlotActionClass[];
     loading: boolean;
+    hasMore: boolean;
+    onLoadMore: () => void;
     isClosing?: boolean;
     devices: Map<string, string | null>;
 }
 
-const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClosing = false, devices}) => {
+const SlotActionsRow: React.FC<SlotActionsRowProps> = ({
+    actions,
+    loading,
+    hasMore,
+    onLoadMore,
+    isClosing = false,
+    devices
+}) => {
     const animationClass = isClosing
         ? "animate-[slideUp_400ms_ease-out]"
         : "animate-[slideDown_400ms_ease-out]";
@@ -56,6 +65,26 @@ const SlotActionsRow: React.FC<SlotActionsRowProps> = ({actions, loading, isClos
                                     </div>
                                 </div>
                             ))}
+                            {hasMore && (
+                                <div
+                                    className="grid grid-cols-9 gap-2 py-1 px-2 bg-[var(--md-rgb-color-surface)] rounded animate-[fadeInSlideUp_300ms_ease-out_forwards]"
+                                    style={{
+                                        animationDelay: `${actions.length * 50}ms`
+                                    }}
+                                >
+                                    <div
+                                        className="col-span-9 text-center font-medium text-[var(--color-primary)]"
+                                        onClick={onLoadMore}
+                                        aria-disabled={loading}
+                                        style={{
+                                            cursor: loading ? 'not-allowed' : 'pointer',
+                                            opacity: loading ? 0.6 : 1
+                                        }}
+                                    >
+                                        {loading ? 'Načítám všechny akce...' : 'Načíst vše'}
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
