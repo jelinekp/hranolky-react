@@ -1,5 +1,5 @@
 /**
- * CSV Export utility for exporting filtered warehouse slots with weekly quantities
+ * Excel export utility for exporting filtered warehouse slots with weekly quantities and volumes
  */
 
 import { collection, getDocs } from 'firebase/firestore';
@@ -104,6 +104,21 @@ function buildSlotExportQuantities(
   return quantities;
 }
 
+function calculateSlotVolumeDm(slot: WarehouseSlotClass, quantity: number): number {
+  if (!slot.thickness || !slot.width || !slot.length) {
+    return 0;
+  }
+
+  return Number(((quantity * slot.length * slot.thickness * slot.width) / 1_000_000).toFixed(3));
+}
+
+function buildSlotExportVolumes(
+  slot: WarehouseSlotClass,
+  quantities: number[]
+): number[] {
+  return quantities.map(quantity => calculateSlotVolumeDm(slot, quantity));
+}
+
 function formatExportTimestamp(date: Date): string {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -126,28 +141,47 @@ function buildExportHeader(allWeeks: string[], exportTimestampLabel: string): st
   ];
 }
 
-// Generate CSV content
-function generateCsvContent(
+function buildSheetRows(
   slots: WarehouseSlotClass[],
   weeklyDataMap: Map<string, Map<string, number>>,
   allWeeks: string[],
-  exportTimestampLabel: string
-): string {
-  // Header row
-  const header = buildExportHeader(allWeeks, exportTimestampLabel).join(',');
+  exportTimestampLabel: string,
+  valueBuilder: (slot: WarehouseSlotClass, quantities: number[]) => Array<number | string>
+): Array<Array<string | number>> {
+  const header = buildExportHeader(allWeeks, exportTimestampLabel);
 
-  // Data rows
   const rows = slots.map(slot => {
     const quantities = buildSlotExportQuantities(slot, weeklyDataMap, allWeeks);
-    return [slot.productId, ...quantities].join(',');
+    return [slot.productId, ...valueBuilder(slot, quantities)];
   });
 
-  return [header, ...rows].join('\n');
+  return [header, ...rows];
+}
+
+async function createWorkbookBlob(
+  quantitiesRows: Array<Array<string | number>>,
+  volumeRows: Array<Array<string | number>>
+): Promise<Blob> {
+  const XLSX = await import('xlsx');
+  const workbook = XLSX.utils.book_new();
+
+  const quantitiesSheet = XLSX.utils.aoa_to_sheet(quantitiesRows);
+  const volumeSheet = XLSX.utils.aoa_to_sheet(volumeRows);
+
+  quantitiesSheet['!cols'] = quantitiesRows[0].map((_, index) => ({ wch: index === 0 ? 28 : 18 }));
+  volumeSheet['!cols'] = volumeRows[0].map((_, index) => ({ wch: index === 0 ? 28 : 18 }));
+
+  XLSX.utils.book_append_sheet(workbook, quantitiesSheet, 'Kusy');
+  XLSX.utils.book_append_sheet(workbook, volumeSheet, 'Objemy dm3');
+
+  const workbookArray = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+  return new Blob([workbookArray], {
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  });
 }
 
 // Trigger browser download
-function downloadCsv(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+function downloadFile(blob: Blob, filename: string): void {
   const link = document.createElement('a');
   const url = URL.createObjectURL(blob);
 
@@ -161,12 +195,12 @@ function downloadCsv(content: string, filename: string): void {
 }
 
 /**
- * Export filtered slots to CSV with weekly quantities
+ * Export filtered slots to Excel with weekly quantities and volumes
  * @param filteredSlots - Array of filtered warehouse slots to export
  * @param slotType - Type of slots (Beam/Jointer) to determine collection
  * @param onProgress - Optional callback for progress updates (0-100)
  */
-export async function exportSlotsToCsv(
+export async function exportSlotsToExcel(
   filteredSlots: WarehouseSlotClass[],
   slotType: SlotType,
   onProgress?: (progress: number, status: string) => void
@@ -201,21 +235,34 @@ export async function exportSlotsToCsv(
     weeklyDataMap.set(slot.productId, reports);
   }
 
-  onProgress?.(90, 'Generování CSV...');
+  onProgress?.(90, 'Generování Excelu...');
   const exportDate = new Date();
   const exportTimestampLabel = formatExportTimestamp(exportDate);
 
-  // Generate CSV content
-  const csvContent = generateCsvContent(filteredSlots, weeklyDataMap, allWeeks, exportTimestampLabel);
+  const quantitiesRows = buildSheetRows(
+    filteredSlots,
+    weeklyDataMap,
+    allWeeks,
+    exportTimestampLabel,
+    (_slot, quantities) => quantities
+  );
+  const volumeRows = buildSheetRows(
+    filteredSlots,
+    weeklyDataMap,
+    allWeeks,
+    exportTimestampLabel,
+    (slot, quantities) => buildSlotExportVolumes(slot, quantities)
+  );
+  const workbookBlob = await createWorkbookBlob(quantitiesRows, volumeRows);
 
   onProgress?.(95, 'Stahování...');
 
   // Create filename with timestamp
   const timestamp = exportDate.toISOString().split('T')[0];
-  const filename = `${collectionName}_export_${timestamp}.csv`;
+  const filename = `${collectionName}_export_${timestamp}.xlsx`;
 
   // Trigger download
-  downloadCsv(csvContent, filename);
+  downloadFile(workbookBlob, filename);
 
   onProgress?.(100, 'Export dokončen!');
 }

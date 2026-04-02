@@ -7,7 +7,7 @@ describe('Export Flow Integration', () => {
   const defaultProps = {
     isOpen: true,
     onClose: vi.fn(),
-    onExportCsv: vi.fn(),
+    onExportExcel: vi.fn(),
     onCopyToClipboard: vi.fn(),
     isExporting: false,
     isCopying: false,
@@ -33,16 +33,16 @@ describe('Export Flow Integration', () => {
   })
 
   describe('export actions', () => {
-    it('calls onExportCsv when export button clicked', async () => {
+    it('calls onExportExcel when export button clicked', async () => {
       const user = userEvent.setup()
-      const onExportCsv = vi.fn()
+      const onExportExcel = vi.fn()
 
-      render(<ExportDialog {...defaultProps} onExportCsv={onExportCsv} />)
+      render(<ExportDialog {...defaultProps} onExportExcel={onExportExcel} />)
 
-      const exportButton = screen.getByRole('button', { name: /Stáhnout jako CSV/ })
+      const exportButton = screen.getByRole('button', { name: /Stáhnout jako Excel/ })
       await user.click(exportButton)
 
-      expect(onExportCsv).toHaveBeenCalledTimes(1)
+      expect(onExportExcel).toHaveBeenCalledTimes(1)
     })
 
     it('calls onCopyToClipboard when copy button clicked', async () => {
@@ -88,8 +88,8 @@ describe('Export Flow Integration', () => {
     it('disables buttons when exporting', () => {
       render(<ExportDialog {...defaultProps} isExporting={true} />)
 
-      const csvButton = screen.getByRole('button', { name: /Stáhnout jako CSV/ })
-      expect(csvButton).toBeDisabled()
+      const excelButton = screen.getByRole('button', { name: /Stáhnout jako Excel/ })
+      expect(excelButton).toBeDisabled()
     })
 
     it('disables buttons when copying', () => {

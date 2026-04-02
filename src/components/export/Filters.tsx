@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons/faArrowRotateLeft";
 import { faFileExport } from "@fortawesome/free-solid-svg-icons/faFileExport";
 import { WarehouseSlotClass, SlotType } from "hranolky-firestore-common";
-import { exportSlotsToCsv, copySlotsToClipboard } from "../../hooks/reports/exportToCsv";
+import { exportSlotsToExcel, copySlotsToClipboard } from "../../hooks/reports/exportToCsv";
 import ExportDialog from "./ExportDialog";
 
 type FilterType = 'quality' | 'thickness' | 'width' | 'lengthInterval' | 'allLength';
@@ -63,7 +63,7 @@ function Filters(props: {
         setExportStatus('Připravuji export...');
 
         try {
-            await exportSlotsToCsv(filteredSlots, slotType, (progress, status) => {
+            await exportSlotsToExcel(filteredSlots, slotType, (progress, status) => {
                 setExportProgress(progress);
                 setExportStatus(status);
             });
@@ -238,7 +238,7 @@ function Filters(props: {
             <ExportDialog
                 isOpen={showExportDialog}
                 onClose={() => setShowExportDialog(false)}
-                onExportCsv={handleExport}
+                onExportExcel={handleExport}
                 onCopyToClipboard={handleCopyToClipboard}
                 isExporting={isExporting}
                 isCopying={isCopying}

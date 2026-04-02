@@ -15,8 +15,8 @@ export interface ExportDialogProps {
   isOpen: boolean
   /** Callback to close the dialog */
   onClose: () => void
-  /** Callback for CSV export action */
-  onExportCsv: () => void
+  /** Callback for Excel export action */
+  onExportExcel: () => void
   /** Callback for clipboard copy action */
   onCopyToClipboard: () => void
   /** Whether an export operation is in progress */
@@ -33,7 +33,7 @@ export interface ExportDialogProps {
 const ExportDialog: React.FC<ExportDialogProps> = ({
   isOpen,
   onClose,
-  onExportCsv,
+  onExportExcel,
   onCopyToClipboard,
   isExporting,
   isCopying,
@@ -46,9 +46,9 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
   const buttonEnabledClass = "hover:bg-grey hover:border-blue-500 cursor-pointer border-gray-300"
   const buttonDisabledClass = "opacity-50 cursor-not-allowed bg-gray-100"
 
-  const handleExportCsv = () => {
+  const handleExportExcel = () => {
     onClose()
-    onExportCsv()
+    onExportExcel()
   }
 
   const handleCopyToClipboard = () => {
@@ -78,14 +78,14 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
 
         <div className="space-y-3">
           <button
-            onClick={handleExportCsv}
+            onClick={handleExportExcel}
             disabled={isDisabled}
             className={`${buttonBaseClass} ${isDisabled ? buttonDisabledClass : buttonEnabledClass}`}
           >
             <FontAwesomeIcon icon={faFileExport} className="text-xl" />
             <div>
-              <div className="font-semibold">Stáhnout jako CSV</div>
-              <div className="text-sm text-gray-600">Uložit data do CSV souboru</div>
+              <div className="font-semibold">Stáhnout jako Excel</div>
+              <div className="text-sm text-gray-600">Uložit data do XLSX sešitu se dvěma listy s množstvím a objemy</div>
             </div>
           </button>
 
@@ -97,7 +97,7 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
             <FontAwesomeIcon icon={faCopy} className="text-xl" />
             <div>
               <div className="font-semibold">Kopírovat pro Excel</div>
-              <div className="text-sm text-gray-600">Zkopírovat data do schránky</div>
+              <div className="text-sm text-gray-600">Zkopírovat jen množství do schránky</div>
             </div>
           </button>
         </div>

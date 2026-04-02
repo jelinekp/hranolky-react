@@ -7,7 +7,7 @@ describe('ExportDialog', () => {
   const defaultProps = {
     isOpen: true,
     onClose: vi.fn(),
-    onExportCsv: vi.fn(),
+    onExportExcel: vi.fn(),
     onCopyToClipboard: vi.fn(),
     isExporting: false,
     isCopying: false,
@@ -23,7 +23,7 @@ describe('ExportDialog', () => {
       render(<ExportDialog {...defaultProps} />)
 
       expect(screen.getByText('Exportovat historii stavů')).toBeInTheDocument()
-      expect(screen.getByText('Stáhnout jako CSV')).toBeInTheDocument()
+      expect(screen.getByText('Stáhnout jako Excel')).toBeInTheDocument()
       expect(screen.getByText('Kopírovat pro Excel')).toBeInTheDocument()
       expect(screen.getByText('Zrušit')).toBeInTheDocument()
     })
@@ -48,23 +48,23 @@ describe('ExportDialog', () => {
   })
 
   describe('interactions', () => {
-    it('calls onExportCsv and onClose when CSV button clicked', async () => {
+    it('calls onExportExcel and onClose when Excel button clicked', async () => {
       const user = userEvent.setup()
-      const onExportCsv = vi.fn()
+      const onExportExcel = vi.fn()
       const onClose = vi.fn()
 
       render(
         <ExportDialog
           {...defaultProps}
-          onExportCsv={onExportCsv}
+          onExportExcel={onExportExcel}
           onClose={onClose}
         />
       )
 
-      await user.click(screen.getByText('Stáhnout jako CSV'))
+      await user.click(screen.getByText('Stáhnout jako Excel'))
 
       expect(onClose).toHaveBeenCalled()
-      expect(onExportCsv).toHaveBeenCalled()
+      expect(onExportExcel).toHaveBeenCalled()
     })
 
     it('calls onCopyToClipboard and onClose when copy button clicked', async () => {
@@ -116,14 +116,14 @@ describe('ExportDialog', () => {
     it('disables buttons when exporting', () => {
       render(<ExportDialog {...defaultProps} isExporting={true} />)
 
-      expect(screen.getByText('Stáhnout jako CSV').closest('button')).toBeDisabled()
+      expect(screen.getByText('Stáhnout jako Excel').closest('button')).toBeDisabled()
       expect(screen.getByText('Kopírovat pro Excel').closest('button')).toBeDisabled()
     })
 
     it('disables buttons when copying', () => {
       render(<ExportDialog {...defaultProps} isCopying={true} />)
 
-      expect(screen.getByText('Stáhnout jako CSV').closest('button')).toBeDisabled()
+      expect(screen.getByText('Stáhnout jako Excel').closest('button')).toBeDisabled()
       expect(screen.getByText('Kopírovat pro Excel').closest('button')).toBeDisabled()
     })
   })
