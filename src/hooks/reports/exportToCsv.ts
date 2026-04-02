@@ -87,6 +87,23 @@ function fillMissingWeeks(
   return filled;
 }
 
+function buildSlotExportQuantities(
+  slot: WarehouseSlotClass,
+  weeklyDataMap: Map<string, Map<string, number>>,
+  allWeeks: string[]
+): number[] {
+  const slotWeeklyData = weeklyDataMap.get(slot.productId) || new Map();
+  const filledData = fillMissingWeeks(slotWeeklyData, allWeeks);
+  const quantities = allWeeks.map(week => filledData.get(week) || 0);
+
+  // Mirror the chart behavior: the current week endpoint uses the live slot quantity.
+  if (quantities.length > 0) {
+    quantities[quantities.length - 1] = slot.quantity;
+  }
+
+  return quantities;
+}
+
 // Generate CSV content
 function generateCsvContent(
   slots: WarehouseSlotClass[],
@@ -98,10 +115,7 @@ function generateCsvContent(
 
   // Data rows
   const rows = slots.map(slot => {
-    const slotWeeklyData = weeklyDataMap.get(slot.productId) || new Map();
-    const filledData = fillMissingWeeks(slotWeeklyData, allWeeks);
-
-    const quantities = allWeeks.map(week => filledData.get(week) || 0);
+    const quantities = buildSlotExportQuantities(slot, weeklyDataMap, allWeeks);
     return [slot.productId, ...quantities].join(',');
   });
 
@@ -192,10 +206,7 @@ function generateTsvContent(
 
   // Data rows
   const rows = slots.map(slot => {
-    const slotWeeklyData = weeklyDataMap.get(slot.productId) || new Map();
-    const filledData = fillMissingWeeks(slotWeeklyData, allWeeks);
-
-    const quantities = allWeeks.map(week => filledData.get(week) || 0);
+    const quantities = buildSlotExportQuantities(slot, weeklyDataMap, allWeeks);
     return [slot.productId, ...quantities].join('\t');
   });
 

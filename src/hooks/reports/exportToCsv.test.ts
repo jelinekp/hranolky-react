@@ -130,27 +130,46 @@ describe('exportToCsv utilities', () => {
   })
 
   describe('generateCsvContent logic', () => {
-    it('formats CSV with header and data rows', () => {
+    it('formats CSV with header and data rows and uses live quantity for the current week', () => {
       const slotIds = ['H-DUB-A|A-27-42-1200', 'H-DUB-B|B-20-38-600']
       const weeks = ['25_27', '25_28']
       const weeklyDataMap = new Map<string, Map<string, number>>([
         ['H-DUB-A|A-27-42-1200', new Map([['25_27', 100], ['25_28', 110]])],
-        ['H-DUB-B|B-20-38-600', new Map([['25_27', 50], ['25_28', 55]])],
+        ['H-DUB-B|B-20-38-600', new Map([['25_27', 50]])],
+      ])
+      const liveQuantities = new Map<string, number>([
+        ['H-DUB-A|A-27-42-1200', 125],
+        ['H-DUB-B|B-20-38-600', 60],
       ])
 
       // Simulate CSV generation
       const header = ['slotId', ...weeks].join(',')
       const rows = slotIds.map(slotId => {
         const data = weeklyDataMap.get(slotId) || new Map()
-        const quantities = weeks.map(week => data.get(week) || 0)
+        const filled = new Map<string, number>()
+        let lastValue = 0
+
+        for (const week of weeks) {
+          const value = data.get(week)
+          if (value !== undefined) {
+            lastValue = value
+          }
+          filled.set(week, lastValue)
+        }
+
+        const quantities = weeks.map((week, index) =>
+          index === weeks.length - 1
+            ? liveQuantities.get(slotId) || 0
+            : filled.get(week) || 0
+        )
         return [slotId, ...quantities].join(',')
       })
       const csv = [header, ...rows].join('\n')
 
       expect(csv).toBe(
         'slotId,25_27,25_28\n' +
-        'H-DUB-A|A-27-42-1200,100,110\n' +
-        'H-DUB-B|B-20-38-600,50,55'
+        'H-DUB-A|A-27-42-1200,100,125\n' +
+        'H-DUB-B|B-20-38-600,50,60'
       )
     })
   })
