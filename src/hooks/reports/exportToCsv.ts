@@ -62,7 +62,7 @@ async function fetchSlotWeeklyReports(
       reports.set(doc.id, data.quantity);
     });
   } catch (error) {
-    console.warn(`Failed to fetch reports for ${collectionName}/${slotId}:`, error);
+    console.warn(`Nepodařilo se vyexportovat data pro položku ${collectionName}/${slotId}:`, error);
   }
 
   return reports;
@@ -274,7 +274,7 @@ export async function copySlotsToClipboard(
   for (let i = 0; i < filteredSlots.length; i++) {
     const slot = filteredSlots[i];
     const progress = 5 + Math.round((i / filteredSlots.length) * 85);
-    onProgress?.(progress, `Načítám ${slot.productId}...`);
+    onProgress?.(progress, `Stahuji stavy pro ${slot.productId}...`);
 
     const reports = await fetchSlotWeeklyReports(collectionName, slot.productId);
     weeklyDataMap.set(slot.productId, reports);
