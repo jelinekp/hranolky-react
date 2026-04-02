@@ -143,7 +143,8 @@ describe('exportToCsv utilities', () => {
       ])
 
       // Simulate CSV generation
-      const header = ['slotId', ...weeks].join(',')
+      const exportTimestampLabel = '2026-04-02 09:35'
+      const header = ['slotId', '25_27', `Poslední živá data (${exportTimestampLabel})`].join(',')
       const rows = slotIds.map(slotId => {
         const data = weeklyDataMap.get(slotId) || new Map()
         const filled = new Map<string, number>()
@@ -167,7 +168,7 @@ describe('exportToCsv utilities', () => {
       const csv = [header, ...rows].join('\n')
 
       expect(csv).toBe(
-        'slotId,25_27,25_28\n' +
+        `slotId,25_27,Poslední živá data (${exportTimestampLabel})\n` +
         'H-DUB-A|A-27-42-1200,100,125\n' +
         'H-DUB-B|B-20-38-600,50,60'
       )

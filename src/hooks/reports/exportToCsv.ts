@@ -104,14 +104,37 @@ function buildSlotExportQuantities(
   return quantities;
 }
 
+function formatExportTimestamp(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+
+  return `${year}-${month}-${day} ${hours}:${minutes}`;
+}
+
+function buildExportHeader(allWeeks: string[], exportTimestampLabel: string): string[] {
+  if (allWeeks.length === 0) {
+    return ['slotId'];
+  }
+
+  return [
+    'slotId',
+    ...allWeeks.slice(0, -1),
+    `Poslední živá data (${exportTimestampLabel})`
+  ];
+}
+
 // Generate CSV content
 function generateCsvContent(
   slots: WarehouseSlotClass[],
   weeklyDataMap: Map<string, Map<string, number>>,
-  allWeeks: string[]
+  allWeeks: string[],
+  exportTimestampLabel: string
 ): string {
   // Header row
-  const header = ['slotId', ...allWeeks].join(',');
+  const header = buildExportHeader(allWeeks, exportTimestampLabel).join(',');
 
   // Data rows
   const rows = slots.map(slot => {
@@ -179,14 +202,16 @@ export async function exportSlotsToCsv(
   }
 
   onProgress?.(90, 'Generování CSV...');
+  const exportDate = new Date();
+  const exportTimestampLabel = formatExportTimestamp(exportDate);
 
   // Generate CSV content
-  const csvContent = generateCsvContent(filteredSlots, weeklyDataMap, allWeeks);
+  const csvContent = generateCsvContent(filteredSlots, weeklyDataMap, allWeeks, exportTimestampLabel);
 
   onProgress?.(95, 'Stahování...');
 
   // Create filename with timestamp
-  const timestamp = new Date().toISOString().split('T')[0];
+  const timestamp = exportDate.toISOString().split('T')[0];
   const filename = `${collectionName}_export_${timestamp}.csv`;
 
   // Trigger download
@@ -199,10 +224,11 @@ export async function exportSlotsToCsv(
 function generateTsvContent(
   slots: WarehouseSlotClass[],
   weeklyDataMap: Map<string, Map<string, number>>,
-  allWeeks: string[]
+  allWeeks: string[],
+  exportTimestampLabel: string
 ): string {
   // Header row
-  const header = ['slotId', ...allWeeks].join('\t');
+  const header = buildExportHeader(allWeeks, exportTimestampLabel).join('\t');
 
   // Data rows
   const rows = slots.map(slot => {
@@ -255,9 +281,10 @@ export async function copySlotsToClipboard(
   }
 
   onProgress?.(90, 'Generuji tabulku...');
+  const exportTimestampLabel = formatExportTimestamp(new Date());
 
   // Generate TSV content (tab-separated for Excel)
-  const tsvContent = generateTsvContent(filteredSlots, weeklyDataMap, allWeeks);
+  const tsvContent = generateTsvContent(filteredSlots, weeklyDataMap, allWeeks, exportTimestampLabel);
 
   onProgress?.(95, 'Kopíruji do schránky...');
 
