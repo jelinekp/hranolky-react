@@ -149,10 +149,10 @@ export async function exportSlotsToCsv(
   onProgress?: (progress: number, status: string) => void
 ): Promise<void> {
   if (filteredSlots.length === 0) {
-    throw new Error('No slots to export');
+    throw new Error('Žádné položky k exportu');
   }
 
-  onProgress?.(0, 'Preparing export...');
+  onProgress?.(0, 'Připravuji export...');
 
   // Determine collection name
   const collectionName = slotType === SlotType.Beam ? 'Hranolky' : 'Sparovky';
@@ -164,7 +164,7 @@ export async function exportSlotsToCsv(
   // Get all week IDs
   const allWeeks = getAllWeekIds(startYear, startWeek);
 
-  onProgress?.(5, `Fetching data for ${filteredSlots.length} slots...`);
+  onProgress?.(5, `Stahování dat pro ${filteredSlots.length} položek...`);
 
   // Fetch weekly reports for each slot
   const weeklyDataMap = new Map<string, Map<string, number>>();
@@ -172,18 +172,18 @@ export async function exportSlotsToCsv(
   for (let i = 0; i < filteredSlots.length; i++) {
     const slot = filteredSlots[i];
     const progress = 5 + Math.round((i / filteredSlots.length) * 85);
-    onProgress?.(progress, `Fetching ${slot.productId}...`);
+    onProgress?.(progress, `Stahování stavů pro ${slot.productId}...`);
 
     const reports = await fetchSlotWeeklyReports(collectionName, slot.productId);
     weeklyDataMap.set(slot.productId, reports);
   }
 
-  onProgress?.(90, 'Generating CSV...');
+  onProgress?.(90, 'Generování CSV...');
 
   // Generate CSV content
   const csvContent = generateCsvContent(filteredSlots, weeklyDataMap, allWeeks);
 
-  onProgress?.(95, 'Downloading...');
+  onProgress?.(95, 'Stahování...');
 
   // Create filename with timestamp
   const timestamp = new Date().toISOString().split('T')[0];
@@ -192,7 +192,7 @@ export async function exportSlotsToCsv(
   // Trigger download
   downloadCsv(csvContent, filename);
 
-  onProgress?.(100, 'Export complete!');
+  onProgress?.(100, 'Export dokončen!');
 }
 
 // Generate TSV content (tab-separated for Excel paste)
@@ -225,10 +225,10 @@ export async function copySlotsToClipboard(
   onProgress?: (progress: number, status: string) => void
 ): Promise<void> {
   if (filteredSlots.length === 0) {
-    throw new Error('No slots to copy');
+    throw new Error('Žádné položky k exportu');
   }
 
-  onProgress?.(0, 'Preparing...');
+  onProgress?.(0, 'Připravování...');
 
   // Determine collection name
   const collectionName = slotType === SlotType.Beam ? 'Hranolky' : 'Sparovky';
