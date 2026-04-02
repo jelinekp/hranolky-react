@@ -8,9 +8,7 @@ describe('Export Flow Integration', () => {
     isOpen: true,
     onClose: vi.fn(),
     onExportExcel: vi.fn(),
-    onCopyToClipboard: vi.fn(),
     isExporting: false,
-    isCopying: false,
     itemCount: 42
   }
 
@@ -43,18 +41,6 @@ describe('Export Flow Integration', () => {
       await user.click(exportButton)
 
       expect(onExportExcel).toHaveBeenCalledTimes(1)
-    })
-
-    it('calls onCopyToClipboard when copy button clicked', async () => {
-      const user = userEvent.setup()
-      const onCopyToClipboard = vi.fn()
-
-      render(<ExportDialog {...defaultProps} onCopyToClipboard={onCopyToClipboard} />)
-
-      const copyButton = screen.getByRole('button', { name: /Kopírovat pro Excel/ })
-      await user.click(copyButton)
-
-      expect(onCopyToClipboard).toHaveBeenCalledTimes(1)
     })
 
     it('calls onClose when cancel button clicked', async () => {
@@ -90,13 +76,6 @@ describe('Export Flow Integration', () => {
 
       const excelButton = screen.getByRole('button', { name: /Stáhnout jako Excel/ })
       expect(excelButton).toBeDisabled()
-    })
-
-    it('disables buttons when copying', () => {
-      render(<ExportDialog {...defaultProps} isCopying={true} />)
-
-      const copyButton = screen.getByRole('button', { name: /Kopírovat pro Excel/ })
-      expect(copyButton).toBeDisabled()
     })
   })
 })

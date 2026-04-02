@@ -8,7 +8,7 @@
 
 import React from 'react'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFileExport, faCopy } from '@fortawesome/free-solid-svg-icons'
+import { faFileExport } from '@fortawesome/free-solid-svg-icons'
 
 export interface ExportDialogProps {
   /** Whether the dialog is open */
@@ -17,31 +17,25 @@ export interface ExportDialogProps {
   onClose: () => void
   /** Callback for Excel export action */
   onExportExcel: () => void
-  /** Callback for clipboard copy action */
-  onCopyToClipboard: () => void
   /** Whether an export operation is in progress */
   isExporting: boolean
-  /** Whether a copy operation is in progress */
-  isCopying: boolean
   /** Number of items that will be exported */
   itemCount: number
 }
 
 /**
- * Modal dialog for choosing export format (CSV download or clipboard copy)
+ * Modal dialog for starting the Excel export
  */
 const ExportDialog: React.FC<ExportDialogProps> = ({
   isOpen,
   onClose,
   onExportExcel,
-  onCopyToClipboard,
   isExporting,
-  isCopying,
   itemCount,
 }) => {
   if (!isOpen) return null
 
-  const isDisabled = isExporting || isCopying
+  const isDisabled = isExporting
   const buttonBaseClass = "w-full text-left p-4 rounded-lg border-2 flex items-center gap-3"
   const buttonEnabledClass = "hover:bg-grey hover:border-blue-500 cursor-pointer border-gray-300"
   const buttonDisabledClass = "opacity-50 cursor-not-allowed bg-gray-100"
@@ -49,11 +43,6 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
   const handleExportExcel = () => {
     onClose()
     onExportExcel()
-  }
-
-  const handleCopyToClipboard = () => {
-    onClose()
-    onCopyToClipboard()
   }
 
   return (
@@ -86,18 +75,6 @@ const ExportDialog: React.FC<ExportDialogProps> = ({
             <div>
               <div className="font-semibold">Stáhnout jako Excel</div>
               <div className="text-sm text-gray-600">Uložit data do XLSX sešitu se dvěma listy s množstvím a objemy</div>
-            </div>
-          </button>
-
-          <button
-            onClick={handleCopyToClipboard}
-            disabled={isDisabled}
-            className={`${buttonBaseClass} ${isDisabled ? buttonDisabledClass : buttonEnabledClass}`}
-          >
-            <FontAwesomeIcon icon={faCopy} className="text-xl" />
-            <div>
-              <div className="font-semibold">Kopírovat pro Excel</div>
-              <div className="text-sm text-gray-600">Zkopírovat jen množství do schránky</div>
             </div>
           </button>
         </div>

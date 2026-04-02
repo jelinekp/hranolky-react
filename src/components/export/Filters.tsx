@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRotateLeft } from "@fortawesome/free-solid-svg-icons/faArrowRotateLeft";
 import { faFileExport } from "@fortawesome/free-solid-svg-icons/faFileExport";
 import { WarehouseSlotClass, SlotType } from "hranolky-firestore-common";
-import { exportSlotsToExcel, copySlotsToClipboard } from "../../hooks/reports/exportToCsv";
+import { exportSlotsToExcel } from "../../hooks/reports/exportToCsv";
 import ExportDialog from "./ExportDialog";
 
 type FilterType = 'quality' | 'thickness' | 'width' | 'lengthInterval' | 'allLength';
@@ -32,7 +32,6 @@ function Filters(props: {
     const { activeFilters, setActiveFilters, distinctThicknessFilters, distinctQualityFilters, distinctWidthFilters, distinctLengthFilters, filteredSlots, slotType } = props;
 
     const [isExporting, setIsExporting] = useState(false);
-    const [isCopying, setIsCopying] = useState(false);
     const [exportProgress, setExportProgress] = useState(0);
     const [exportStatus, setExportStatus] = useState('');
     const [showExportDialog, setShowExportDialog] = useState(false);
@@ -72,31 +71,6 @@ function Filters(props: {
             alert('Export selhal: ' + (error instanceof Error ? error.message : 'Unknown error'));
         } finally {
             setIsExporting(false);
-            setExportProgress(0);
-            setExportStatus('');
-        }
-    };
-
-    const handleCopyToClipboard = async () => {
-        if (filteredSlots.length === 0) {
-            alert('Nejsou žádné sloty ke zkopírování');
-            return;
-        }
-
-        setIsCopying(true);
-        setExportProgress(0);
-        setExportStatus('Připravuji...');
-
-        try {
-            await copySlotsToClipboard(filteredSlots, slotType, (progress, status) => {
-                setExportProgress(progress);
-                setExportStatus(status);
-            });
-        } catch (error) {
-            console.error('Copy failed:', error);
-            alert('Kopírování selhalo: ' + (error instanceof Error ? error.message : 'Unknown error'));
-        } finally {
-            setIsCopying(false);
             setExportProgress(0);
             setExportStatus('');
         }
@@ -239,13 +213,11 @@ function Filters(props: {
                 isOpen={showExportDialog}
                 onClose={() => setShowExportDialog(false)}
                 onExportExcel={handleExport}
-                onCopyToClipboard={handleCopyToClipboard}
                 isExporting={isExporting}
-                isCopying={isCopying}
                 itemCount={filteredSlots.length}
             />
 
-            {(isExporting || isCopying) && (
+            {isExporting && (
                 <div className="mt-2">
                     <div className="w-full bg-gray-200 rounded-full h-2">
                         <div

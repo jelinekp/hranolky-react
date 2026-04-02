@@ -8,9 +8,7 @@ describe('ExportDialog', () => {
     isOpen: true,
     onClose: vi.fn(),
     onExportExcel: vi.fn(),
-    onCopyToClipboard: vi.fn(),
     isExporting: false,
-    isCopying: false,
     itemCount: 50,
   }
 
@@ -24,7 +22,6 @@ describe('ExportDialog', () => {
 
       expect(screen.getByText('Exportovat historii stavů')).toBeInTheDocument()
       expect(screen.getByText('Stáhnout jako Excel')).toBeInTheDocument()
-      expect(screen.getByText('Kopírovat pro Excel')).toBeInTheDocument()
       expect(screen.getByText('Zrušit')).toBeInTheDocument()
     })
 
@@ -67,25 +64,6 @@ describe('ExportDialog', () => {
       expect(onExportExcel).toHaveBeenCalled()
     })
 
-    it('calls onCopyToClipboard and onClose when copy button clicked', async () => {
-      const user = userEvent.setup()
-      const onCopyToClipboard = vi.fn()
-      const onClose = vi.fn()
-
-      render(
-        <ExportDialog
-          {...defaultProps}
-          onCopyToClipboard={onCopyToClipboard}
-          onClose={onClose}
-        />
-      )
-
-      await user.click(screen.getByText('Kopírovat pro Excel'))
-
-      expect(onClose).toHaveBeenCalled()
-      expect(onCopyToClipboard).toHaveBeenCalled()
-    })
-
     it('calls onClose when cancel button clicked', async () => {
       const user = userEvent.setup()
       const onClose = vi.fn()
@@ -113,18 +91,10 @@ describe('ExportDialog', () => {
   })
 
   describe('disabled state', () => {
-    it('disables buttons when exporting', () => {
+    it('disables export button when exporting', () => {
       render(<ExportDialog {...defaultProps} isExporting={true} />)
 
       expect(screen.getByText('Stáhnout jako Excel').closest('button')).toBeDisabled()
-      expect(screen.getByText('Kopírovat pro Excel').closest('button')).toBeDisabled()
-    })
-
-    it('disables buttons when copying', () => {
-      render(<ExportDialog {...defaultProps} isCopying={true} />)
-
-      expect(screen.getByText('Stáhnout jako Excel').closest('button')).toBeDisabled()
-      expect(screen.getByText('Kopírovat pro Excel').closest('button')).toBeDisabled()
     })
   })
 })
